@@ -1,0 +1,94 @@
+{
+  "files_created": [
+    "package.json",
+    ".env.example",
+    "bin/aitri-hub.js",
+    "lib/constants.js",
+    "lib/store/projects.js",
+    "lib/store/dashboard.js",
+    "lib/collector/index.js",
+    "lib/collector/aitri-reader.js",
+    "lib/collector/git-reader.js",
+    "lib/collector/test-reader.js",
+    "lib/alerts/engine.js",
+    "lib/renderer/cli.js",
+    "lib/commands/setup.js",
+    "lib/commands/monitor.js",
+    "lib/commands/web.js",
+    "web/package.json",
+    "web/vite.config.js",
+    "web/index.html",
+    "web/src/main.jsx",
+    "web/src/App.jsx",
+    "web/src/styles.css",
+    "web/src/components/Header.jsx",
+    "web/src/components/ProjectCard.jsx",
+    "web/src/components/PhaseProgress.jsx",
+    "web/src/components/AlertBadge.jsx",
+    "web/src/components/ConnectionBanner.jsx",
+    "docker/Dockerfile",
+    "docker/docker-compose.yml",
+    "docker/nginx.conf",
+    "tests/unit/aitri-reader.test.js",
+    "tests/unit/git-reader.test.js",
+    "tests/unit/test-reader.test.js",
+    "tests/unit/alerts-engine.test.js",
+    "tests/unit/cli-renderer.test.js",
+    "tests/unit/dashboard-store.test.js",
+    "tests/integration/setup.test.js",
+    "tests/integration/dashboard-write.test.js",
+    "tests/e2e/web-dashboard.test.js"
+  ],
+
+  "setup_commands": [
+    "npm install",
+    "node bin/aitri-hub.js setup",
+    "node bin/aitri-hub.js monitor",
+    "docker compose -f docker/docker-compose.yml up --build -d"
+  ],
+
+  "environment_variables": [
+    { "name": "AITRI_HUB_DIR",         "default": "~/.aitri-hub" },
+    { "name": "AITRI_HUB_PORT",        "default": "3000" },
+    { "name": "AITRI_HUB_REFRESH_MS",  "default": "5000" },
+    { "name": "AITRI_HUB_GIT_TIMEOUT_MS", "default": "5000" },
+    { "name": "AITRI_HUB_MAX_PROJECTS", "default": "50" },
+    { "name": "AITRI_HUB_STALE_HOURS",  "default": "72" }
+  ],
+
+  "technical_debt": [
+    {
+      "fr_id": "FR-006",
+      "substitution": "Docker image requires `docker build` on first use (2–3 min) before `docker compose up` achieves sub-30s startup; subsequent runs use cached layers and meet the 30s requirement",
+      "reason": "ADR-04 chose pre-built bundle; npm pack cannot include a pre-built Docker image; build must happen on user's machine",
+      "effort_to_fix": "medium"
+    },
+    {
+      "fr_id": "FR-005",
+      "substitution": "CLI monitor `cmdMonitor` uses `setInterval` with full screen clear+redraw (ANSI ESC[2J) instead of partial row updates; causes brief flicker on slow terminals",
+      "reason": "ADR-02 chose full redraw for simplicity; partial update requires cursor positioning state machine which is out of scope for v1",
+      "effort_to_fix": "medium"
+    },
+    {
+      "fr_id": "FR-001",
+      "substitution": "`cmdSetup` uses Node.js `readline.createInterface` which requires a real TTY; it does not support non-interactive (piped) setup — users must run it interactively",
+      "reason": "Non-interactive setup (e.g. via config file) was not in the IDEA.md requirements for v1; ≤5 prompts constraint implies human interaction",
+      "effort_to_fix": "low"
+    }
+  ],
+
+  "test_runner": "node --test tests/unit/aitri-reader.test.js tests/unit/git-reader.test.js tests/unit/test-reader.test.js tests/unit/alerts-engine.test.js tests/unit/cli-renderer.test.js tests/unit/dashboard-store.test.js tests/unit/web-config.test.js tests/integration/setup.test.js tests/integration/dashboard-write.test.js tests/integration/remote-collector.test.js",
+
+  "test_files": [
+    "tests/unit/aitri-reader.test.js",
+    "tests/unit/git-reader.test.js",
+    "tests/unit/test-reader.test.js",
+    "tests/unit/alerts-engine.test.js",
+    "tests/unit/cli-renderer.test.js",
+    "tests/unit/dashboard-store.test.js",
+    "tests/unit/web-config.test.js",
+    "tests/integration/setup.test.js",
+    "tests/integration/dashboard-write.test.js",
+    "tests/integration/remote-collector.test.js"
+  ]
+}

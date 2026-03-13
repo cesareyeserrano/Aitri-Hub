@@ -1,0 +1,28 @@
+{
+  "name": "aitri-hub",
+  "version": "0.1.0",
+  "description": "Centralized monitoring dashboard for Aitri-managed projects",
+  "type": "module",
+  "bin": {
+    "aitri-hub": "bin/aitri-hub.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "node --test tests/unit/aitri-reader.test.js tests/unit/git-reader.test.js tests/unit/test-reader.test.js tests/unit/alerts-engine.test.js tests/unit/cli-renderer.test.js tests/unit/dashboard-store.test.js tests/unit/web-config.test.js tests/integration/setup.test.js tests/integration/dashboard-write.test.js tests/integration/remote-collector.test.js",
+    "test:e2e": "npx playwright test tests/e2e/",
+    "test:all": "npm test && npm run test:e2e"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "docker",
+    ".env.example",
+    "README.md"
+  ],
+  "devDependencies": {
+    "@playwright/test": "^1.43.0"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,112 @@
+{
+  "project": "Aitri Hub",
+  "version": "0.1.0",
+  "phases_completed": [1, 2, 3, 4, 5],
+  "overall_status": "partial",
+  "requirement_compliance": [
+    {
+      "id": "FR-001",
+      "title": "Project registration via interactive setup",
+      "level": "partial",
+      "evidence": "TC-001h/e/f passing (3/3). Technical debt: cmdSetup requires a real TTY — non-interactive (piped) use not supported in v1."
+    },
+    {
+      "id": "FR-002",
+      "title": "Read and parse .aitri state file per project",
+      "level": "complete",
+      "evidence": "TC-002h/e/f passing (3/3). No declared debt."
+    },
+    {
+      "id": "FR-003",
+      "title": "Collect Git metadata per project",
+      "level": "complete",
+      "evidence": "TC-003h/e/f passing (3/3). No declared debt."
+    },
+    {
+      "id": "FR-004",
+      "title": "Read test results from 04_TEST_RESULTS.json",
+      "level": "complete",
+      "evidence": "TC-004h/e/f passing (3/3). No declared debt."
+    },
+    {
+      "id": "FR-005",
+      "title": "CLI terminal dashboard — aitri-hub monitor",
+      "level": "partial",
+      "evidence": "TC-005e passing (1/3 automated; 2 skipped — E2E/terminal tests require live TTY). Technical debt: ANSI full-screen clear+redraw causes brief flicker on slow terminals."
+    },
+    {
+      "id": "FR-006",
+      "title": "Web dashboard — React served via Docker at localhost:3000",
+      "level": "partial",
+      "evidence": "TC-006h/e/f passing (3/3 unit config tests). E2E Playwright test (TC-006h browser) skipped — requires running Docker container. Technical debt: Docker first-build takes 2–3 min; subsequent runs meet ≤30s requirement."
+    },
+    {
+      "id": "FR-007",
+      "title": "Smart alerts engine",
+      "level": "complete",
+      "evidence": "TC-007h/e/f passing (3/3). No declared debt."
+    },
+    {
+      "id": "FR-008",
+      "title": "Remote project support (GitHub/GitLab URLs)",
+      "level": "complete",
+      "evidence": "TC-008h/e/f passing (3/3). Clone, pull, and unreachable-remote failure paths all verified with local bare repo as fake remote. No declared debt."
+    },
+    {
+      "id": "FR-009",
+      "title": "Consolidated dashboard data file",
+      "level": "complete",
+      "evidence": "TC-009h/e passing (2/3 automated; 1 skipped — no marker). Integration roundtrip (write→read) and atomic write pattern verified. No declared debt."
+    },
+    {
+      "id": "NFR-001",
+      "title": "Collection cycle ≤5s for 20 local projects",
+      "level": "functionally_present",
+      "evidence": "collectAll() uses Promise.all for parallel collection. No automated benchmark test defined — manual testing required to confirm ≤5s SLA at 20 projects."
+    },
+    {
+      "id": "NFR-002",
+      "title": "Single unreadable project must not crash the monitor",
+      "level": "functionally_present",
+      "evidence": "collectOne() is wrapped in try/catch and returns status='unreadable' rather than throwing. TC-008f verifies non-throw contract. No explicit multi-project crash test defined."
+    },
+    {
+      "id": "NFR-003",
+      "title": "Setup completable in ≤15 minutes without prior knowledge",
+      "level": "functionally_present",
+      "evidence": "Setup flow uses ≤5 prompts with inline guidance. No user study or timed test defined — qualitative assessment only."
+    },
+    {
+      "id": "NFR-004",
+      "title": "CLI works on macOS, Linux, and Windows WSL2 with Node.js 18+",
+      "level": "functionally_present",
+      "evidence": "Zero runtime dependencies; uses only Node.js built-in modules. Tested on macOS only in CI. Cross-platform verification on Linux and WSL2 not automated."
+    },
+    {
+      "id": "NFR-005",
+      "title": "No project data transmitted outside local machine",
+      "level": "functionally_present",
+      "evidence": "Architecture uses local file I/O only. Remote projects use git clone/pull (intentional, user-registered). No network traffic analysis test defined."
+    }
+  ],
+  "technical_debt_inherited": [
+    {
+      "fr_id": "FR-006",
+      "substitution": "Docker image requires `docker build` on first use (2–3 min) before `docker compose up` achieves sub-30s startup; subsequent runs use cached layers and meet the 30s requirement",
+      "reason": "ADR-04 chose pre-built bundle; npm pack cannot include a pre-built Docker image; build must happen on user's machine",
+      "effort_to_fix": "medium"
+    },
+    {
+      "fr_id": "FR-005",
+      "substitution": "CLI monitor `cmdMonitor` uses `setInterval` with full screen clear+redraw (ANSI ESC[2J) instead of partial row updates; causes brief flicker on slow terminals",
+      "reason": "ADR-02 chose full redraw for simplicity; partial update requires cursor positioning state machine which is out of scope for v1",
+      "effort_to_fix": "medium"
+    },
+    {
+      "fr_id": "FR-001",
+      "substitution": "`cmdSetup` uses Node.js `readline.createInterface` which requires a real TTY; it does not support non-interactive (piped) setup — users must run it interactively",
+      "reason": "Non-interactive setup (e.g. via config file) was not in the IDEA.md requirements for v1; ≤5 prompts constraint implies human interaction",
+      "effort_to_fix": "low"
+    }
+  ]
+}

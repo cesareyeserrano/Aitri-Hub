@@ -1,0 +1,375 @@
+{
+  "project_name": "Aitri Hub",
+  "project_summary": "Centralized monitoring dashboard for multiple Aitri-managed projects. Provides a single-pane-of-glass view of pipeline progress, test health, Git activity, and alerts across N projects — via CLI terminal dashboard or React web dashboard served through Docker.\n\nProduct Analysis:\n  North Star KPI: Time-to-insight — user sees all project statuses in ≤5 seconds from running `aitri-hub monitor`.\n  JTBD: 'When I have multiple Aitri projects running in parallel, help me instantly know which ones need attention without cd-ing into each repo.'\n  Guardrail metric: Dashboard render time must stay ≤2s for up to 20 registered projects.",
+
+  "no_go_zone": [
+    "No cloud storage or remote sync — all state lives locally under ~/.aitri-hub/; no external API calls to persist data",
+    "No authentication or user accounts — no login, no sessions, no multi-user access control in v1",
+    "No aitri command execution from the dashboard — cannot trigger run-phase, approve, reject, or verify from UI or CLI monitor",
+    "No monitoring of non-Aitri projects — projects without a .aitri state file are not supported",
+    "No code editing or test execution — dashboard is read-only; it observes, never modifies project files",
+    "No mobile native build — web interface is browser-only via localhost; no iOS/Android app"
+  ],
+
+  "user_personas": [
+    {
+      "role": "Solo Developer",
+      "tech_level": "high",
+      "goal": "See the health of all personal Aitri projects in one terminal command each morning without switching directories",
+      "pain_point": "Runs aitri status in each project folder sequentially — slow, no cross-project comparison, easy to miss a failing project"
+    },
+    {
+      "role": "Team Lead",
+      "tech_level": "high",
+      "goal": "Share a live web dashboard URL with the team so everyone sees project statuses without needing CLI access",
+      "pain_point": "Must manually aggregate status from each developer's project, no single source of truth for the team"
+    },
+    {
+      "role": "Project Portfolio Manager",
+      "tech_level": "mid",
+      "goal": "Monitor company-wide Aitri projects (local + GitHub) from a visual web dashboard without deep CLI knowledge",
+      "pain_point": "No visibility into pipeline health across teams; relies on manual status updates in Slack or email"
+    }
+  ],
+
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "title": "Project registration via interactive setup",
+      "description": "User can register N projects (local paths or GitHub/GitLab URLs) through `aitri-hub setup` interactive CLI session. Configuration is saved to ~/.aitri-hub/projects.json.",
+      "priority": "MUST",
+      "type": "persistence",
+      "acceptance_criteria": [
+        "Setup completes in ≤5 interactive prompts",
+        "~/.aitri-hub/projects.json is created/updated after setup with valid JSON containing registered project entries",
+        "Local path entries are validated to exist on the filesystem before saving",
+        "Remote GitHub/GitLab URLs are stored as-is without requiring the repo to be cloned at setup time",
+        "Re-running setup does not overwrite existing entries unless user explicitly confirms"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-002",
+      "title": "Read and parse .aitri state file per project",
+      "description": "For each registered project, the system reads the .aitri state file and extracts: currentPhase, approvedPhases, completedPhases, verifyPassed, verifySummary, rejections, and artifactHashes (for drift detection).",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a project with a valid .aitri file, when the collector runs, then currentPhase, approvedPhases, and completedPhases are correctly extracted",
+        "Given a project with verifyPassed: true and a verifySummary, when collected, then passed/failed/skipped counts are available for display",
+        "Given a project where an artifact hash has changed post-approval (drift), when collected, then a drift flag is set to true for that project",
+        "Given a project whose .aitri file is missing or malformed, when collected, then the project entry shows status: 'unreadable' and no crash occurs",
+        "Given a project with rejections entries, when collected, then the most recent rejection timestamp and feedback string are extracted"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-003",
+      "title": "Collect Git metadata per project",
+      "description": "For each registered project, collect: last commit timestamp, commits in the last 7 days (velocity), and active branch name.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a local project with git history, when collected, then last commit timestamp is accurate to within 1 minute of `git log -1 --format=%cd`",
+        "Given a local project, when collected, then commit velocity equals the count of commits in the last 7 calendar days",
+        "Given a project with no commits in ≥72 hours, when alerts are evaluated, then a 'stale' alert is generated for that project",
+        "Given a project that is not a git repository, when collected, then git fields are null and no crash occurs"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-004",
+      "title": "Read test results from 04_TEST_RESULTS.json",
+      "description": "For each registered project, read spec/04_TEST_RESULTS.json (when present) to extract per-FR coverage status and summary counts (passed, failed, skipped, total).",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "Given a project with a valid 04_TEST_RESULTS.json, when collected, then summary.passed, summary.failed, summary.total are correctly extracted",
+        "Given a project with 04_TEST_RESULTS.json containing fr_coverage, when collected, then each FR's coverage status ('covered'|'partial'|'uncovered') is available",
+        "Given a project where 04_TEST_RESULTS.json is absent, when collected, then test fields are null and display shows 'Tests: N/A'",
+        "Given a project with summary.failed > 0, when alerts are evaluated, then a 'tests failing' alert is generated"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-005",
+      "title": "CLI terminal dashboard — `aitri-hub monitor`",
+      "description": "Render a terminal dashboard showing all registered projects with their pipeline progress, test status, and alerts. Auto-refreshes every 5 seconds.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Dashboard renders within ≤2 seconds of running `aitri-hub monitor` for up to 20 projects",
+        "Each project row displays: name, phase progress (e.g. '3/5 phases approved'), verify status, last commit age, and alert count",
+        "Projects with active alerts are visually distinguished from healthy projects (e.g. different prefix character or label)",
+        "Dashboard auto-refreshes every 5 seconds without requiring user input",
+        "Dashboard renders correctly in a terminal with width ≥80 columns",
+        "User can exit the monitor with Ctrl+C without leaving the terminal in a broken state (cursor restored, no orphaned process)"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-006",
+      "title": "Web dashboard — React served via Docker at localhost:3000",
+      "description": "Provide a React web dashboard accessible at localhost:3000 via a single command (`aitri-hub web` or `docker compose up`). Shows the same data as the CLI dashboard in a visual layout with auto-refresh.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Running `aitri-hub web` or `docker compose up` makes the dashboard accessible at http://localhost:3000 within 30 seconds on a machine with Docker installed",
+        "Dashboard renders all registered projects within ≤2 seconds of page load for up to 20 projects",
+        "Each project card displays: name, phase progress, verify pass/fail counts, last commit timestamp, active branch, and alerts",
+        "Dashboard auto-refreshes every 5 seconds without a full page reload",
+        "Layout is usable at viewport widths ≥768px without horizontal scroll",
+        "Alert badges are visually distinct — minimum contrast ratio of 4.5:1 against card background"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-007",
+      "title": "Smart alerts engine",
+      "description": "Evaluate collected project data against alert rules and surface actionable warnings: stale project (no commits >72h), verify failed, artifact drift detected, tests failing.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a project with last commit >72 hours ago, then alert 'No commits in Xh' is generated",
+        "Given a project with verifySummary.failed > 0 or verifyPassed: false, then alert 'Verify failed' is generated",
+        "Given a project with at least one artifact drift flag, then alert 'Artifact drift detected' is generated",
+        "Given a project with 04_TEST_RESULTS.json where summary.failed > 0, then alert 'Tests failing (N)' is generated",
+        "Given a project with no alert conditions, then no alerts are shown for that project",
+        "Alert evaluation completes within ≤500ms per project"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-008",
+      "title": "Remote project support (GitHub/GitLab URLs)",
+      "description": "For projects registered with a remote URL, clone the repo to a local cache directory, read its .aitri state and spec/ artifacts, and refresh the cache on each monitor cycle.",
+      "priority": "SHOULD",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a registered GitHub URL, when monitor runs for the first time, then the repo is cloned to ~/.aitri-hub/cache/<repo-name>/",
+        "Given a cached remote project, when monitor refreshes, then `git pull` is run on the cached clone to fetch latest state",
+        "Given a remote project that cannot be reached (network error), when monitor runs, then the project shows last known cached data with a 'Cache stale' label and no crash occurs",
+        "Cache directory is reused across monitor sessions — no re-clone if cache exists"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-009",
+      "title": "Consolidated dashboard data file",
+      "description": "After each collection cycle, write aggregated project data to ~/.aitri-hub/dashboard.json for consumption by the web dashboard API.",
+      "priority": "MUST",
+      "type": "persistence",
+      "acceptance_criteria": [
+        "dashboard.json is written after every collection cycle (every 5 seconds during monitor)",
+        "dashboard.json contains an array of project entries, each with: name, location, phases, verifyStatus, gitMeta, testSummary, alerts",
+        "dashboard.json is valid JSON — malformed writes do not corrupt the file (atomic write via temp file + rename)",
+        "Web dashboard reads dashboard.json as its data source; no direct project file access from the React frontend"
+      ],
+      "implementation_level": "functional"
+    }
+  ],
+
+  "user_stories": [
+    {
+      "id": "US-001",
+      "requirement_id": "FR-001",
+      "as_a": "solo developer",
+      "i_want": "to register all my Aitri projects in one setup session",
+      "so_that": "I don't have to configure each project individually every time I use the dashboard",
+      "acceptance_criteria": [
+        {
+          "id": "AC-001",
+          "given": "the user has 3 local Aitri projects and runs `aitri-hub setup`",
+          "when": "they answer ≤5 prompts providing project paths and preferred interface",
+          "then": "~/.aitri-hub/projects.json exists with 3 valid entries and setup exits with code 0"
+        }
+      ]
+    },
+    {
+      "id": "US-002",
+      "requirement_id": "FR-002",
+      "as_a": "developer",
+      "i_want": "the dashboard to read each project's .aitri state file",
+      "so_that": "I can see the current pipeline phase and approval status without running aitri status manually",
+      "acceptance_criteria": [
+        {
+          "id": "AC-002",
+          "given": "a registered project at /home/user/projects/finance with .aitri containing approvedPhases:[1,2,3] and currentPhase:4",
+          "when": "the collector runs",
+          "then": "the dashboard shows '3 phases approved, current phase: 4' for that project"
+        },
+        {
+          "id": "AC-003",
+          "given": "a registered project whose .aitri file has been deleted",
+          "when": "the collector runs",
+          "then": "the project card shows status 'unreadable' and all other projects continue to display normally"
+        }
+      ]
+    },
+    {
+      "id": "US-003",
+      "requirement_id": "FR-003",
+      "as_a": "team lead",
+      "i_want": "to see which projects have had no recent commits",
+      "so_that": "I can follow up with developers on stagnant work before it becomes a blocker",
+      "acceptance_criteria": [
+        {
+          "id": "AC-004",
+          "given": "a registered project whose last commit was 80 hours ago",
+          "when": "the dashboard renders",
+          "then": "an alert 'No commits in 80h' is visible for that project in both CLI and web interfaces"
+        }
+      ]
+    },
+    {
+      "id": "US-004",
+      "requirement_id": "FR-004",
+      "as_a": "developer",
+      "i_want": "to see test pass/fail counts from the last verify run",
+      "so_that": "I know which projects have failing tests without running aitri verify-run manually",
+      "acceptance_criteria": [
+        {
+          "id": "AC-005",
+          "given": "a project with 04_TEST_RESULTS.json showing passed:28, failed:2, total:30",
+          "when": "the dashboard renders",
+          "then": "the project entry shows 'Tests: 28/30' and a 'Tests failing (2)' alert"
+        },
+        {
+          "id": "AC-006",
+          "given": "a project with no 04_TEST_RESULTS.json file",
+          "when": "the dashboard renders",
+          "then": "the project entry shows 'Tests: N/A' with no alert for tests"
+        }
+      ]
+    },
+    {
+      "id": "US-005",
+      "requirement_id": "FR-005",
+      "as_a": "solo developer",
+      "i_want": "to run `aitri-hub monitor` and see all projects in the terminal",
+      "so_that": "I can assess the state of all my work in one glance without leaving the terminal",
+      "acceptance_criteria": [
+        {
+          "id": "AC-007",
+          "given": "5 registered projects and `aitri-hub monitor` running",
+          "when": "the dashboard first renders",
+          "then": "all 5 projects are visible within 2 seconds, each showing name, phase progress, verify status, last commit age, and alert count"
+        },
+        {
+          "id": "AC-008",
+          "given": "`aitri-hub monitor` running and one project's .aitri file is updated",
+          "when": "5 seconds elapse",
+          "then": "the dashboard re-renders showing the updated state without user interaction"
+        }
+      ]
+    },
+    {
+      "id": "US-006",
+      "requirement_id": "FR-006",
+      "as_a": "team lead",
+      "i_want": "to open a web dashboard at localhost:3000 after one command",
+      "so_that": "I can share the URL with my team for a shared live view",
+      "acceptance_criteria": [
+        {
+          "id": "AC-009",
+          "given": "Docker is installed and `aitri-hub web` is executed",
+          "when": "30 seconds have elapsed",
+          "then": "http://localhost:3000 returns HTTP 200 and renders all registered project cards"
+        },
+        {
+          "id": "AC-010",
+          "given": "the web dashboard is open in a browser at 768px viewport width",
+          "when": "the page renders",
+          "then": "all project cards are visible without horizontal scroll and alert badges have contrast ratio ≥4.5:1"
+        }
+      ]
+    },
+    {
+      "id": "US-007",
+      "requirement_id": "FR-007",
+      "as_a": "developer",
+      "i_want": "to see actionable alerts for projects that need attention",
+      "so_that": "I can prioritize which project to work on without reading raw state files",
+      "acceptance_criteria": [
+        {
+          "id": "AC-011",
+          "given": "a project with verifyPassed:false and last commit 90 hours ago",
+          "when": "the dashboard renders",
+          "then": "two alerts are shown: 'Verify failed' and 'No commits in 90h'"
+        },
+        {
+          "id": "AC-012",
+          "given": "a project with all phases approved, verifyPassed:true, no drift, and a commit within the last 24h",
+          "when": "the dashboard renders",
+          "then": "zero alerts are shown for that project"
+        }
+      ]
+    },
+    {
+      "id": "US-008",
+      "requirement_id": "FR-009",
+      "as_a": "web dashboard",
+      "i_want": "to read aggregated project data from a local JSON file",
+      "so_that": "the React frontend does not need direct filesystem access to individual project directories",
+      "acceptance_criteria": [
+        {
+          "id": "AC-013",
+          "given": "a collection cycle has completed",
+          "when": "dashboard.json is read",
+          "then": "it contains valid JSON with an array where each entry has name, phases, verifyStatus, gitMeta, testSummary, and alerts fields"
+        },
+        {
+          "id": "AC-014",
+          "given": "a collection cycle fails mid-write",
+          "when": "dashboard.json is read",
+          "then": "the file contains the previous valid state (atomic write ensures no partial corruption)"
+        }
+      ]
+    }
+  ],
+
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "category": "Performance",
+      "requirement": "Collection cycle for up to 20 local projects must complete within 5 seconds",
+      "acceptance_criteria": "Running the collector against 20 local projects with valid .aitri files completes in ≤5000ms measured from start to dashboard.json write"
+    },
+    {
+      "id": "NFR-002",
+      "category": "Reliability",
+      "requirement": "A single unreadable or missing project must not crash the monitor or web server",
+      "acceptance_criteria": "Given one project with a missing .aitri file among N registered projects, the monitor continues running and all other projects display correctly; error is logged to ~/.aitri-hub/logs/aitri-hub.log"
+    },
+    {
+      "id": "NFR-003",
+      "category": "Usability",
+      "requirement": "Setup must be completable by a developer with no prior aitri-hub knowledge",
+      "acceptance_criteria": "A developer unfamiliar with aitri-hub completes setup in ≤15 minutes using only the prompts shown by `aitri-hub setup`, without consulting external documentation"
+    },
+    {
+      "id": "NFR-004",
+      "category": "Portability",
+      "requirement": "CLI dashboard must work on macOS, Linux, and Windows (WSL2) with Node.js 18+",
+      "acceptance_criteria": "`aitri-hub monitor` produces correct output on macOS 13+, Ubuntu 22.04+, and Windows 11 WSL2 with Node.js ≥18.0.0 installed"
+    },
+    {
+      "id": "NFR-005",
+      "category": "Security",
+      "requirement": "No project data is transmitted outside the local machine",
+      "acceptance_criteria": "Network traffic analysis during a full monitor session shows zero outbound connections except git pull for remote-registered projects"
+    }
+  ],
+
+  "constraints": [
+    "Node.js 18+ for CLI; Docker required for web dashboard",
+    "Zero npm runtime dependencies for CLI — Node.js built-ins only (mirrors Aitri's design principle)",
+    "All persistent data written under ~/.aitri-hub/ — no writes to project directories"
+  ],
+
+  "technology_preferences": [
+    "CLI: Node.js (ESM, zero dependencies)",
+    "Web: React (served via Docker)",
+    "Data exchange: JSON files (dashboard.json read by frontend)"
+  ]
+}

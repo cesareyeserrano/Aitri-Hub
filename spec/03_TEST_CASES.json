@@ -1,0 +1,730 @@
+{
+  "test_plan": {
+    "strategy": "Unit tests for all logic/persistence modules; integration tests for file I/O and git execution; E2E tests via Playwright for CLI monitor and web dashboard. Every FR must have at minimum a happy-path, edge-case, and negative test. All Given/When/Then use concrete values per SPEC-SEALED rule.",
+    "coverage_goal": "80%",
+    "test_types": ["unit", "integration", "e2e"]
+  },
+
+  "type_coverage_matrix": [
+    { "fr_id": "FR-001", "fr_type": "persistence", "unit": "MUST", "integration": "MUST", "e2e": "-"    },
+    { "fr_id": "FR-002", "fr_type": "logic",       "unit": "MUST", "integration": "SHOULD","e2e": "-"   },
+    { "fr_id": "FR-003", "fr_type": "logic",       "unit": "MUST", "integration": "SHOULD","e2e": "-"   },
+    { "fr_id": "FR-004", "fr_type": "reporting",   "unit": "MUST", "integration": "MUST", "e2e": "-"    },
+    { "fr_id": "FR-005", "fr_type": "UX",          "unit": "SHOULD","integration": "-",   "e2e": "MUST" },
+    { "fr_id": "FR-006", "fr_type": "UX",          "unit": "-",    "integration": "SHOULD","e2e": "MUST" },
+    { "fr_id": "FR-007", "fr_type": "logic",       "unit": "MUST", "integration": "SHOULD","e2e": "-"   },
+    { "fr_id": "FR-008", "fr_type": "logic",       "unit": "MUST", "integration": "SHOULD","e2e": "-"   },
+    { "fr_id": "FR-009", "fr_type": "persistence", "unit": "MUST", "integration": "MUST", "e2e": "-"    }
+  ],
+
+  "test_cases": [
+
+    {
+      "id": "TC-001h",
+      "requirement_id": "FR-001",
+      "user_story_id": "US-001",
+      "ac_id": "AC-001",
+      "title": "Setup — 2 valid local paths saved to projects.json",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "~/.aitri-hub/ directory does not exist",
+        "/tmp/proj-a/ and /tmp/proj-b/ directories exist on the filesystem"
+      ],
+      "given": "no ~/.aitri-hub/projects.json exists and /tmp/proj-a/ and /tmp/proj-b/ exist on disk",
+      "when": "cmdSetup() is called with mock readline returning: count='2', name1='proj-a', location1='/tmp/proj-a', name2='proj-b', location2='/tmp/proj-b', interface='cli', confirm='y'",
+      "then": "~/.aitri-hub/projects.json exists, JSON is valid, projects array has exactly 2 entries with location='/tmp/proj-a' and location='/tmp/proj-b', defaultInterface='cli', process exits with code 0",
+      "steps": [
+        "Call cmdSetup() with mock readline providing 7 answers in order",
+        "Assert fs.existsSync('~/.aitri-hub/projects.json') === true",
+        "Assert JSON.parse(fs.readFileSync(...)).projects.length === 2",
+        "Assert projects[0].location === '/tmp/proj-a'",
+        "Assert projects[1].location === '/tmp/proj-b'"
+      ],
+      "expected_result": "projects.json written with 2 entries, both with correct location values and type='local'",
+      "test_data": { "paths": ["/tmp/proj-a", "/tmp/proj-b"], "interface": "cli" }
+    },
+
+    {
+      "id": "TC-001e",
+      "requirement_id": "FR-001",
+      "user_story_id": "US-001",
+      "ac_id": "AC-001",
+      "title": "Setup — re-run with existing projects.json prompts for overwrite confirmation",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "~/.aitri-hub/projects.json already exists with 1 entry: { name: 'existing', location: '/tmp/existing' }"
+      ],
+      "given": "~/.aitri-hub/projects.json exists with content { projects: [{ name: 'existing', location: '/tmp/existing' }] }",
+      "when": "cmdSetup() is called with mock readline returning 'n' as first answer (decline overwrite)",
+      "then": "projects.json still contains the original entry { name: 'existing', location: '/tmp/existing' }, no new entries added, process exits with code 0",
+      "steps": [
+        "Write existing projects.json with 1 entry before test",
+        "Call cmdSetup() with mock readline that returns 'n' to overwrite prompt",
+        "Assert projects.json unchanged: JSON.parse(...).projects.length === 1",
+        "Assert projects[0].location === '/tmp/existing'"
+      ],
+      "expected_result": "projects.json content unchanged; setup aborts without modifying existing config",
+      "test_data": { "existingEntry": { "name": "existing", "location": "/tmp/existing" } }
+    },
+
+    {
+      "id": "TC-001f",
+      "requirement_id": "FR-001",
+      "user_story_id": "US-001",
+      "ac_id": "AC-001",
+      "title": "Setup — non-existent local path triggers re-prompt, not crash",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "/tmp/does-not-exist-xyz/ does not exist on the filesystem"
+      ],
+      "given": "no ~/.aitri-hub/projects.json exists and /tmp/does-not-exist-xyz/ does not exist on disk",
+      "when": "cmdSetup() is called with mock readline returning: count='1', location1='/tmp/does-not-exist-xyz' (first attempt), then location1='/tmp/proj-a' (second attempt after re-prompt), name='proj-a', interface='cli', confirm='y'; and /tmp/proj-a/ exists",
+      "then": "process does NOT throw; a re-prompt message containing 'not found' is printed; final projects.json is written with location='/tmp/proj-a'",
+      "steps": [
+        "Mock readline: first path answer = '/tmp/does-not-exist-xyz', second = '/tmp/proj-a'",
+        "Call cmdSetup()",
+        "Assert no exception thrown",
+        "Assert output includes 'not found' or 'does not exist'",
+        "Assert projects.json written with projects[0].location === '/tmp/proj-a'"
+      ],
+      "expected_result": "Error message 'Path not found. Enter an existing directory.' printed; setup re-prompts and completes successfully on second attempt with valid path",
+      "test_data": { "invalidPath": "/tmp/does-not-exist-xyz", "validPath": "/tmp/proj-a" }
+    },
+
+    {
+      "id": "TC-002h",
+      "requirement_id": "FR-002",
+      "user_story_id": "US-002",
+      "ac_id": "AC-002",
+      "title": "aitri-reader — valid .aitri with approvedPhases extracts all fields",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "Temp directory /tmp/aitri-proj-1/ exists",
+        "/tmp/aitri-proj-1/.aitri contains valid JSON"
+      ],
+      "given": "/tmp/aitri-proj-1/.aitri contains { \"projectName\": \"finance-app\", \"currentPhase\": 4, \"approvedPhases\": [1,2,3], \"completedPhases\": [1,2,3,4], \"verifyPassed\": true, \"verifySummary\": { \"passed\": 28, \"failed\": 0, \"skipped\": 2, \"total\": 30 }, \"artifactHashes\": { \"1\": \"abc123\" }, \"rejections\": {} }",
+      "when": "readAitriState('/tmp/aitri-proj-1') is called",
+      "then": "returned object has: currentPhase=4, approvedPhases=[1,2,3], completedPhases=[1,2,3,4], verifyPassed=true, verifySummary.passed=28, verifySummary.failed=0, hasDrift=false, lastRejection=null",
+      "steps": [
+        "Write .aitri file to temp dir",
+        "Call readAitriState('/tmp/aitri-proj-1')",
+        "Assert result.currentPhase === 4",
+        "Assert result.approvedPhases deep equals [1,2,3]",
+        "Assert result.verifyPassed === true",
+        "Assert result.verifySummary.passed === 28",
+        "Assert result.hasDrift === false",
+        "Assert result.lastRejection === null"
+      ],
+      "expected_result": "All fields extracted correctly; hasDrift=false because no artifact hash mismatch",
+      "test_data": { "aitriContent": { "currentPhase": 4, "approvedPhases": [1,2,3], "completedPhases": [1,2,3,4], "verifyPassed": true, "verifySummary": { "passed": 28, "failed": 0, "skipped": 2, "total": 30 } } }
+    },
+
+    {
+      "id": "TC-002e",
+      "requirement_id": "FR-002",
+      "user_story_id": "US-002",
+      "ac_id": "AC-002",
+      "title": "aitri-reader — .aitri with rejection entry extracts most recent rejection",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "/tmp/aitri-proj-2/.aitri exists with rejections data"
+      ],
+      "given": "/tmp/aitri-proj-2/.aitri contains { \"currentPhase\": 2, \"approvedPhases\": [1], \"completedPhases\": [1,2], \"rejections\": { \"2\": { \"at\": \"2026-03-10T12:00:00Z\", \"feedback\": \"Missing API docs\" } } }",
+      "when": "readAitriState('/tmp/aitri-proj-2') is called",
+      "then": "returned object has lastRejection = { phase: 2, at: '2026-03-10T12:00:00Z', feedback: 'Missing API docs' }",
+      "steps": [
+        "Write .aitri with rejections to temp dir",
+        "Call readAitriState('/tmp/aitri-proj-2')",
+        "Assert result.lastRejection.feedback === 'Missing API docs'",
+        "Assert result.lastRejection.at === '2026-03-10T12:00:00Z'"
+      ],
+      "expected_result": "lastRejection extracted with correct phase, timestamp, and feedback string",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-002f",
+      "requirement_id": "FR-002",
+      "user_story_id": "US-002",
+      "ac_id": "AC-003",
+      "title": "aitri-reader — malformed .aitri JSON returns null without throwing",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "/tmp/aitri-proj-3/.aitri exists with invalid JSON content"
+      ],
+      "given": "/tmp/aitri-proj-3/.aitri contains the string '{ \"currentPhase\": 2, INVALID JSON'",
+      "when": "readAitriState('/tmp/aitri-proj-3') is called",
+      "then": "function returns null, no exception is thrown, no process crash occurs",
+      "steps": [
+        "Write malformed JSON to /tmp/aitri-proj-3/.aitri",
+        "Call readAitriState('/tmp/aitri-proj-3') inside try/catch",
+        "Assert no exception thrown",
+        "Assert return value === null"
+      ],
+      "expected_result": "Returns null; does not throw; calling code sets project status to 'unreadable'",
+      "test_data": { "malformedContent": "{ \"currentPhase\": 2, INVALID" }
+    },
+
+    {
+      "id": "TC-003h",
+      "requirement_id": "FR-003",
+      "user_story_id": "US-003",
+      "ac_id": "AC-004",
+      "title": "git-reader — active git repo returns correct lastCommitAt and branch",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "/tmp/git-proj-1/ is an initialized git repository with at least 1 commit on branch 'main'",
+        "Most recent commit was made at 2026-03-13T08:00:00Z (2.5 hours before test time)"
+      ],
+      "given": "a git repository at /tmp/git-proj-1/ with HEAD at branch 'main' and last commit ISO timestamp '2026-03-13T08:00:00Z' (2.5h ago relative to test run at 10:30:00Z)",
+      "when": "readGitMeta('/tmp/git-proj-1') is called",
+      "then": "returned object has: isGitRepo=true, branch='main', lastCommitAt='2026-03-13T08:00:00Z', lastCommitAgeHours between 2.4 and 2.6, commitVelocity7d >= 1",
+      "steps": [
+        "Initialize git repo in temp dir, set committer date explicitly to 2026-03-13T08:00:00Z",
+        "Call readGitMeta('/tmp/git-proj-1')",
+        "Assert result.isGitRepo === true",
+        "Assert result.branch === 'main'",
+        "Assert result.lastCommitAt === '2026-03-13T08:00:00Z'",
+        "Assert result.lastCommitAgeHours >= 2.4 && <= 2.6"
+      ],
+      "expected_result": "isGitRepo=true, branch='main', lastCommitAt accurate to within 1 minute of actual commit time",
+      "test_data": { "commitTimestamp": "2026-03-13T08:00:00Z", "branch": "main" }
+    },
+
+    {
+      "id": "TC-003e",
+      "requirement_id": "FR-003",
+      "user_story_id": "US-003",
+      "ac_id": "AC-004",
+      "title": "git-reader — commit exactly 73 hours ago triggers stale alert via evaluateAlerts",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "readGitMeta returns lastCommitAgeHours=73.0 for the test project"
+      ],
+      "given": "projectData with gitMeta.lastCommitAgeHours=73.0, all other alert conditions false",
+      "when": "evaluateAlerts(projectData) is called",
+      "then": "returned array contains exactly 1 alert with type='stale' and message='No commits in 73h'",
+      "steps": [
+        "Construct projectData with gitMeta.lastCommitAgeHours=73.0",
+        "Call evaluateAlerts(projectData)",
+        "Assert result.length === 1",
+        "Assert result[0].type === 'stale'",
+        "Assert result[0].message === 'No commits in 73h'"
+      ],
+      "expected_result": "One alert { type: 'stale', message: 'No commits in 73h', severity: 'warning' } returned",
+      "test_data": { "lastCommitAgeHours": 73.0 }
+    },
+
+    {
+      "id": "TC-003f",
+      "requirement_id": "FR-003",
+      "user_story_id": "US-003",
+      "ac_id": "AC-004",
+      "title": "git-reader — directory without .git returns null without throwing",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "/tmp/no-git-dir/ exists but is not a git repository (no .git subdirectory)"
+      ],
+      "given": "directory /tmp/no-git-dir/ exists but has no .git folder and git rev-parse returns exit code 128",
+      "when": "readGitMeta('/tmp/no-git-dir') is called",
+      "then": "function returns null, no exception thrown, no process crash",
+      "steps": [
+        "Create /tmp/no-git-dir/ as plain directory (no git init)",
+        "Call readGitMeta('/tmp/no-git-dir') inside try/catch",
+        "Assert no exception thrown",
+        "Assert return value === null"
+      ],
+      "expected_result": "Returns null; calling code shows 'Last commit: N/A' in dashboard",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-004h",
+      "requirement_id": "FR-004",
+      "user_story_id": "US-004",
+      "ac_id": "AC-005",
+      "title": "test-reader — valid 04_TEST_RESULTS.json returns correct summary",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "/tmp/test-proj-1/spec/04_TEST_RESULTS.json exists with valid schema"
+      ],
+      "given": "/tmp/test-proj-1/spec/04_TEST_RESULTS.json contains { \"summary\": { \"passed\": 28, \"failed\": 0, \"skipped\": 2, \"total\": 30 }, \"fr_coverage\": [{ \"fr_id\": \"FR-001\", \"status\": \"covered\" }], \"results\": [] }",
+      "when": "readTestSummary('/tmp/test-proj-1') is called",
+      "then": "returned object has: available=true, passed=28, failed=0, skipped=2, total=30, frCoverage[0].frId='FR-001', frCoverage[0].status='covered'",
+      "steps": [
+        "Write valid 04_TEST_RESULTS.json to /tmp/test-proj-1/spec/",
+        "Call readTestSummary('/tmp/test-proj-1')",
+        "Assert result.available === true",
+        "Assert result.passed === 28",
+        "Assert result.total === 30",
+        "Assert result.frCoverage[0].status === 'covered'"
+      ],
+      "expected_result": "TestSummary with available=true, correct counts, and frCoverage array extracted",
+      "test_data": { "passed": 28, "failed": 0, "total": 30 }
+    },
+
+    {
+      "id": "TC-004e",
+      "requirement_id": "FR-004",
+      "user_story_id": "US-004",
+      "ac_id": "AC-005",
+      "title": "test-reader — failed > 0 triggers tests-failing alert via evaluateAlerts",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "projectData with testSummary = { available: true, passed: 28, failed: 2, skipped: 0, total: 30 }, all other alert conditions false",
+      "when": "evaluateAlerts(projectData) is called",
+      "then": "returned array contains exactly 1 alert with type='tests-failing' and message='Tests failing (2)'",
+      "steps": [
+        "Construct projectData with testSummary.failed=2",
+        "Call evaluateAlerts(projectData)",
+        "Assert result.length === 1",
+        "Assert result[0].type === 'tests-failing'",
+        "Assert result[0].message === 'Tests failing (2)'"
+      ],
+      "expected_result": "One alert { type: 'tests-failing', message: 'Tests failing (2)', severity: 'error' } returned",
+      "test_data": { "failed": 2 }
+    },
+
+    {
+      "id": "TC-004f",
+      "requirement_id": "FR-004",
+      "user_story_id": "US-004",
+      "ac_id": "AC-006",
+      "title": "test-reader — absent 04_TEST_RESULTS.json returns null without crashing",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "/tmp/test-proj-2/ exists but has no spec/ directory"
+      ],
+      "given": "directory /tmp/test-proj-2/ exists with no spec/04_TEST_RESULTS.json file",
+      "when": "readTestSummary('/tmp/test-proj-2') is called",
+      "then": "function returns null, no exception is thrown",
+      "steps": [
+        "Create /tmp/test-proj-2/ with no spec/ subdirectory",
+        "Call readTestSummary('/tmp/test-proj-2') inside try/catch",
+        "Assert no exception thrown",
+        "Assert return value === null"
+      ],
+      "expected_result": "Returns null; calling code renders 'Tests: N/A' in dashboard",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-005h",
+      "requirement_id": "FR-005",
+      "user_story_id": "US-005",
+      "ac_id": "AC-007",
+      "title": "CLI monitor — 5 projects render within 2 seconds at 80-column terminal",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "~/.aitri-hub/projects.json exists with 5 local project entries",
+        "Each project has a valid .aitri file with approvedPhases=[1,2,3], currentPhase=4, verifyPassed=true",
+        "Each project has a git repo with last commit < 24h ago",
+        "Terminal width = 80 columns"
+      ],
+      "given": "~/.aitri-hub/projects.json contains 5 project entries (proj-1 through proj-5), each with a valid .aitri and git history, and process.stdout.columns=80",
+      "when": "cmdMonitor() is called with _singleCycle=true (renders once and returns without looping)",
+      "then": "output string contains all 5 project names (proj-1, proj-2, proj-3, proj-4, proj-5), contains column headers 'PROJECT', 'PHASES', 'TESTS', 'LAST COMMIT', 'ALERTS', and renderDashboard() returns within 2000ms",
+      "steps": [
+        "Set up 5 temp project directories with .aitri and git history",
+        "Write projects.json pointing to these dirs",
+        "Record start time",
+        "Call cmdMonitor({ singleCycle: true })",
+        "Record end time",
+        "Assert (end - start) < 2000",
+        "Assert output.includes('proj-1') && output.includes('proj-5')",
+        "Assert output.includes('PROJECT') && output.includes('PHASES')"
+      ],
+      "expected_result": "All 5 project rows visible in output, column headers present, render time < 2000ms",
+      "test_data": { "projectCount": 5, "terminalWidth": 80 }
+    },
+
+    {
+      "id": "TC-005e",
+      "requirement_id": "FR-005",
+      "user_story_id": "US-005",
+      "ac_id": "AC-007",
+      "title": "CLI renderer — 60-column terminal hides ALERTS column",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [],
+      "given": "a DashboardData object with 1 project (name='my-app', status='warning', alerts=[{ type:'stale', message:'No commits in 80h' }])",
+      "when": "renderDashboard(dashboardData, 60) is called with terminalWidth=60",
+      "then": "returned string does NOT contain standalone 'ALERTS' column header, but DOES contain 'my-app' and the alert is indicated as a suffix on the project row (e.g. '⚠' on the project name line)",
+      "steps": [
+        "Construct dashboardData with 1 warning project",
+        "Call renderDashboard(dashboardData, 60)",
+        "Assert output does not contain 'ALERTS' as a column header",
+        "Assert output contains 'my-app'"
+      ],
+      "expected_result": "ALERTS column absent; alert indicator present on project row suffix; no horizontal overflow",
+      "test_data": { "terminalWidth": 60 }
+    },
+
+    {
+      "id": "TC-005f",
+      "requirement_id": "FR-005",
+      "user_story_id": "US-005",
+      "ac_id": "AC-007",
+      "title": "CLI monitor — missing projects.json prints setup message and exits with code 1",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "~/.aitri-hub/projects.json does not exist"
+      ],
+      "given": "~/.aitri-hub/projects.json does not exist on the filesystem",
+      "when": "cmdMonitor() is called",
+      "then": "output contains the string 'No projects configured. Run \\'aitri-hub setup\\' first.' and process exits with code 1 (or err() is called with that message)",
+      "steps": [
+        "Ensure projects.json does not exist in temp aitri-hub dir",
+        "Call cmdMonitor({ dir: tempDir })",
+        "Assert err was called with message containing 'No projects configured'",
+        "Assert output contains 'aitri-hub setup'"
+      ],
+      "expected_result": "Error message directing user to run aitri-hub setup; no dashboard rendered; exit code 1",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-006h",
+      "requirement_id": "FR-006",
+      "user_story_id": "US-006",
+      "ac_id": "AC-009",
+      "title": "Web dashboard — localhost:3000 returns HTTP 200 within 30s of docker compose up",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "Docker daemon is running",
+        "aitri-hub-web Docker image is built",
+        "~/.aitri-hub/dashboard.json exists with 2 project entries"
+      ],
+      "given": "Docker is running, aitri-hub-web image is available, ~/.aitri-hub/dashboard.json contains { projects: [{ name: 'proj-a', status: 'healthy' }, { name: 'proj-b', status: 'warning' }] }",
+      "when": "docker compose up -d is run and HTTP GET http://localhost:3000 is polled every second for up to 30 seconds",
+      "then": "HTTP GET http://localhost:3000 returns status 200 with Content-Type containing 'text/html' within 30 seconds",
+      "steps": [
+        "Ensure dashboard.json exists with 2 projects",
+        "Run 'docker compose up -d'",
+        "Record start time",
+        "Poll GET http://localhost:3000 every 1 second",
+        "Assert HTTP 200 received within 30 seconds",
+        "Run 'docker compose down' after test"
+      ],
+      "expected_result": "HTTP 200 with text/html content type received at localhost:3000 within 30 seconds",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-006e",
+      "requirement_id": "FR-006",
+      "user_story_id": "US-006",
+      "ac_id": "AC-010",
+      "title": "Web dashboard — 768px viewport renders all cards without horizontal scroll",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "Web dashboard running at localhost:3000",
+        "dashboard.json contains 4 project entries"
+      ],
+      "given": "web dashboard running at localhost:3000 with dashboard.json containing 4 projects, Playwright browser set to viewport { width: 768, height: 1024 }",
+      "when": "page navigates to http://localhost:3000 and page load is awaited",
+      "then": "page has no horizontal scrollbar (document.documentElement.scrollWidth <= 768), all 4 project names are visible in the DOM, and no element has offsetLeft + offsetWidth > 768",
+      "steps": [
+        "Launch Playwright browser with viewport { width: 768, height: 1024 }",
+        "Navigate to http://localhost:3000",
+        "await page.waitForSelector('[data-testid=\"project-card\"]')",
+        "Assert document.documentElement.scrollWidth <= 768",
+        "Assert page.locator('[data-testid=\"project-card\"]').count() === 4"
+      ],
+      "expected_result": "scrollWidth <= 768px, 4 project cards visible, no horizontal scroll present",
+      "test_data": { "viewport": { "width": 768, "height": 1024 }, "projectCount": 4 }
+    },
+
+    {
+      "id": "TC-006f",
+      "requirement_id": "FR-006",
+      "user_story_id": "US-006",
+      "ac_id": "AC-009",
+      "title": "Web dashboard — missing dashboard.json shows empty state message",
+      "type": "e2e",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "Web dashboard running at localhost:3000",
+        "~/.aitri-hub/dashboard.json does NOT exist (deleted or never written)"
+      ],
+      "given": "web dashboard running at localhost:3000, GET /data/dashboard.json returns HTTP 404",
+      "when": "page navigates to http://localhost:3000 and waits 3 seconds",
+      "then": "page contains the text 'Run `aitri-hub setup`' or 'No projects configured' and does NOT render any project cards (data-testid='project-card' count === 0)",
+      "steps": [
+        "Ensure dashboard.json does not exist in mounted volume",
+        "Navigate to http://localhost:3000",
+        "Wait 3 seconds",
+        "Assert page contains 'aitri-hub setup' text",
+        "Assert page.locator('[data-testid=\"project-card\"]').count() === 0"
+      ],
+      "expected_result": "Empty state message with setup instructions shown; no project cards rendered; no JavaScript errors in console",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-007h",
+      "requirement_id": "FR-007",
+      "user_story_id": "US-007",
+      "ac_id": "AC-012",
+      "title": "Alerts engine — healthy project with all conditions OK returns empty alerts array",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "projectData = { aitriState: { verifyPassed: true, verifySummary: { failed: 0 }, hasDrift: false }, gitMeta: { lastCommitAgeHours: 1.5 }, testSummary: { available: true, failed: 0 } }",
+      "when": "evaluateAlerts(projectData) is called",
+      "then": "returned array has length === 0",
+      "steps": [
+        "Construct projectData with all healthy values",
+        "Call evaluateAlerts(projectData)",
+        "Assert result.length === 0"
+      ],
+      "expected_result": "Empty array [] returned; no alerts generated for a fully healthy project",
+      "test_data": { "lastCommitAgeHours": 1.5, "verifyPassed": true, "testsFailed": 0 }
+    },
+
+    {
+      "id": "TC-007e",
+      "requirement_id": "FR-007",
+      "user_story_id": "US-007",
+      "ac_id": "AC-011",
+      "title": "Alerts engine — project with 3 concurrent alert conditions returns 3 alerts",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "projectData = { aitriState: { verifyPassed: false, verifySummary: { failed: 2 }, hasDrift: true }, gitMeta: { lastCommitAgeHours: 90.0 }, testSummary: { available: true, failed: 3 } }",
+      "when": "evaluateAlerts(projectData) is called",
+      "then": "returned array has length === 4 and contains alerts with types: 'stale', 'verify-failed', 'drift', 'tests-failing'",
+      "steps": [
+        "Construct projectData with all 4 alert conditions active",
+        "Call evaluateAlerts(projectData)",
+        "Assert result.length === 4",
+        "Assert result.map(a => a.type) includes 'stale'",
+        "Assert result.map(a => a.type) includes 'verify-failed'",
+        "Assert result.map(a => a.type) includes 'drift'",
+        "Assert result.map(a => a.type) includes 'tests-failing'"
+      ],
+      "expected_result": "4 alerts returned (stale, verify-failed, drift, tests-failing); all with correct type and severity fields",
+      "test_data": { "lastCommitAgeHours": 90, "verifyPassed": false, "hasDrift": true, "testsFailed": 3 }
+    },
+
+    {
+      "id": "TC-007f",
+      "requirement_id": "FR-007",
+      "user_story_id": "US-007",
+      "ac_id": "AC-011",
+      "title": "Alerts engine — verifyPassed=false generates verify-failed alert with severity=error",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "projectData = { aitriState: { verifyPassed: false, verifySummary: { failed: 1 }, hasDrift: false }, gitMeta: { lastCommitAgeHours: 1.0 }, testSummary: null }",
+      "when": "evaluateAlerts(projectData) is called",
+      "then": "returned array contains exactly 1 alert with type='verify-failed', severity='error', and message='Verify failed'",
+      "steps": [
+        "Construct projectData with verifyPassed=false",
+        "Call evaluateAlerts(projectData)",
+        "Assert result.length === 1",
+        "Assert result[0].type === 'verify-failed'",
+        "Assert result[0].severity === 'error'",
+        "Assert result[0].message === 'Verify failed'"
+      ],
+      "expected_result": "One alert { type: 'verify-failed', severity: 'error', message: 'Verify failed' }",
+      "test_data": { "verifyPassed": false }
+    },
+
+    {
+      "id": "TC-008h",
+      "requirement_id": "FR-008",
+      "user_story_id": "US-002",
+      "ac_id": "AC-002",
+      "title": "git-reader — first monitor run clones remote URL to cache directory",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "medium",
+      "preconditions": [
+        "~/.aitri-hub/cache/ directory does not contain a 'test-remote-repo' subdirectory",
+        "A bare git repo exists at /tmp/fake-remote-repo.git (local git server for testing)"
+      ],
+      "given": "projectEntry = { type: 'remote', location: 'file:///tmp/fake-remote-repo.git', name: 'fake-remote-repo' } and ~/.aitri-hub/cache/fake-remote-repo/ does not exist",
+      "when": "collectOne(projectEntry) is called",
+      "then": "~/.aitri-hub/cache/fake-remote-repo/ directory exists and contains a .git subdirectory; returned projectData.gitMeta.isGitRepo === true",
+      "steps": [
+        "Create bare git repo at /tmp/fake-remote-repo.git with git init --bare and one commit",
+        "Ensure cache/fake-remote-repo/ does not exist",
+        "Call collectOne(projectEntry)",
+        "Assert fs.existsSync('~/.aitri-hub/cache/fake-remote-repo/.git') === true",
+        "Assert projectData.gitMeta.isGitRepo === true"
+      ],
+      "expected_result": "Repository cloned to ~/.aitri-hub/cache/fake-remote-repo/; gitMeta populated from cloned repo",
+      "test_data": { "remoteUrl": "file:///tmp/fake-remote-repo.git" }
+    },
+
+    {
+      "id": "TC-008e",
+      "requirement_id": "FR-008",
+      "user_story_id": "US-002",
+      "ac_id": "AC-002",
+      "title": "git-reader — second monitor run uses git pull on existing cache, not re-clone",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "~/.aitri-hub/cache/cached-proj/ already exists as a valid git clone"
+      ],
+      "given": "~/.aitri-hub/cache/cached-proj/.git exists (previously cloned), projectEntry.location = 'file:///tmp/fake-remote-repo.git'",
+      "when": "collectOne(projectEntry) is called with a spy on execSync tracking which git commands are run",
+      "then": "execSync is called with 'git pull' (or 'git fetch') but NOT with 'git clone'; cache directory is not re-created",
+      "steps": [
+        "Pre-create cache/cached-proj/ as a git repo",
+        "Spy on execSync",
+        "Call collectOne(projectEntry)",
+        "Assert execSync was called with a command containing 'git pull' or 'git fetch'",
+        "Assert execSync was NOT called with a command containing 'git clone'"
+      ],
+      "expected_result": "git pull executed on existing cache; git clone NOT executed; no directory recreation",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-008f",
+      "requirement_id": "FR-008",
+      "user_story_id": "US-002",
+      "ac_id": "AC-003",
+      "title": "git-reader — network error during git pull shows cache-stale alert, no crash",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": [
+        "~/.aitri-hub/cache/offline-proj/ exists as a valid git clone with stale data"
+      ],
+      "given": "cache/offline-proj/.git exists, git pull throws execSync error 'fatal: unable to connect to remote repository'",
+      "when": "collectOne(projectEntry) is called with execSync stubbed to throw on git pull",
+      "then": "collectOne() does NOT throw; returned projectData has collectionError containing 'cache stale' or 'git pull failed'; alerts array contains { type: 'cache-stale' }",
+      "steps": [
+        "Pre-create cache/offline-proj/ as git repo",
+        "Stub execSync to throw on 'git pull'",
+        "Call collectOne(projectEntry)",
+        "Assert no exception propagated",
+        "Assert result.collectionError is a non-null string",
+        "Assert result.alerts.some(a => a.type === 'cache-stale')"
+      ],
+      "expected_result": "No crash; collectionError set; cache-stale alert generated; last cached .aitri data still returned",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-009h",
+      "requirement_id": "FR-009",
+      "user_story_id": "US-008",
+      "ac_id": "AC-013",
+      "title": "dashboard store — writeDashboard writes valid JSON with correct schema to ~/.aitri-hub/dashboard.json",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "~/.aitri-hub/ directory exists"
+      ],
+      "given": "dashboardData = { schemaVersion: '1', collectedAt: '2026-03-13T10:30:00Z', projects: [{ id: 'a1b2c3d4', name: 'finance-app', status: 'healthy', aitriState: { approvedPhases: [1,2,3] }, gitMeta: { branch: 'main', lastCommitAgeHours: 2 }, testSummary: null, alerts: [] }] }",
+      "when": "writeDashboard(dashboardData) is called",
+      "then": "~/.aitri-hub/dashboard.json exists, JSON.parse(fs.readFileSync('dashboard.json')) succeeds without throwing, parsed.projects.length === 1, parsed.projects[0].name === 'finance-app', parsed.schemaVersion === '1'",
+      "steps": [
+        "Call writeDashboard(dashboardData)",
+        "Assert fs.existsSync('~/.aitri-hub/dashboard.json') === true",
+        "Parse file with JSON.parse — assert no exception",
+        "Assert parsed.projects.length === 1",
+        "Assert parsed.projects[0].name === 'finance-app'",
+        "Assert parsed.schemaVersion === '1'"
+      ],
+      "expected_result": "Valid JSON file at ~/.aitri-hub/dashboard.json with correct schema and project data",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-009e",
+      "requirement_id": "FR-009",
+      "user_story_id": "US-008",
+      "ac_id": "AC-014",
+      "title": "dashboard store — atomic write prevents partial file on concurrent read",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "a previous valid dashboard.json exists at ~/.aitri-hub/dashboard.json with content { schemaVersion: '1', projects: [{ name: 'old-project' }] }",
+      "when": "writeDashboard() is called with new data; fs.renameSync is stubbed to verify that a temp file is used as intermediate (temp path ends in '.tmp')",
+      "then": "writeDashboard() first writes to a path ending in '.tmp', then calls fs.renameSync from temp path to final path; the original dashboard.json is never in a partially-written state",
+      "steps": [
+        "Spy on fs.writeFileSync and fs.renameSync",
+        "Call writeDashboard(newData)",
+        "Assert fs.writeFileSync was called with a path containing '.tmp'",
+        "Assert fs.renameSync was called with (tmpPath, finalPath)",
+        "Assert finalPath === ~/.aitri-hub/dashboard.json"
+      ],
+      "expected_result": "Write goes to .tmp file first, then atomic rename to dashboard.json; no partial write visible to readers",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-009f",
+      "requirement_id": "FR-009",
+      "user_story_id": "US-008",
+      "ac_id": "AC-014",
+      "title": "dashboard store — write failure preserves previous dashboard.json content",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "~/.aitri-hub/dashboard.json exists with { schemaVersion: '1', projects: [{ name: 'previous-project' }] }"
+      ],
+      "given": "valid dashboard.json with { projects: [{ name: 'previous-project' }] } exists; fs.renameSync is stubbed to throw ENOSPC (disk full) error",
+      "when": "writeDashboard(newData) is called",
+      "then": "dashboard.json still contains { projects: [{ name: 'previous-project' }] }; writeDashboard() does NOT throw an unhandled exception; error is logged to ~/.aitri-hub/logs/aitri-hub.log",
+      "steps": [
+        "Write valid previous dashboard.json",
+        "Stub fs.renameSync to throw { code: 'ENOSPC', message: 'no space left on device' }",
+        "Call writeDashboard(newData) inside try/catch",
+        "Assert no unhandled exception",
+        "Assert dashboard.json still contains 'previous-project'",
+        "Assert log file contains 'ENOSPC' or 'write failed'"
+      ],
+      "expected_result": "Previous dashboard.json intact; error logged; no crash propagated to monitor loop",
+      "test_data": {}
+    }
+
+  ]
+}

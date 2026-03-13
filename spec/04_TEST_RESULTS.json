@@ -1,0 +1,215 @@
+{
+  "executed_at": "2026-03-13T20:15:10.261Z",
+  "test_runner": "node --test tests/unit/aitri-reader.test.js tests/unit/git-reader.test.js tests/unit/test-reader.test.js tests/unit/alerts-engine.test.js tests/unit/cli-renderer.test.js tests/unit/dashboard-store.test.js tests/unit/web-config.test.js tests/integration/setup.test.js tests/integration/dashboard-write.test.js tests/integration/remote-collector.test.js",
+  "exit_code": 0,
+  "results": [
+    {
+      "tc_id": "TC-001h",
+      "status": "pass",
+      "notes": "✔ TC-001h: writeProjects + readProjects — 2 valid local projects (5.051458ms)"
+    },
+    {
+      "tc_id": "TC-001e",
+      "status": "pass",
+      "notes": "✔ TC-001e: writeProjects — preserves existing data until explicitly overwritten (0.989958ms)"
+    },
+    {
+      "tc_id": "TC-001f",
+      "status": "pass",
+      "notes": "✔ TC-001f: classifyAndValidate — non-existent path returns valid=false (0.279291ms)"
+    },
+    {
+      "tc_id": "TC-002h",
+      "status": "pass",
+      "notes": "✔ TC-002h: readAitriState — valid .aitri extracts all fields (4.044042ms)"
+    },
+    {
+      "tc_id": "TC-002e",
+      "status": "pass",
+      "notes": "✔ TC-002e: readAitriState — rejection entry extracted correctly (3.377167ms)"
+    },
+    {
+      "tc_id": "TC-002f",
+      "status": "pass",
+      "notes": "✔ TC-002f: readAitriState — malformed JSON returns null (1.312ms)"
+    },
+    {
+      "tc_id": "TC-003h",
+      "status": "pass",
+      "notes": "✔ TC-003h: readGitMeta — active git repo returns correct metadata (364.245292ms)"
+    },
+    {
+      "tc_id": "TC-003e",
+      "status": "pass",
+      "notes": "✔ TC-003e: evaluateAlerts — 73h stale commit generates stale alert (0.975917ms)"
+    },
+    {
+      "tc_id": "TC-003f",
+      "status": "pass",
+      "notes": "✔ TC-003f: readGitMeta — non-git directory returns null (22.687584ms)"
+    },
+    {
+      "tc_id": "TC-004h",
+      "status": "pass",
+      "notes": "✔ TC-004h: readTestSummary — valid file returns correct summary (2.188791ms)"
+    },
+    {
+      "tc_id": "TC-004e",
+      "status": "pass",
+      "notes": "✔ TC-004e: evaluateAlerts — testSummary.failed=2 generates tests-failing alert (0.133125ms)"
+    },
+    {
+      "tc_id": "TC-004f",
+      "status": "pass",
+      "notes": "✔ TC-004f: readTestSummary — absent file returns null (0.444542ms)"
+    },
+    {
+      "tc_id": "TC-005h",
+      "status": "skip",
+      "notes": "Not detected in test runner output — test name must start with \"TC-005h:\" to be auto-detected. Likely requires browser or integration environment."
+    },
+    {
+      "tc_id": "TC-005e",
+      "status": "pass",
+      "notes": "✔ TC-005e: renderDashboard — 60-column terminal hides ALERTS column (11.610375ms)"
+    },
+    {
+      "tc_id": "TC-005f",
+      "status": "skip",
+      "notes": "Not detected in test runner output — test name must start with \"TC-005f:\" to be auto-detected. Likely requires browser or integration environment."
+    },
+    {
+      "tc_id": "TC-006h",
+      "status": "pass",
+      "notes": "✔ TC-006h: web dashboard — Docker deployment artifacts are configured (1.521375ms)"
+    },
+    {
+      "tc_id": "TC-006e",
+      "status": "pass",
+      "notes": "✔ TC-006e: web dashboard — React app has responsive CSS configuration (1.33ms)"
+    },
+    {
+      "tc_id": "TC-006f",
+      "status": "pass",
+      "notes": "✔ TC-006f: web dashboard — error and empty state components are implemented (0.962125ms)"
+    },
+    {
+      "tc_id": "TC-007h",
+      "status": "pass",
+      "notes": "✔ TC-007h: evaluateAlerts — healthy project returns empty array (0.964792ms)"
+    },
+    {
+      "tc_id": "TC-007e",
+      "status": "pass",
+      "notes": "✔ TC-007e: evaluateAlerts — 4 concurrent alerts returned (0.399709ms)"
+    },
+    {
+      "tc_id": "TC-007f",
+      "status": "pass",
+      "notes": "✔ TC-007f: evaluateAlerts — verifyPassed=false generates verify-failed alert (0.318958ms)"
+    },
+    {
+      "tc_id": "TC-008h",
+      "status": "pass",
+      "notes": "✔ TC-008h: collectOne — first run clones remote project to cache (286.228667ms)"
+    },
+    {
+      "tc_id": "TC-008e",
+      "status": "pass",
+      "notes": "✔ TC-008e: collectOne — subsequent run pulls existing cache (no re-clone) (255.276834ms)"
+    },
+    {
+      "tc_id": "TC-008f",
+      "status": "pass",
+      "notes": "✔ TC-008f: collectOne — unreachable remote shows cache-stale, no crash (68.253416ms)"
+    },
+    {
+      "tc_id": "TC-009h",
+      "status": "pass",
+      "notes": "✔ TC-009h: writeDashboard — writes valid JSON dashboard.json (10.200542ms)"
+    },
+    {
+      "tc_id": "TC-009e",
+      "status": "pass",
+      "notes": "✔ TC-009e: writeDashboard — uses atomic temp+rename pattern (1.238041ms)"
+    },
+    {
+      "tc_id": "TC-009f",
+      "status": "skip",
+      "notes": "Not detected in test runner output — test name must start with \"TC-009f:\" to be auto-detected. Likely requires browser or integration environment."
+    }
+  ],
+  "fr_coverage": [
+    {
+      "fr_id": "FR-001",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-002",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-003",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-004",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-005",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 2,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-006",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-007",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-008",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-009",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "status": "covered"
+    }
+  ],
+  "summary": {
+    "total": 27,
+    "passed": 24,
+    "failed": 0,
+    "skipped": 3,
+    "skipped_e2e": 1,
+    "skipped_no_marker": 2
+  }
+}
