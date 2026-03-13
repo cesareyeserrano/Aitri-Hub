@@ -23,7 +23,9 @@ function groupByFolder(projects) {
   const groups = new Map();
   for (const p of projects) {
     let folder;
-    if (p.type === 'remote') {
+    if (p.group) {
+      folder = p.group;
+    } else if (p.type === 'remote') {
       folder = 'remote';
     } else {
       const parts = (p.location ?? '').replace(/\/$/, '').split('/');
