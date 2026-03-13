@@ -14,6 +14,27 @@ import AlertsTab from './components/AlertsTab.jsx';
 import VelocityTab from './components/VelocityTab.jsx';
 import ProjectsTable from './components/ProjectsTable.jsx';
 
+/**
+ * Group projects by parent folder name (basename of parent dir for local, 'remote' for URLs).
+ * @param {object[]} projects
+ * @returns {{ folder: string, projects: object[] }[]}
+ */
+function groupByFolder(projects) {
+  const groups = new Map();
+  for (const p of projects) {
+    let folder;
+    if (p.type === 'remote') {
+      folder = 'remote';
+    } else {
+      const parts = (p.location ?? '').replace(/\/$/, '').split('/');
+      folder = parts.length >= 2 ? parts[parts.length - 2] : (parts[0] || 'projects');
+    }
+    if (!groups.has(folder)) groups.set(folder, []);
+    groups.get(folder).push(p);
+  }
+  return [...groups.entries()].map(([folder, items]) => ({ folder, projects: items }));
+}
+
 const POLL_INTERVAL_MS   = 5_000;
 const FAILURE_THRESHOLD  = 3;
 const DASHBOARD_URL      = '/data/dashboard.json';
@@ -165,17 +186,32 @@ export default function App() {
                 </p>
               </div>
             )}
-            {!loading && projects.length > 0 && (
-              <div className="project-grid">
-                {projects.map((project, idx) => (
-                  <ProjectCard
-                    key={project.id}
-                    project={project}
-                    animationDelay={idx * 50}
-                  />
-                ))}
-              </div>
-            )}
+            {!loading && projects.length > 0 && (() => {
+              const groups = groupByFolder(projects);
+              const multiGroup = groups.length > 1;
+              let globalIdx = 0;
+              return groups.map(({ folder, projects: groupProjects }) => (
+                <div key={folder}>
+                  {multiGroup && (
+                    <div className="folder-group-header">
+                      <span className="folder-group-header__label">▸ {folder}/</span>
+                    </div>
+                  )}
+                  <div className="project-grid">
+                    {groupProjects.map((project) => {
+                      const delay = globalIdx++ * 50;
+                      return (
+                        <ProjectCard
+                          key={project.id}
+                          project={project}
+                          animationDelay={delay}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+              ));
+            })()}
           </>
         )}
 
@@ -197,7 +233,24 @@ export default function App() {
         {activeTab === TABS.ALL && (
           loading
             ? <div className="empty-state"><p>Loading…</p></div>
-            : <ProjectsTable projects={projects} />
+            : (() => {
+                const groups = groupByFolder(projects);
+                const multiGroup = groups.length > 1;
+                return (
+                  <>
+                    {groups.map(({ folder, projects: groupProjects }) => (
+                      <div key={folder}>
+                        {multiGroup && (
+                          <div className="folder-group-header">
+                            <span className="folder-group-header__label">▸ {folder}/</span>
+                          </div>
+                        )}
+                        <ProjectsTable projects={groupProjects} />
+                      </div>
+                    ))}
+                  </>
+                );
+              })()
         )}
       </main>
     </div>
