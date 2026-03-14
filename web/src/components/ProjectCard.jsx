@@ -78,9 +78,10 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
     collectionError,
   } = project;
 
-  const isStalled  = (gitMeta?.lastCommitAgeHours ?? 0) > 72;
-  const tests      = formatTests(testSummary);
-  const lastEvent  = lastEventLabel(aitriState?.events);
+  const isStalled        = (gitMeta?.lastCommitAgeHours ?? 0) > 72;
+  const tests            = formatTests(testSummary);
+  const lastEvent        = lastEventLabel(aitriState?.events);
+  const complianceSummary = project.complianceSummary ?? null;
 
   return (
     <div
@@ -121,6 +122,27 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
         <>
           {/* ── Phase progress ────────────────────── */}
           <PhaseProgress aitriState={aitriState ?? null} />
+
+          {/* ── Compliance badge (Phase 5 only) ───── */}
+          {complianceSummary?.available && (() => {
+            const s = complianceSummary.overallStatus;
+            const cfg = s === 'compliant'
+              ? { color: 'var(--syn-green)',   icon: '✓', label: 'COMPLIANT' }
+              : s === 'partial'
+              ? { color: 'var(--syn-yellow)',  icon: '⚠', label: 'PARTIAL'   }
+              : { color: 'var(--syn-comment)', icon: '·', label: 'DRAFT'     };
+            return (
+              <div className="compliance-badge" style={{ borderColor: cfg.color }}>
+                <span style={{ color: cfg.color }}>{cfg.icon}</span>
+                <span className="compliance-badge__label" style={{ color: cfg.color }}>
+                  {cfg.label}
+                </span>
+                <span className="compliance-badge__detail">
+                  {complianceSummary.levels.production_ready}/{complianceSummary.total} production_ready
+                </span>
+              </div>
+            );
+          })()}
 
           <hr className="card__divider" />
 

@@ -1389,6 +1389,27 @@ body {
   margin-top: var(--space-1);
 }
 
+/* Compliance badge in ProjectCard */
+.compliance-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-left: 2px solid;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.compliance-badge__label {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.compliance-badge__detail {
+  color: var(--syn-comment);
+}
+
 /* Last-activity in ProjectCard */
 .metric-row__last-event {
   font-size: 11px;
