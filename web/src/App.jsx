@@ -13,6 +13,7 @@ import ConnectionBanner from './components/ConnectionBanner.jsx';
 import AlertsTab from './components/AlertsTab.jsx';
 import VelocityTab from './components/VelocityTab.jsx';
 import ProjectsTable from './components/ProjectsTable.jsx';
+import ActivityTab from './components/ActivityTab.jsx';
 
 /**
  * Group projects by parent folder name (basename of parent dir for local, 'remote' for URLs).
@@ -57,6 +58,7 @@ const TABS = Object.freeze({
   OVERVIEW:  'overview',
   ALERTS:    'alerts',
   VELOCITY:  'velocity',
+  ACTIVITY:  'activity',
   ALL:       'all',
 });
 
@@ -162,6 +164,19 @@ export default function App() {
 
         <button
           role="tab"
+          className={`tab-btn ${activeTab === TABS.ACTIVITY ? 'tab-btn--active' : ''}`}
+          onClick={() => setActiveTab(TABS.ACTIVITY)}
+          aria-selected={activeTab === TABS.ACTIVITY}
+        >
+          activity.log
+          {!loading && (() => {
+            const total = projects.reduce((n, p) => n + (p.aitriState?.events?.length ?? 0), 0);
+            return total > 0 ? <span className="tab-badge">{total}</span> : null;
+          })()}
+        </button>
+
+        <button
+          role="tab"
           className={`tab-btn ${activeTab === TABS.ALL ? 'tab-btn--active' : ''}`}
           onClick={() => setActiveTab(TABS.ALL)}
           aria-selected={activeTab === TABS.ALL}
@@ -229,6 +244,13 @@ export default function App() {
           loading
             ? <div className="empty-state"><p>Loading…</p></div>
             : <VelocityTab projects={projects} />
+        )}
+
+        {/* ── Activity tab ── */}
+        {activeTab === TABS.ACTIVITY && (
+          loading
+            ? <div className="empty-state"><p>Loading…</p></div>
+            : <ActivityTab projects={projects} />
         )}
 
         {/* ── All Projects tab ── */}

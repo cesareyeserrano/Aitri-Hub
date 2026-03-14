@@ -51,6 +51,22 @@ function formatTests(ts) {
  * @param {{ project: object, animationDelay?: number }} props
  * @returns {JSX.Element}
  */
+const EVENT_COLOR = {
+  approved:  'var(--syn-green)',
+  completed: 'var(--syn-teal)',
+  rejected:  'var(--syn-red)',
+};
+
+function lastEventLabel(events) {
+  if (!Array.isArray(events) || events.length === 0) return null;
+  const ev = events[events.length - 1];
+  if (!ev || !ev.at) return null;
+  const diff = Date.now() - new Date(ev.at).getTime();
+  const m = Math.floor(diff / 60_000);
+  const age = m < 1 ? 'just now' : m < 60 ? `${m}m ago` : m < 1440 ? `${Math.floor(m / 60)}h ago` : `${Math.floor(m / 1440)}d ago`;
+  return { label: ev.event, phase: ev.phase, age, color: EVENT_COLOR[ev.event] ?? 'var(--syn-comment)' };
+}
+
 export default function ProjectCard({ project, animationDelay = 0 }) {
   const {
     name,
@@ -62,8 +78,9 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
     collectionError,
   } = project;
 
-  const isStalled = (gitMeta?.lastCommitAgeHours ?? 0) > 72;
-  const tests     = formatTests(testSummary);
+  const isStalled  = (gitMeta?.lastCommitAgeHours ?? 0) > 72;
+  const tests      = formatTests(testSummary);
+  const lastEvent  = lastEventLabel(aitriState?.events);
 
   return (
     <div
@@ -173,6 +190,18 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
               </span>
             </div>
           </div>
+
+          {/* ── Last pipeline event ───────────────── */}
+          {lastEvent && (
+            <div className="metric-row" style={{ marginTop: '2px' }}>
+              <span className="metric-row__icon" style={{ color: lastEvent.color }}>◎</span>
+              <span className="metric-row__label">last event</span>
+              <span className="metric-row__value metric-row__last-event">
+                <span style={{ color: lastEvent.color }}>{lastEvent.label}</span>
+                {' '}phase {lastEvent.phase} · {lastEvent.age}
+              </span>
+            </div>
+          )}
 
           {/* ── Alerts footer ─────────────────────── */}
           <AlertBadge alerts={alerts} />

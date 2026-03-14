@@ -1,6 +1,6 @@
 {
   "name": "aitri-hub",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "description": "Centralized monitoring dashboard for Aitri-managed projects",
   "type": "module",
   "bin": {
