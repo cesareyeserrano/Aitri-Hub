@@ -196,7 +196,7 @@ export default function App() {
                 <div key={folder}>
                   {multiGroup && (
                     <div className="folder-group-header">
-                      <span className="folder-group-header__label">▸ {folder}/</span>
+                      <span className="folder-group-header__label">{folder}/</span>
                     </div>
                   )}
                   <div className="project-grid">
@@ -244,7 +244,7 @@ export default function App() {
                       <div key={folder}>
                         {multiGroup && (
                           <div className="folder-group-header">
-                            <span className="folder-group-header__label">▸ {folder}/</span>
+                            <span className="folder-group-header__label">{folder}/</span>
                           </div>
                         )}
                         <ProjectsTable projects={groupProjects} />

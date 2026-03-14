@@ -80,6 +80,7 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
             className={`status-badge status-badge--${status}`}
             data-testid="status-badge"
           >
+            {status === 'healthy' ? '✓ ' : status === 'warning' ? '⚠ ' : status === 'error' ? '✖ ' : '? '}
             {status === 'unreadable' ? 'UNREADABLE' : status.toUpperCase()}
           </span>
           {isStalled && (
@@ -111,7 +112,7 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
 
             {/* Tests */}
             <div className="metric-row">
-              <span className="metric-row__icon" />
+              <span className="metric-row__icon">◉</span>
               <span className="metric-row__label">tests</span>
               <span
                 className={`metric-row__value ${
@@ -130,22 +131,31 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
                 </span>
               )}
             </div>
+            {testSummary?.available && (testSummary.total ?? 0) > 0 && (
+              <div style={{ paddingLeft: '22px', paddingBottom: '2px' }}>
+                <ProgressBar value={testSummary.passed} max={testSummary.total} label="Test progress" />
+              </div>
+            )}
 
             {/* Last commit */}
             <div className="metric-row">
-              <span className="metric-row__icon" />
+              <span className="metric-row__icon">⊙</span>
               <span className="metric-row__label">commit</span>
               <span
                 className={`metric-row__value ${ageColorClass(gitMeta?.lastCommitAgeHours)}`}
               >
                 {formatAge(gitMeta?.lastCommitAgeHours)}
-                {gitMeta?.branch ? <span style={{ color: 'var(--syn-comment)' }}> · {gitMeta.branch}</span> : null}
+                {!isStalled && gitMeta?.branch && (
+                  <span style={{ display: 'block', color: 'var(--syn-comment)', fontSize: '11px' }}>
+                    {gitMeta.branch}
+                  </span>
+                )}
               </span>
             </div>
 
             {/* Branch */}
             <div className="metric-row">
-              <span className="metric-row__icon" />
+              <span className="metric-row__icon">⎇</span>
               <span className="metric-row__label">branch</span>
               <span className="metric-row__value color--info">
                 {gitMeta?.branch ?? 'N/A'}
@@ -154,7 +164,7 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
 
             {/* Velocity */}
             <div className="metric-row">
-              <span className="metric-row__icon" />
+              <span className="metric-row__icon">⚡</span>
               <span className="metric-row__label">velocity</span>
               <span className="metric-row__value" style={{ color: 'var(--syn-teal)' }}>
                 {gitMeta?.commitVelocity7d != null

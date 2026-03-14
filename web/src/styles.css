@@ -332,15 +332,32 @@ body {
 /* Project grid                                                                 */
 /* ─────────────────────────────────────────────────────────────────────────── */
 .folder-group-header {
-  padding: var(--space-4) 0 var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5) 0 var(--space-3);
+  margin-bottom: var(--space-1);
+}
+
+.folder-group-header::before {
+  content: '▸';
+  color: var(--syn-purple);
+  font-size: 11px;
+}
+
+.folder-group-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--border), transparent);
 }
 
 .folder-group-header__label {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
-  text-transform: lowercase;
+  color: var(--syn-purple);
+  letter-spacing: 0.06em;
+  font-weight: 500;
 }
 
 .project-grid {
@@ -372,7 +389,7 @@ body {
   border-left: 3px solid var(--border);
   padding: var(--space-4);
   min-width: 280px;
-  min-height: 240px;
+  min-height: 260px;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -383,6 +400,11 @@ body {
 .card:hover {
   border-color: var(--syn-comment);
 }
+
+.card[data-status="healthy"]:hover    { box-shadow: 0 0 0 1px rgba(63,185,80,0.25),  0 4px 16px rgba(63,185,80,0.08); }
+.card[data-status="warning"]:hover    { box-shadow: 0 0 0 1px rgba(227,179,65,0.25), 0 4px 16px rgba(227,179,65,0.08); }
+.card[data-status="error"]:hover      { box-shadow: 0 0 0 1px rgba(248,81,73,0.25),  0 4px 16px rgba(248,81,73,0.08); }
+.card[data-status="unreadable"]:hover { box-shadow: 0 0 0 1px rgba(110,118,129,0.25),0 4px 16px rgba(110,118,129,0.08); }
 
 .card[data-status="healthy"]    { border-left-color: var(--syn-green);   }
 .card[data-status="warning"]    { border-left-color: var(--syn-yellow);  }
@@ -429,7 +451,7 @@ body {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: 2px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -504,7 +526,7 @@ body {
 .phase-bar { display: flex; gap: 3px; align-items: center; }
 
 .phase-segment {
-  height: 4px;
+  height: 6px;
   flex: 1;
   border-radius: 1px;
   background: var(--surface-raised);
@@ -561,9 +583,12 @@ body {
   font-family: var(--font-mono);
 }
 
-/* hide the emoji icons — we use label-only style */
 .metric-row__icon {
-  display: none;
+  font-size: 11px;
+  width: 14px;
+  flex-shrink: 0;
+  text-align: center;
+  opacity: 0.7;
 }
 
 .metric-row__label {
