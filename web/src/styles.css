@@ -438,6 +438,23 @@ body {
   font-weight: 400;
 }
 
+.card__header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.card__fr-context {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--syn-comment);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .card__header-right {
   display: flex;
   flex-direction: column;

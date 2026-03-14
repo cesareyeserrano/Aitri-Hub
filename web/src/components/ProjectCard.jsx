@@ -78,10 +78,11 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
     collectionError,
   } = project;
 
-  const isStalled        = (gitMeta?.lastCommitAgeHours ?? 0) > 72;
-  const tests            = formatTests(testSummary);
-  const lastEvent        = lastEventLabel(aitriState?.events);
-  const complianceSummary = project.complianceSummary ?? null;
+  const isStalled          = (gitMeta?.lastCommitAgeHours ?? 0) > 72;
+  const tests              = formatTests(testSummary);
+  const lastEvent          = lastEventLabel(aitriState?.events);
+  const complianceSummary  = project.complianceSummary ?? null;
+  const requirementsSummary = project.requirementsSummary ?? null;
 
   return (
     <div
@@ -92,7 +93,20 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
     >
       {/* ── Card header: // project-name ────────── */}
       <div className="card__header">
-        <span className="card__name" title={name}>{name}</span>
+        <div className="card__header-left">
+          <span className="card__name" title={name}>{name}</span>
+          {requirementsSummary?.available && (
+            <span className="card__fr-context">
+              {requirementsSummary.total} FRs
+              {requirementsSummary.priority.MUST > 0 && (
+                <> · <span style={{ color: 'var(--syn-orange)' }}>{requirementsSummary.priority.MUST} MUST</span></>
+              )}
+              {requirementsSummary.priority.SHOULD > 0 && (
+                <> · {requirementsSummary.priority.SHOULD} SHOULD</>
+              )}
+            </span>
+          )}
+        </div>
         <div className="card__header-right">
           <span
             className={`status-badge status-badge--${status}`}
