@@ -116,15 +116,15 @@ export default function Header({
             ) : (
               <>
                 <span className="pill pill--healthy" data-testid="pill-healthy">
-                  healthy:&nbsp;<strong>{healthy}</strong>
+                  ✓ healthy:&nbsp;<strong>{healthy}</strong>
                 </span>
                 <span className="header__subtitle-sep">,&nbsp;</span>
                 <span className="pill pill--warning" data-testid="pill-warning">
-                  warning:&nbsp;<strong>{warning}</strong>
+                  ⚠ warning:&nbsp;<strong>{warning}</strong>
                 </span>
                 <span className="header__subtitle-sep">,&nbsp;</span>
                 <span className="pill pill--error" data-testid="pill-error">
-                  error:&nbsp;<strong>{error}</strong>
+                  ✖ error:&nbsp;<strong>{error}</strong>
                 </span>
               </>
             )}

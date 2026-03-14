@@ -50,12 +50,12 @@ export default function ProjectsTable({ projects }) {
       <table className="projects-table">
         <thead>
           <tr>
-            <th>NAME</th>
-            <th>STATUS</th>
-            <th>PHASE</th>
-            <th>TESTS</th>
-            <th>COMMIT</th>
-            <th>ALERTS</th>
+            <th>⎇ NAME</th>
+            <th>◈ STATUS</th>
+            <th>≡ PHASE</th>
+            <th>◉ TESTS</th>
+            <th>⊙ COMMIT</th>
+            <th>⚡ ALERTS</th>
           </tr>
         </thead>
         <tbody>

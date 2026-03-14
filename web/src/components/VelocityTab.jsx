@@ -57,14 +57,13 @@ export default function VelocityTab({ projects }) {
         }}
       >
         {/* // velocity.ts header */}
-        <div style={{ ...cmtStyle, marginBottom: '8px' }}>
-          // velocity.ts
-          <span style={{ color: 'var(--text-muted)', marginLeft: '1ch' }}>
-            ────────────────────────────────────────────────
-          </span>
+        <div style={{ ...cmtStyle, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ color: 'var(--syn-teal)' }}>⚡</span>
+          <span>// velocity.ts</span>
+          <span style={{ color: 'var(--text-muted)', flex: 1, borderTop: '1px solid var(--border)', marginLeft: '8px' }} />
         </div>
         <div style={{ ...cmtStyle, marginBottom: '12px' }}>
-          // commits last 7 days
+          // commits last 7 days · {projects.length} projects tracked
         </div>
 
         {/* const stats = { */}
@@ -125,7 +124,7 @@ export default function VelocityTab({ projects }) {
 
       {/* ── Bar chart panel ── */}
       <div className="velocity-chart">
-        <div className="velocity-chart__title">bar chart</div>
+        <div className="velocity-chart__title">⊙ commit velocity · 7d window</div>
 
         {rows.length === 0 ? (
           <div style={{ color: 'var(--syn-comment)', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
@@ -151,10 +150,12 @@ export default function VelocityTab({ projects }) {
                   />
                 </div>
 
-                <span className="velocity-bar-row__count">{row.commits}</span>
+                <span className="velocity-bar-row__count">
+                  {row.commits > 0 ? `${row.commits}c` : '—'}
+                </span>
 
                 {row.isStalled && (
-                  <span className="velocity-bar-row__stalled-label">STALLED</span>
+                  <span className="velocity-bar-row__stalled-label">⏸ STALLED</span>
                 )}
               </div>
             );

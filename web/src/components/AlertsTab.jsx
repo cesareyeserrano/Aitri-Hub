@@ -84,13 +84,14 @@ export default function AlertsTab({ projects }) {
       {errors.length > 0 && (
         <div className="alert-group">
           <div className="alert-group__header">
-            <span className="alert-group__title alert-group__title--error">[ERROR]</span>
+            <span className="alert-group__title alert-group__title--error">✖ ERROR</span>
             <span className="alert-group__count alert-group__count--error">
               {errors.length}
             </span>
           </div>
           {errors.map((alert, i) => (
             <div key={i} className="alert-row alert-row--error">
+              <span style={{ color: 'var(--syn-red)', flexShrink: 0 }}>✖</span>
               <span className="alert-row__project">{alert.projectName}</span>
               <span style={{ color: 'var(--text-muted)' }}>→</span>
               <span className="alert-row__message">{alert.message}</span>
@@ -102,13 +103,14 @@ export default function AlertsTab({ projects }) {
       {warnings.length > 0 && (
         <div className="alert-group">
           <div className="alert-group__header">
-            <span className="alert-group__title alert-group__title--warning">[WARN]</span>
+            <span className="alert-group__title alert-group__title--warning">⚠ WARN</span>
             <span className="alert-group__count alert-group__count--warning">
               {warnings.length}
             </span>
           </div>
           {warnings.map((alert, i) => (
             <div key={i} className="alert-row alert-row--warning">
+              <span style={{ color: 'var(--syn-yellow)', flexShrink: 0 }}>⚠</span>
               <span className="alert-row__project">{alert.projectName}</span>
               <span style={{ color: 'var(--text-muted)' }}>→</span>
               <span className="alert-row__message">{alert.message}</span>

@@ -923,9 +923,9 @@ body {
 
 .velocity-bar-row__bar-wrap {
   flex: 1;
-  height: 4px;
+  height: 8px;
   background: var(--surface-2);
-  border-radius: 2px;
+  border-radius: 3px;
   overflow: hidden;
 }
 
