@@ -106,3 +106,40 @@ describe('readTestSummary — malformed JSON returns null', () => {
     assert.equal(readTestSummary(dir), null);
   });
 });
+
+// ── Extra: custom artifactsDir reads from correct path ───────────────────────
+
+describe('readTestSummary — respects custom artifactsDir', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.mkdirSync(path.join(dir, 'artifacts'));
+    fs.writeFileSync(
+      path.join(dir, 'artifacts', '04_TEST_RESULTS.json'),
+      JSON.stringify({
+        summary: { passed: 5, failed: 1, skipped: 0, total: 6 },
+        fr_coverage: [{ fr_id: 'FR-001', status: 'partial' }],
+        results: [],
+      })
+    );
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns null when using default "spec" dir (file is in artifacts/)', () => {
+    assert.equal(readTestSummary(dir), null);
+  });
+
+  it('returns summary when using correct custom artifactsDir', () => {
+    const result = readTestSummary(dir, 'artifacts');
+    assert.notEqual(result, null);
+    assert.equal(result.passed, 5);
+    assert.equal(result.failed, 1);
+  });
+
+  it('frCoverage frId maps correctly from custom dir', () => {
+    const result = readTestSummary(dir, 'artifacts');
+    assert.equal(result.frCoverage[0].frId, 'FR-001');
+  });
+});

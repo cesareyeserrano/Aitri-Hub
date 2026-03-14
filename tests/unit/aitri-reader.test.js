@@ -152,3 +152,62 @@ describe('readAitriState — missing .aitri returns null', () => {
     assert.doesNotThrow(() => readAitriState(dir));
   });
 });
+
+// ── Extra: .aitri as directory (Aitri v0.1.39+) reads config.json ─────────────
+
+describe('readAitriState — .aitri as directory reads .aitri/config.json', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.mkdirSync(path.join(dir, '.aitri'));
+    fs.writeFileSync(path.join(dir, '.aitri', 'config.json'), JSON.stringify({
+      projectName: 'dir-project',
+      currentPhase: 2,
+      approvedPhases: [1],
+      completedPhases: [1, 2],
+      artifactsDir: 'artifacts',
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('does not throw when .aitri is a directory', () => {
+    assert.doesNotThrow(() => readAitriState(dir));
+  });
+
+  it('returns state from .aitri/config.json', () => {
+    const result = readAitriState(dir);
+    assert.notEqual(result, null);
+    assert.equal(result.projectName, 'dir-project');
+    assert.equal(result.currentPhase, 2);
+  });
+
+  it('returns artifactsDir from config', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.artifactsDir, 'artifacts');
+  });
+});
+
+// ── Extra: artifactsDir defaults to "spec" when missing from config ───────────
+
+describe('readAitriState — artifactsDir defaults to "spec"', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      projectName: 'no-artifacts-dir',
+      currentPhase: 1,
+      approvedPhases: [],
+      completedPhases: [],
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns artifactsDir="spec" when field is absent', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.artifactsDir, 'spec');
+  });
+});
