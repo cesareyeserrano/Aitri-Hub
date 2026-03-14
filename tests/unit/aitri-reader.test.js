@@ -189,6 +189,69 @@ describe('readAitriState — .aitri as directory reads .aitri/config.json', () =
   });
 });
 
+// ── Extra: events array is read correctly ─────────────────────────────────────
+
+describe('readAitriState — events array is read correctly', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      currentPhase: 3,
+      approvedPhases: [1, 2],
+      completedPhases: [1, 2, 3],
+      events: [
+        { at: '2026-03-10T10:00:00Z', event: 'completed', phase: 1 },
+        { at: '2026-03-10T11:00:00Z', event: 'approved',  phase: 1 },
+        { at: '2026-03-11T09:00:00Z', event: 'completed', phase: 2 },
+        { at: '2026-03-11T10:00:00Z', event: 'approved',  phase: 2 },
+        { at: '2026-03-12T08:00:00Z', event: 'rejected',  phase: 3, feedback: 'missing edge cases' },
+        { at: '2026-03-13T09:00:00Z', event: 'completed', phase: 3 },
+      ],
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns events array with 6 entries', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.events.length, 6);
+  });
+
+  it('last event is completed phase 3', () => {
+    const result = readAitriState(dir);
+    const last = result.events[result.events.length - 1];
+    assert.equal(last.event, 'completed');
+    assert.equal(last.phase, 3);
+  });
+
+  it('rejected event includes feedback', () => {
+    const result = readAitriState(dir);
+    const rejected = result.events.find(e => e.event === 'rejected');
+    assert.equal(rejected.feedback, 'missing edge cases');
+  });
+});
+
+// ── Extra: events defaults to empty array when missing ────────────────────────
+
+describe('readAitriState — events defaults to [] when absent', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      currentPhase: 1, approvedPhases: [], completedPhases: [],
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns empty events array', () => {
+    const result = readAitriState(dir);
+    assert.deepEqual(result.events, []);
+  });
+});
+
 // ── Extra: artifactsDir defaults to "spec" when missing from config ───────────
 
 describe('readAitriState — artifactsDir defaults to "spec"', () => {
