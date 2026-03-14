@@ -6,118 +6,83 @@
 
 import React from 'react';
 
-/**
- * @param {{ projects: object[] }} props
- * @returns {JSX.Element}
- */
 export default function AlertsTab({ projects }) {
-  // Collect all alerts with their parent project name
   const allAlerts = projects.flatMap(p =>
-    (p.alerts ?? []).map(alert => ({ ...alert, projectName: p.name })),
+    (p.alerts ?? []).map(alert => ({ ...alert, projectName: p.name, status: p.status })),
   );
 
   const errors   = allAlerts.filter(a => a.severity === 'error');
   const warnings = allAlerts.filter(a => a.severity === 'warning');
+  const total    = allAlerts.length;
 
-  const timestamp = new Date().toISOString();
-
-  if (allAlerts.length === 0) {
+  if (total === 0) {
     return (
       <div className="alerts-tab">
-        <div
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '12px',
-            color: 'var(--syn-comment)',
-            marginBottom: 'var(--space-3)',
-          }}
-        >
-          // alerts.log
-          <span style={{ color: 'var(--text-muted)', marginLeft: '1ch' }}>
-            ─────────────────────────────────────────────────────
-          </span>
-        </div>
-        <div
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '12px',
-            color: 'var(--syn-comment)',
-            marginBottom: 'var(--space-4)',
-          }}
-        >
-          // 0 warnings · 0 errors · {timestamp}
+        <div className="alerts-log-header">
+          <span className="alerts-log-header__file">// alerts.log</span>
+          <span className="alerts-log-header__sep" />
+          <span className="alerts-log-header__meta">0 issues · {new Date().toLocaleTimeString()}</span>
         </div>
         <div className="alerts-empty">
-          no critical issues — all projects look healthy.
+          <span style={{ fontSize: '18px' }}>✓</span>
+          <span>no critical issues — all projects look healthy.</span>
         </div>
       </div>
     );
   }
 
+  const errPct  = Math.round((errors.length / total) * 100);
+  const warnPct = 100 - errPct;
+
   return (
     <div className="alerts-tab">
-      {/* Log file header */}
-      <div
-        style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: '12px',
-          color: 'var(--syn-comment)',
-          marginBottom: 'var(--space-1)',
-        }}
-      >
-        // alerts.log
-        <span style={{ color: 'var(--text-muted)', marginLeft: '1ch' }}>
-          ─────────────────────────────────────────────────────
+      {/* ── Log header ── */}
+      <div className="alerts-log-header">
+        <span className="alerts-log-header__file">// alerts.log</span>
+        <span className="alerts-log-header__sep" />
+        <span className="alerts-log-header__meta">
+          {errors.length} error{errors.length !== 1 ? 's' : ''} · {warnings.length} warning{warnings.length !== 1 ? 's' : ''} · {new Date().toLocaleTimeString()}
         </span>
       </div>
-      <div
-        style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: '12px',
-          color: 'var(--syn-comment)',
-          marginBottom: 'var(--space-5)',
-        }}
-      >
-        // {warnings.length} warning{warnings.length !== 1 ? 's' : ''} · {errors.length} error{errors.length !== 1 ? 's' : ''} · {timestamp}
+
+      {/* ── Visual summary bar ── */}
+      <div className="alerts-summary">
+        <div className="alerts-summary__bar">
+          {errors.length > 0 && (
+            <div className="alerts-summary__bar-seg alerts-summary__bar-seg--error" style={{ flex: errors.length }} />
+          )}
+          {warnings.length > 0 && (
+            <div className="alerts-summary__bar-seg alerts-summary__bar-seg--warn" style={{ flex: warnings.length }} />
+          )}
+        </div>
+        <div className="alerts-summary__stats">
+          <span className="alerts-summary__stat alerts-summary__stat--error">
+            <span className="alerts-summary__dot alerts-summary__dot--error" />
+            ✖ {errors.length} error{errors.length !== 1 ? 's' : ''}
+            {total > 0 && <span className="alerts-summary__pct">({errPct}%)</span>}
+          </span>
+          <span className="alerts-summary__stat alerts-summary__stat--warn">
+            <span className="alerts-summary__dot alerts-summary__dot--warn" />
+            ⚠ {warnings.length} warning{warnings.length !== 1 ? 's' : ''}
+            {total > 0 && <span className="alerts-summary__pct">({warnPct}%)</span>}
+          </span>
+        </div>
       </div>
 
-      {errors.length > 0 && (
-        <div className="alert-group">
-          <div className="alert-group__header">
-            <span className="alert-group__title alert-group__title--error">✖ ERROR</span>
-            <span className="alert-group__count alert-group__count--error">
-              {errors.length}
+      {/* ── Log lines ── */}
+      <div className="alerts-log">
+        {[...errors, ...warnings].map((alert, i) => (
+          <div key={i} className={`alerts-log-row alerts-log-row--${alert.severity}`}>
+            <span className="alerts-log-row__ln">{String(i + 1).padStart(3, '0')}</span>
+            <span className={`alerts-log-row__chip alerts-log-row__chip--${alert.severity}`}>
+              {alert.severity === 'error' ? '✖ ERR' : '⚠ WRN'}
             </span>
+            <span className="alerts-log-row__project">{alert.projectName}</span>
+            <span className="alerts-log-row__arrow">→</span>
+            <span className="alerts-log-row__msg">{alert.message}</span>
           </div>
-          {errors.map((alert, i) => (
-            <div key={i} className="alert-row alert-row--error">
-              <span style={{ color: 'var(--syn-red)', flexShrink: 0 }}>✖</span>
-              <span className="alert-row__project">{alert.projectName}</span>
-              <span style={{ color: 'var(--text-muted)' }}>→</span>
-              <span className="alert-row__message">{alert.message}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {warnings.length > 0 && (
-        <div className="alert-group">
-          <div className="alert-group__header">
-            <span className="alert-group__title alert-group__title--warning">⚠ WARN</span>
-            <span className="alert-group__count alert-group__count--warning">
-              {warnings.length}
-            </span>
-          </div>
-          {warnings.map((alert, i) => (
-            <div key={i} className="alert-row alert-row--warning">
-              <span style={{ color: 'var(--syn-yellow)', flexShrink: 0 }}>⚠</span>
-              <span className="alert-row__project">{alert.projectName}</span>
-              <span style={{ color: 'var(--text-muted)' }}>→</span>
-              <span className="alert-row__message">{alert.message}</span>
-            </div>
-          ))}
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 }

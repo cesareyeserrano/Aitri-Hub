@@ -8,11 +8,6 @@ import React from 'react';
 
 const TOTAL_PHASES = 5;
 
-/**
- * Format commit age in hours to human-readable string.
- * @param {number | null | undefined} hours
- * @returns {string}
- */
 function formatAge(hours) {
   if (hours === null || hours === undefined) return 'N/A';
   if (hours < 1)   return `${Math.round(hours * 60)}m ago`;
@@ -20,11 +15,6 @@ function formatAge(hours) {
   return `${Math.round(hours / 24)}d ago`;
 }
 
-/**
- * Return a CSS variable color string based on commit age.
- * @param {number | null | undefined} hours
- * @returns {string}
- */
 function ageColor(hours) {
   if (hours === null || hours === undefined) return 'var(--text-muted)';
   if (hours < 24)  return 'var(--syn-green)';
@@ -32,17 +22,11 @@ function ageColor(hours) {
   return 'var(--syn-red)';
 }
 
-/**
- * @param {{ projects: object[] }} props
- * @returns {JSX.Element}
- */
+const STATUS_ICON = { healthy: '✓', warning: '⚠', error: '✖', unreadable: '?' };
+
 export default function ProjectsTable({ projects }) {
   if (projects.length === 0) {
-    return (
-      <div className="empty-state">
-        <p>// no projects to display.</p>
-      </div>
-    );
+    return <div className="empty-state"><p>// no projects to display.</p></div>;
   }
 
   return (
@@ -60,61 +44,89 @@ export default function ProjectsTable({ projects }) {
         </thead>
         <tbody>
           {projects.map(project => {
-            const {
-              id, name, status, aitriState, gitMeta, testSummary, alerts,
-            } = project;
+            const { id, name, status, aitriState, gitMeta, testSummary, alerts } = project;
 
-            const approved    = aitriState?.approvedPhases?.length ?? 0;
-            const currentPh   = aitriState?.currentPhase ?? '—';
-            const testsAvail  = testSummary?.available;
-            const testStr     = testsAvail
-              ? `${testSummary.passed}/${testSummary.total}`
-              : 'N/A';
-            const hasFailures = (testSummary?.failed ?? 0) > 0;
-            const alertCount  = alerts?.length ?? 0;
+            const approved   = aitriState?.approvedPhases?.length ?? 0;
+            const currentPh  = aitriState?.currentPhase ?? null;
+            const phasePct   = Math.round((approved / TOTAL_PHASES) * 100);
+
+            const testsAvail = testSummary?.available;
+            const passed     = testSummary?.passed ?? 0;
+            const total      = testSummary?.total ?? 0;
+            const failed     = testSummary?.failed ?? 0;
+            const testPct    = total > 0 ? Math.round((passed / total) * 100) : null;
+
+            const alertCount = alerts?.length ?? 0;
+            const hasError   = alerts?.some(a => a.severity === 'error');
 
             return (
-              <tr key={id} data-testid="project-row">
-                <td className="projects-table__name">{name}</td>
+              <tr key={id} data-testid="project-row" data-status={status}>
+                {/* Name */}
+                <td className="projects-table__name">
+                  <span style={{ color: 'var(--syn-comment)', marginRight: '4px' }}>
+                    {STATUS_ICON[status] ?? '·'}
+                  </span>
+                  {name}
+                  {gitMeta?.branch && (
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '1px' }}>
+                      ⎇ {gitMeta.branch}
+                    </div>
+                  )}
+                </td>
+
+                {/* Status */}
                 <td>
                   <span className={`status-badge status-badge--${status}`}>
-                    {status === 'unreadable' ? 'UNREADABLE' : status.toUpperCase()}
+                    {STATUS_ICON[status]} {status === 'unreadable' ? 'N/A' : status.toUpperCase()}
                   </span>
                 </td>
-                <td className="projects-table__dim">
-                  {aitriState
-                    ? `${currentPh}/${TOTAL_PHASES}  (${approved} approved)`
-                    : 'N/A'}
+
+                {/* Phase with mini bar */}
+                <td>
+                  {aitriState ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <span className="projects-table__dim">
+                        {currentPh}/{TOTAL_PHASES}
+                        <span style={{ color: 'var(--text-muted)', marginLeft: '6px' }}>({approved} ✓)</span>
+                      </span>
+                      <div style={{ height: '3px', background: 'var(--surface-raised)', borderRadius: '2px', overflow: 'hidden', width: '80px' }}>
+                        <div style={{ height: '100%', width: `${phasePct}%`, background: 'var(--syn-blue)', borderRadius: '2px', transition: 'width .4s ease' }} />
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="projects-table__dim">N/A</span>
+                  )}
                 </td>
-                <td
-                  className="projects-table__mono"
-                  style={{ color: hasFailures ? 'var(--syn-red)' : undefined }}
-                >
-                  {testStr}
+
+                {/* Tests with mini bar */}
+                <td>
+                  {testsAvail ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <span className="projects-table__mono" style={{ color: failed > 0 ? 'var(--syn-red)' : 'var(--syn-green)' }}>
+                        {passed}/{total}
+                        {testPct !== null && <span style={{ color: 'var(--text-muted)', marginLeft: '4px' }}>({testPct}%)</span>}
+                      </span>
+                      <div style={{ height: '3px', background: 'var(--surface-raised)', borderRadius: '2px', overflow: 'hidden', width: '80px' }}>
+                        <div style={{ height: '100%', width: `${testPct ?? 0}%`, background: failed > 0 ? 'var(--syn-red)' : 'var(--syn-green)', borderRadius: '2px', transition: 'width .4s ease' }} />
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="projects-table__dim">N/A</span>
+                  )}
                 </td>
-                <td
-                  className="projects-table__mono"
-                  style={{ color: ageColor(gitMeta?.lastCommitAgeHours) }}
-                >
+
+                {/* Commit */}
+                <td className="projects-table__mono" style={{ color: ageColor(gitMeta?.lastCommitAgeHours) }}>
                   {formatAge(gitMeta?.lastCommitAgeHours)}
                 </td>
+
+                {/* Alerts */}
                 <td>
                   {alertCount === 0 ? (
-                    <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
-                      —
-                    </span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>—</span>
                   ) : (
-                    <span
-                      style={{
-                        color: alerts.some(a => a.severity === 'error')
-                          ? 'var(--syn-red)'
-                          : 'var(--syn-yellow)',
-                        fontWeight: 500,
-                        fontSize: '12px',
-                        fontFamily: 'var(--font-mono)',
-                      }}
-                    >
-                      {alertCount}
+                    <span className={`alert-badge-mini alert-badge-mini--${hasError ? 'error' : 'warning'}`}>
+                      {hasError ? '✖' : '⚠'} {alertCount}
                     </span>
                   )}
                 </td>

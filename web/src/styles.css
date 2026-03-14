@@ -727,6 +727,121 @@ body {
 .alert-item--error   { background: rgba(248,81,73,0.1);   color: var(--syn-red);    }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
+/* Alerts tab — redesigned log style                                            */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.alerts-log-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.alerts-log-header__file  { color: var(--syn-comment); }
+.alerts-log-header__sep   { flex: 1; height: 1px; background: var(--border); }
+.alerts-log-header__meta  { color: var(--text-muted); font-size: 11px; white-space: nowrap; }
+
+.alerts-summary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+.alerts-summary__bar {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: var(--space-3);
+  gap: 2px;
+}
+.alerts-summary__bar-seg         { border-radius: 2px; transition: flex .4s ease; }
+.alerts-summary__bar-seg--error  { background: var(--syn-red); }
+.alerts-summary__bar-seg--warn   { background: var(--syn-yellow); }
+
+.alerts-summary__stats {
+  display: flex;
+  gap: var(--space-5);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.alerts-summary__stat         { display: flex; align-items: center; gap: var(--space-2); }
+.alerts-summary__stat--error  { color: var(--syn-red); }
+.alerts-summary__stat--warn   { color: var(--syn-yellow); }
+.alerts-summary__dot          { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.alerts-summary__dot--error   { background: var(--syn-red); }
+.alerts-summary__dot--warn    { background: var(--syn-yellow); }
+.alerts-summary__pct          { color: var(--text-muted); margin-left: 4px; font-size: 11px; }
+
+.alerts-log {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.alerts-log-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: 6px var(--space-3);
+  border-radius: 2px;
+  border-left: 2px solid transparent;
+}
+.alerts-log-row--error   { background: rgba(248,81,73,0.05);  border-left-color: var(--syn-red); }
+.alerts-log-row--warning { background: rgba(227,179,65,0.05); border-left-color: var(--syn-yellow); }
+.alerts-log-row__ln      { color: var(--text-muted); font-size: 11px; min-width: 28px; flex-shrink: 0; }
+.alerts-log-row__chip    { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 2px; flex-shrink: 0; border: 1px solid currentColor; letter-spacing: .04em; }
+.alerts-log-row__chip--error   { color: var(--syn-red);    background: rgba(248,81,73,0.12); }
+.alerts-log-row__chip--warning { color: var(--syn-yellow); background: rgba(227,179,65,0.12); }
+.alerts-log-row__project { color: var(--syn-blue); font-weight: 500; min-width: 120px; flex-shrink: 0; }
+.alerts-log-row__arrow   { color: var(--text-muted); flex-shrink: 0; }
+.alerts-log-row__msg     { color: var(--text-dim); flex: 1; }
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* Velocity stat cards                                                          */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.vel-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+@media (max-width: 900px) { .vel-stats { grid-template-columns: repeat(2, 1fr); } }
+
+.vel-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  border-left: 3px solid var(--syn-teal);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.vel-stat__icon  { font-size: 16px; color: var(--syn-teal); margin-bottom: var(--space-1); }
+.vel-stat__value { font-family: var(--font-mono); font-size: 28px; font-weight: 700; color: var(--syn-teal); line-height: 1; letter-spacing: -0.02em; }
+.vel-stat__label { font-family: var(--font-mono); font-size: 11px; color: var(--syn-comment); }
+.vel-stat__sub   { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* Velocity bar row — with meta line                                            */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.velocity-bar-row__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 160px;
+  flex-shrink: 0;
+}
+.velocity-bar-row__branch {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
 /* Connection banner — terminal error line                                      */
 /* ─────────────────────────────────────────────────────────────────────────── */
 .banner {
