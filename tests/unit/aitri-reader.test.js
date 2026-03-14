@@ -252,6 +252,91 @@ describe('readAitriState — events defaults to [] when absent', () => {
   });
 });
 
+// ── Extra: feature sub-pipeline detection ─────────────────────────────────────
+
+describe('readAitriState — features[] contains sub-pipeline state', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      currentPhase: 3, approvedPhases: [1, 2], completedPhases: [1, 2, 3],
+    }));
+    // Two feature sub-pipelines
+    fs.mkdirSync(path.join(dir, 'features', 'auth'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'features', 'auth', '.aitri'), JSON.stringify({
+      projectName: 'auth', currentPhase: 2, approvedPhases: [1], completedPhases: [1, 2],
+    }));
+    fs.mkdirSync(path.join(dir, 'features', 'billing'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'features', 'billing', '.aitri'), JSON.stringify({
+      projectName: 'billing', currentPhase: 1, approvedPhases: [], completedPhases: [1],
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns features array with 2 entries', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.features.length, 2);
+  });
+
+  it('features are sorted by name', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.features[0].name, 'auth');
+    assert.equal(result.features[1].name, 'billing');
+  });
+
+  it('auth feature has currentPhase=2 and approvedPhases=[1]', () => {
+    const result = readAitriState(dir);
+    const auth = result.features.find(f => f.name === 'auth');
+    assert.equal(auth.currentPhase, 2);
+    assert.deepEqual(auth.approvedPhases, [1]);
+  });
+});
+
+describe('readAitriState — features[] is empty when features/ does not exist', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      currentPhase: 1, approvedPhases: [], completedPhases: [],
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns features=[] when no features/ directory', () => {
+    const result = readAitriState(dir);
+    assert.deepEqual(result.features, []);
+  });
+});
+
+describe('readAitriState — features/ subdirs without .aitri are ignored', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      currentPhase: 1, approvedPhases: [], completedPhases: [],
+    }));
+    // A features/ dir with one valid and one invalid entry
+    fs.mkdirSync(path.join(dir, 'features', 'valid-feature'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'features', 'valid-feature', '.aitri'), JSON.stringify({
+      currentPhase: 1, approvedPhases: [], completedPhases: [],
+    }));
+    fs.mkdirSync(path.join(dir, 'features', 'empty-dir'), { recursive: true });
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns only the feature with a .aitri file', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.features.length, 1);
+    assert.equal(result.features[0].name, 'valid-feature');
+  });
+});
+
 // ── Extra: artifactsDir defaults to "spec" when missing from config ───────────
 
 describe('readAitriState — artifactsDir defaults to "spec"', () => {

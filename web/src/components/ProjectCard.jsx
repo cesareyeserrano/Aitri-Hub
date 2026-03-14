@@ -239,6 +239,21 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
             </div>
           )}
 
+          {/* ── Feature sub-pipelines ─────────────── */}
+          {aitriState?.features?.length > 0 && (
+            <div className="metric-row" style={{ marginTop: '2px' }}>
+              <span className="metric-row__icon" style={{ color: 'var(--syn-purple)' }}>⊞</span>
+              <span className="metric-row__label">features</span>
+              <span className="metric-row__value" style={{ color: 'var(--syn-purple)' }}>
+                {aitriState.features.length} active
+                <span style={{ color: 'var(--syn-comment)', fontSize: '11px', display: 'block' }}>
+                  {aitriState.features.slice(0, 3).map(f => f.name).join(', ')}
+                  {aitriState.features.length > 3 && ` +${aitriState.features.length - 3} more`}
+                </span>
+              </span>
+            </div>
+          )}
+
           {/* ── Alerts footer ─────────────────────── */}
           <AlertBadge alerts={alerts} />
         </>
