@@ -90,6 +90,28 @@ BROWSER
 
 ---
 
+## Contrato de integración con Aitri
+
+**IMPORTANTE:** Aitri Hub lee datos de proyectos directamente desde el filesystem de cada proyecto.
+El schema canónico de `.aitri` (campos, tipos, defaults, cómo calcular drift) está documentado en:
+
+```
+<aitri-install>/docs/HUB_INTEGRATION.md
+```
+
+O en el repositorio de Aitri: `docs/HUB_INTEGRATION.md`
+
+**Regla:** Antes de modificar cualquier reader (`aitri-reader.js`, `test-reader.js`, `compliance-reader.js`) o cualquier alert rule que dependa de datos de `.aitri`, consultar ese documento primero.
+Si el schema de Aitri cambió pero `HUB_INTEGRATION.md` no fue actualizado, reportar el gap como bug en Aitri antes de asumir el nuevo schema.
+
+El contrato especifica:
+- Schema completo de `.aitri` con tipos y defaults para backward compat
+- Cómo detectar drift (requiere calcular sha256 de artifacts — no hay campo `hasDrift` en `.aitri`)
+- Cómo resolver la ruta de artifacts según `artifactsDir` (`"spec"` vs `""`)
+- Schema de `~/.aitri-hub/projects.json` (campos escritos por Aitri al registrar proyectos)
+
+---
+
 ## Data Model
 
 ### `~/.aitri-hub/projects.json`
