@@ -1,11 +1,11 @@
 /**
  * Tests: alerts/engine
- * Covers: TC-007h, TC-007e, TC-007f, TC-003e, TC-004e
+ * Covers: TC-007h, TC-007e, TC-007f, TC-003e, TC-004e, TC-014h, TC-014f, TC-014e, TC-014e2
  */
 
-import { describe, it } from 'node:test';
+import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { evaluateAlerts, deriveStatus } from '../../lib/alerts/engine.js';
+import { evaluateAlerts, deriveStatus, _resetVersionCache, _setVersionCache } from '../../lib/alerts/engine.js';
 
 function makeData(overrides = {}) {
   return {
@@ -138,6 +138,85 @@ describe('TC-004e: evaluateAlerts — testSummary.failed=2 generates tests-faili
   it('alert message contains failure count "2"', () => {
     const result = evaluateAlerts(data);
     assert.ok(result[0].message.includes('2'), `Expected message to contain '2', got: ${result[0].message}`);
+  });
+});
+
+// ── FR-014: VERSION_MISMATCH alert ────────────────────────────────────────────
+
+describe('TC-014h: evaluateAlerts — VERSION_MISMATCH alert when project version differs from CLI', () => {
+  beforeEach(() => _setVersionCache('0.1.63'));
+
+  it('returns alert with type "version-mismatch" when project=0.1.01 and CLI=0.1.63', () => {
+    const data = makeData({ aitriState: { aitriVersion: '0.1.01', verifyPassed: true, hasDrift: false, verifySummary: null } });
+    const result = evaluateAlerts(data);
+    assert.ok(result.some(a => a.type === 'version-mismatch'));
+  });
+
+  it('alert severity is "warning"', () => {
+    const data = makeData({ aitriState: { aitriVersion: '0.1.01', verifyPassed: true, hasDrift: false, verifySummary: null } });
+    const alert = evaluateAlerts(data).find(a => a.type === 'version-mismatch');
+    assert.equal(alert.severity, 'warning');
+  });
+
+  it('alert message contains both versions', () => {
+    const data = makeData({ aitriState: { aitriVersion: '0.1.01', verifyPassed: true, hasDrift: false, verifySummary: null } });
+    const alert = evaluateAlerts(data).find(a => a.type === 'version-mismatch');
+    assert.ok(alert.message.includes('0.1.01'), `Expected message to contain '0.1.01', got: ${alert.message}`);
+    assert.ok(alert.message.includes('0.1.63'), `Expected message to contain '0.1.63', got: ${alert.message}`);
+  });
+});
+
+describe('TC-014f: evaluateAlerts — no VERSION_MISMATCH when aitriVersion is null', () => {
+  beforeEach(() => _setVersionCache('0.1.63'));
+
+  it('returns no version-mismatch alert when aitriVersion is null', () => {
+    const data = makeData({ aitriState: { aitriVersion: null, verifyPassed: true, hasDrift: false, verifySummary: null } });
+    const result = evaluateAlerts(data);
+    assert.equal(result.filter(a => a.type === 'version-mismatch').length, 0);
+  });
+
+  it('returns no version-mismatch alert when aitriState is null', () => {
+    const data = makeData({ aitriState: null });
+    const result = evaluateAlerts(data);
+    assert.equal(result.filter(a => a.type === 'version-mismatch').length, 0);
+  });
+});
+
+describe('TC-014e: evaluateAlerts — no VERSION_MISMATCH when CLI version unavailable (null cache)', () => {
+  beforeEach(() => _setVersionCache(null));
+
+  it('does not throw when installed version is null', () => {
+    const data = makeData({ aitriState: { aitriVersion: '0.1.50', verifyPassed: true, hasDrift: false, verifySummary: null } });
+    assert.doesNotThrow(() => evaluateAlerts(data));
+  });
+
+  it('returns no version-mismatch alert when CLI version is null', () => {
+    const data = makeData({ aitriState: { aitriVersion: '0.1.50', verifyPassed: true, hasDrift: false, verifySummary: null } });
+    const result = evaluateAlerts(data);
+    assert.equal(result.filter(a => a.type === 'version-mismatch').length, 0);
+  });
+});
+
+describe('TC-014e2: evaluateAlerts — no VERSION_MISMATCH when versions match', () => {
+  beforeEach(() => _setVersionCache('0.1.63'));
+
+  it('returns no version-mismatch alert when project version equals CLI version', () => {
+    const data = makeData({ aitriState: { aitriVersion: '0.1.63', verifyPassed: true, hasDrift: false, verifySummary: null } });
+    const result = evaluateAlerts(data);
+    assert.equal(result.filter(a => a.type === 'version-mismatch').length, 0);
+  });
+});
+
+describe('TC-014e3: evaluateAlerts — cached version reused across 20 calls', () => {
+  beforeEach(() => _setVersionCache('0.1.63'));
+
+  it('returns consistent VERSION_MISMATCH alerts for 20 projects without re-probing CLI', () => {
+    // All 20 calls should use the cached '0.1.63' and produce alerts for version '0.1.01'
+    for (let i = 0; i < 20; i++) {
+      const data = makeData({ aitriState: { aitriVersion: '0.1.01', verifyPassed: true, hasDrift: false, verifySummary: null } });
+      const result = evaluateAlerts(data);
+      assert.ok(result.some(a => a.type === 'version-mismatch'), `Call ${i + 1}: expected version-mismatch alert`);
+    }
   });
 });
 

@@ -1,0 +1,250 @@
+{
+  "project_name": "Aitri Hub — integration_update",
+  "project_summary": "Correctness patch to bring aitri-reader.js and the alert engine into full compliance with the Aitri ↔ Hub Integration Contract v0.1.63. Fixes six known gaps: missing aitriVersion field, ignored driftPhases fast path, incorrect drift hash logic, wrong artifactsDir default, null projectName fallback, and absent VERSION_MISMATCH alert.\n\nProduct Analysis:\n  North Star KPI: Zero false-positive or false-negative drift alerts for any project after this patch ships.\n  JTBD: 'When I monitor projects that were adopted or initialized before v0.1.20, give me accurate drift and version status without manual workarounds.'\n  Guardrail metric: Collection cycle duration for 20 projects must stay ≤5000ms — no regression from current baseline.\n\n  idea_gaps: IDEA.md sections 'Problem' and 'Business Rules' were empty in the main project IDEA.md (not the feature IDEA.md). Feature IDEA.md was complete. No blocking gaps.",
+
+  "no_go_zone": [
+    "No writes to .aitri or any project file — Hub remains strictly read-only, consistent with the integration contract's fundamental constraint",
+    "No aitri adopt --upgrade execution from Hub — Hub does not trigger Aitri CLI commands; it only reads output they produce",
+    "No compliance-reader.js implementation — reading 05_PROOF_OF_COMPLIANCE.json is a separate feature not implied by this contract gap",
+    "No changes to dashboard.json schema structure beyond exposing the new reader fields (aitriVersion, updatedAt, createdAt) on each project entry",
+    "VERSION_MISMATCH is a warning-only alert — Hub does not auto-upgrade projects, prompt to upgrade, or execute aitri commands in response"
+  ],
+
+  "user_personas": [
+    {
+      "role": "Solo Developer (adopted project owner)",
+      "tech_level": "high",
+      "goal": "See accurate drift status for projects that were adopted with `aitri adopt` (artifactsDir = '') without false positives",
+      "pain_point": "Hub defaults artifactsDir to 'spec' for all projects, causing artifact lookups to fail on adopted projects and generating spurious drift alerts"
+    },
+    {
+      "role": "Team Lead (multi-version environment)",
+      "tech_level": "high",
+      "goal": "Know which projects were initialized with an older Aitri version so they can request `aitri adopt --upgrade` before the next pipeline run",
+      "pain_point": "No signal exists today when a project's Aitri version is stale — the team discovers it only when a pipeline command fails unexpectedly"
+    }
+  ],
+
+  "functional_requirements": [
+    {
+      "id": "FR-010",
+      "title": "Expose aitriVersion, updatedAt, and createdAt from .aitri schema in readAitriState",
+      "description": "readAitriState must extract and return three additional fields from the parsed .aitri file: aitriVersion (string | null), updatedAt (ISO 8601 string | null), and createdAt (ISO 8601 string | null). All three are defensive: return null when the field is absent or not the expected type.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a .aitri file with aitriVersion: '0.1.63', when readAitriState is called, then the returned object contains aitriVersion: '0.1.63'",
+        "Given a .aitri file without an aitriVersion field, when readAitriState is called, then the returned object contains aitriVersion: null",
+        "Given a .aitri file with updatedAt: '2026-03-17T23:00:00.000Z', when readAitriState is called, then updatedAt is '2026-03-17T23:00:00.000Z'",
+        "Given a .aitri file without updatedAt, when readAitriState is called, then updatedAt is null",
+        "Given a .aitri file with createdAt: '2025-11-01T14:00:00.000Z', when readAitriState is called, then createdAt is '2025-11-01T14:00:00.000Z'"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-011",
+      "title": "Apply correct defaults for artifactsDir and projectName per the integration contract",
+      "description": "readAitriState must return artifactsDir as empty string ('') when the field is absent or an empty string in .aitri — NOT 'spec'. It must return projectName as path.basename(projectDir) when the field is absent or not a string.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a .aitri file without an artifactsDir field, when readAitriState is called, then the returned object contains artifactsDir: ''",
+        "Given a .aitri file with artifactsDir: '', when readAitriState is called, then the returned object contains artifactsDir: ''",
+        "Given a .aitri file with artifactsDir: 'spec', when readAitriState is called, then the returned object contains artifactsDir: 'spec'",
+        "Given a .aitri file without a projectName field and projectDir: '/home/user/my-project', when readAitriState is called, then projectName is 'my-project'",
+        "Given a .aitri file with projectName: 'aitri-hub', when readAitriState is called, then projectName is 'aitri-hub'"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-012",
+      "title": "Implement driftPhases fast path in drift detection (v0.1.58+)",
+      "description": "detectDrift must check config.driftPhases[] as its first step. If driftPhases is an array and contains any phase key (as string) that matches an approved phase, return true immediately without reading artifact files from disk.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a .aitri file with driftPhases: ['2'] and approvedPhases: [1, 2], when detectDrift is called, then it returns true",
+        "Given a .aitri file with driftPhases: [] and approvedPhases: [1, 2], when detectDrift is called with the fast path only, then it does not return true from driftPhases alone",
+        "Given a .aitri file without a driftPhases field (pre-v0.1.58 project), when detectDrift is called, then it falls through to the hash check without throwing",
+        "Given driftPhases: ['ux'] and approvedPhases: ['ux', 1], when detectDrift is called, then it returns true (string phase keys compared with String())"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-013",
+      "title": "Implement correct dynamic sha256 hash check for drift detection",
+      "description": "When driftPhases fast path does not confirm drift, detectDrift must check each approved phase that has a stored hash in artifactHashes: read the corresponding artifact file from disk using ARTIFACT_MAP and artifactsDir, compute its sha256, and compare against the stored hash. A phase with NO stored hash must NOT be considered drifted.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given approvedPhases: [1], artifactHashes: { '1': '<sha256-of-current-file>' }, and the artifact file unchanged on disk, when detectDrift is called, then it returns false",
+        "Given approvedPhases: [1], artifactHashes: { '1': '<old-sha256>' }, and the artifact file modified on disk, when detectDrift is called, then it returns true",
+        "Given approvedPhases: [1, 2], artifactHashes: { '1': '<sha256>' } (phase 2 has no hash), when detectDrift is called, then phase 2 is NOT counted as drifted — only phase 1 is evaluated",
+        "Given approvedPhases: [1], artifactHashes: { '1': '<sha256>' }, and the artifact file does not exist on disk, when detectDrift is called, then it returns false and does not throw",
+        "Given a project with artifactsDir: '', when computing the artifact path for phase 1, then the file is looked up at path.join(projectDir, '01_REQUIREMENTS.json') not path.join(projectDir, 'spec', '01_REQUIREMENTS.json')"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-014",
+      "title": "VERSION_MISMATCH alert when project aitriVersion differs from installed CLI version",
+      "description": "The alert engine must emit a VERSION_MISMATCH warning alert when a project's aitriVersion (from .aitri) differs from the version of the aitri CLI installed globally. The CLI version is obtained by running `aitri --version` once per collection cycle (cached for the cycle). If the CLI is unavailable or the version cannot be parsed, no alert is emitted and collection continues normally.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a project with aitriVersion: '0.1.50' and aitri CLI reporting version '0.1.63', when alerts are evaluated, then a VERSION_MISMATCH alert is generated with message containing both versions",
+        "Given a project with aitriVersion: '0.1.63' and aitri CLI reporting version '0.1.63', when alerts are evaluated, then no VERSION_MISMATCH alert is generated",
+        "Given a project with aitriVersion: null, when alerts are evaluated, then no VERSION_MISMATCH alert is generated",
+        "Given aitri CLI is not installed (execFileSync throws ENOENT), when alerts are evaluated, then no VERSION_MISMATCH alert is generated and no crash occurs",
+        "Given 20 projects in one collection cycle, when VERSION_MISMATCH is evaluated, then `aitri --version` is called at most once (cached result reused across projects)"
+      ],
+      "implementation_level": "functional"
+    }
+  ],
+
+  "user_stories": [
+    {
+      "id": "US-010",
+      "requirement_id": "FR-010",
+      "as_a": "team lead",
+      "i_want": "to see which Aitri version initialized each project",
+      "so_that": "I can identify projects that need aitri adopt --upgrade before running new pipeline commands",
+      "acceptance_criteria": [
+        {
+          "id": "AC-020",
+          "given": "a project with .aitri containing aitriVersion: '0.1.50'",
+          "when": "the collector runs",
+          "then": "the project entry in dashboard.json contains aitriVersion: '0.1.50'"
+        },
+        {
+          "id": "AC-021",
+          "given": "a project with .aitri that has no aitriVersion field (pre-v0.1.20 project)",
+          "when": "the collector runs",
+          "then": "the project entry in dashboard.json contains aitriVersion: null and no crash occurs"
+        }
+      ]
+    },
+    {
+      "id": "US-011",
+      "requirement_id": "FR-011",
+      "as_a": "solo developer with adopted projects",
+      "i_want": "artifact lookups to use the correct base directory",
+      "so_that": "drift detection and test reader do not fail on projects where artifacts live in the project root rather than spec/",
+      "acceptance_criteria": [
+        {
+          "id": "AC-022",
+          "given": "a project initialized with aitri adopt (artifactsDir: '' in .aitri)",
+          "when": "the collector evaluates drift for phase 1",
+          "then": "it reads 01_REQUIREMENTS.json from path.join(projectDir, '01_REQUIREMENTS.json') — not from spec/"
+        },
+        {
+          "id": "AC-023",
+          "given": "a project with no projectName in .aitri at path /Users/dev/finance-tracker",
+          "when": "the collector runs",
+          "then": "the dashboard displays the project name as 'finance-tracker'"
+        }
+      ]
+    },
+    {
+      "id": "US-012",
+      "requirement_id": "FR-012",
+      "as_a": "developer",
+      "i_want": "drift to be detected immediately from driftPhases without extra file I/O",
+      "so_that": "the collection cycle stays fast when the Aitri CLI has already flagged drift",
+      "acceptance_criteria": [
+        {
+          "id": "AC-024",
+          "given": "a project with driftPhases: ['3'] set by a previous aitri run-phase call",
+          "when": "the collector evaluates drift",
+          "then": "hasDrift is true and no artifact file is read from disk"
+        }
+      ]
+    },
+    {
+      "id": "US-013",
+      "requirement_id": "FR-013",
+      "as_a": "developer",
+      "i_want": "drift to be detected even when artifacts are modified directly outside the Aitri CLI",
+      "so_that": "I know when someone hand-edited a spec file post-approval",
+      "acceptance_criteria": [
+        {
+          "id": "AC-025",
+          "given": "phase 2 is approved (artifactHashes has a stored hash for '2') and 02_SYSTEM_DESIGN.md is then edited directly on disk",
+          "when": "the collector evaluates drift",
+          "then": "hasDrift is true"
+        },
+        {
+          "id": "AC-026",
+          "given": "phase 1 is approved but has no entry in artifactHashes (old project pre-v0.1.51)",
+          "when": "the collector evaluates drift",
+          "then": "hasDrift is false — missing hash is not treated as drift"
+        }
+      ]
+    },
+    {
+      "id": "US-014",
+      "requirement_id": "FR-014",
+      "as_a": "team lead",
+      "i_want": "a VERSION_MISMATCH alert when a project's Aitri version is behind the installed CLI",
+      "so_that": "I can proactively run aitri adopt --upgrade on stale projects before pipeline failures occur",
+      "acceptance_criteria": [
+        {
+          "id": "AC-027",
+          "given": "project aitriVersion is '0.1.50' and installed CLI is '0.1.63'",
+          "when": "the dashboard renders",
+          "then": "a yellow/warning alert 'Aitri version mismatch: project 0.1.50, CLI 0.1.63' is shown for that project"
+        },
+        {
+          "id": "AC-028",
+          "given": "aitri CLI is not installed on the machine",
+          "when": "the collector runs",
+          "then": "no VERSION_MISMATCH alert is generated for any project and the collection cycle completes normally"
+        }
+      ]
+    }
+  ],
+
+  "non_functional_requirements": [
+    {
+      "id": "NFR-010",
+      "category": "Performance",
+      "requirement": "sha256 hash computation for drift detection must not cause collection cycle regression",
+      "acceptance_criteria": "Collection cycle for 20 local projects with all phases approved and artifact files present completes in ≤5000ms — same budget as NFR-001"
+    },
+    {
+      "id": "NFR-011",
+      "category": "Reliability",
+      "requirement": "aitri --version subprocess failure must not crash or stall the collection cycle",
+      "acceptance_criteria": "Given execFileSync('aitri', ['--version']) throws any error (ENOENT, timeout, non-zero exit), the collector catches the error, sets installedAitriVersion to null, and completes the cycle within the normal 5000ms budget"
+    },
+    {
+      "id": "NFR-012",
+      "category": "CI/CD",
+      "requirement": "All new logic (FR-010 through FR-014) must be covered by unit tests that run in the existing test suite",
+      "acceptance_criteria": "Running the existing test command (npm test or equivalent) executes tests covering all 5 new FRs; CI pipeline passes with 0 failures on the main branch after this feature is merged"
+    },
+    {
+      "id": "NFR-013",
+      "category": "Observability",
+      "requirement": "Not applicable — this feature adds no new HTTP server or daemon process; existing logging via ~/.aitri-hub/logs/ is sufficient",
+      "acceptance_criteria": "N/A — no new process; existing NFR-002 error logging covers unreadable projects"
+    },
+    {
+      "id": "NFR-014",
+      "category": "Security",
+      "requirement": "sha256 computation must only read files within registered project directories",
+      "acceptance_criteria": "Artifact path construction uses ARTIFACT_MAP lookup (whitelist of known filenames) combined with path.join — no user-controlled path segments traverse outside the project directory; path.join cannot produce a path outside projectDir when given a basename from a fixed map"
+    }
+  ],
+
+  "constraints": [
+    "Node.js built-in crypto module must be used for sha256 — no npm dependencies",
+    "execFileSync for aitri --version must use node:child_process built-in — no npm dependencies",
+    "All changes are confined to lib/collector/aitri-reader.js and lib/alerts/engine.js — no new files required"
+  ],
+
+  "technology_preferences": [
+    "Node.js crypto.createHash('sha256') for artifact hash computation",
+    "node:child_process execFileSync for aitri --version with try/catch"
+  ]
+}

@@ -1,0 +1,556 @@
+{
+  "test_plan": {
+    "strategy": "Unit tests for all logic FRs using temp directories (os.tmpdir()) for file fixtures. Integration tests for full readAitriState + evaluateAlerts pipeline. E2E tests exercise the collection pipeline end-to-end writing to a temp dashboard.json. No hardcoded absolute paths — all fixtures created in os.tmpdir() and cleaned up in teardown.",
+    "coverage_goal": "100% of MUST FRs with ≥3 TCs each",
+    "test_types": ["unit", "integration", "e2e"]
+  },
+
+  "type_coverage_matrix": [
+    { "fr": "FR-010", "unit": "MUST", "integration": "SHOULD", "e2e": "MUST" },
+    { "fr": "FR-011", "unit": "MUST", "integration": "SHOULD", "e2e": "-" },
+    { "fr": "FR-012", "unit": "MUST", "integration": "-",       "e2e": "-" },
+    { "fr": "FR-013", "unit": "MUST", "integration": "SHOULD",  "e2e": "-" },
+    { "fr": "FR-014", "unit": "MUST", "integration": "SHOULD",  "e2e": "MUST" }
+  ],
+
+  "test_cases": [
+
+    {
+      "id": "TC-010h",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-010",
+      "ac_id": "AC-020",
+      "title": "readAitriState — returns aitriVersion '0.1.63' when present in .aitri",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "temp dir created via os.tmpdir(); .aitri file written with JSON: { projectName:'test', aitriVersion:'0.1.63', updatedAt:'2026-03-17T23:00:00.000Z', createdAt:'2025-11-01T14:00:00.000Z', currentPhase:2, approvedPhases:[1], completedPhases:[1] }"
+      ],
+      "given": "a .aitri file at /tmp/tc-010h/.aitri containing { aitriVersion: '0.1.63', updatedAt: '2026-03-17T23:00:00.000Z', createdAt: '2025-11-01T14:00:00.000Z' }",
+      "when": "readAitriState('/tmp/tc-010h') is called",
+      "then": "returned object has aitriVersion === '0.1.63', updatedAt === '2026-03-17T23:00:00.000Z', createdAt === '2025-11-01T14:00:00.000Z'",
+      "steps": [
+        "Create temp dir using os.tmpdir() + unique suffix",
+        "Write .aitri JSON with aitriVersion, updatedAt, createdAt fields",
+        "Call readAitriState(tempDir)",
+        "Assert result.aitriVersion === '0.1.63'",
+        "Assert result.updatedAt === '2026-03-17T23:00:00.000Z'",
+        "Assert result.createdAt === '2025-11-01T14:00:00.000Z'",
+        "Cleanup temp dir"
+      ],
+      "expected_result": "result.aitriVersion === '0.1.63', result.updatedAt === '2026-03-17T23:00:00.000Z', result.createdAt === '2025-11-01T14:00:00.000Z'",
+      "test_data": {
+        "aitriVersion": "0.1.63",
+        "updatedAt": "2026-03-17T23:00:00.000Z",
+        "createdAt": "2025-11-01T14:00:00.000Z"
+      }
+    },
+
+    {
+      "id": "TC-010f",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-010",
+      "ac_id": "AC-021",
+      "title": "readAitriState — returns aitriVersion null when field absent (pre-v0.1.20 project)",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "temp dir created via os.tmpdir(); .aitri file written with JSON: { projectName:'legacy-project', currentPhase:3, approvedPhases:[1,2], completedPhases:[1,2] } — no aitriVersion, no updatedAt, no createdAt fields"
+      ],
+      "given": "a .aitri file at /tmp/tc-010f/.aitri containing { projectName: 'legacy-project', currentPhase: 3, approvedPhases: [1,2] } with no aitriVersion, updatedAt, or createdAt fields",
+      "when": "readAitriState('/tmp/tc-010f') is called",
+      "then": "returned object has aitriVersion === null, updatedAt === null, createdAt === null — and no exception is thrown",
+      "steps": [
+        "Create temp dir using os.tmpdir() + unique suffix",
+        "Write .aitri JSON without aitriVersion, updatedAt, createdAt",
+        "Call readAitriState(tempDir)",
+        "Assert result is not null",
+        "Assert result.aitriVersion === null",
+        "Assert result.updatedAt === null",
+        "Assert result.createdAt === null",
+        "Cleanup temp dir"
+      ],
+      "expected_result": "result.aitriVersion === null, result.updatedAt === null, result.createdAt === null; no exception thrown",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-010e",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-010",
+      "ac_id": "AC-020",
+      "title": "readAitriState — returns aitriVersion null when field is a number (type coercion guard)",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "temp dir created via os.tmpdir(); .aitri file written with JSON: { aitriVersion: 163, currentPhase: 1 } — aitriVersion is a number, not a string"
+      ],
+      "given": "a .aitri file at /tmp/tc-010e/.aitri containing { aitriVersion: 163 } where aitriVersion is the number 163 (not the string '0.1.63')",
+      "when": "readAitriState('/tmp/tc-010e') is called",
+      "then": "returned object has aitriVersion === null — only string type is accepted per integration contract",
+      "steps": [
+        "Create temp dir using os.tmpdir() + unique suffix",
+        "Write .aitri JSON with aitriVersion as a number: 163",
+        "Call readAitriState(tempDir)",
+        "Assert result.aitriVersion === null",
+        "Cleanup temp dir"
+      ],
+      "expected_result": "result.aitriVersion === null",
+      "test_data": { "aitriVersion_raw": 163 }
+    },
+
+    {
+      "id": "TC-011h",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-022",
+      "title": "readAitriState — preserves artifactsDir 'spec' when explicitly set",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "temp dir created via os.tmpdir(); .aitri file written with JSON: { projectName: 'hub', artifactsDir: 'spec', currentPhase: 1, approvedPhases: [], completedPhases: [] }"
+      ],
+      "given": "a .aitri file at /tmp/tc-011h/.aitri containing { artifactsDir: 'spec', projectName: 'hub' }",
+      "when": "readAitriState('/tmp/tc-011h') is called",
+      "then": "returned object has artifactsDir === 'spec' and projectName === 'hub'",
+      "steps": [
+        "Create temp dir using os.tmpdir() + unique suffix",
+        "Write .aitri JSON with artifactsDir: 'spec', projectName: 'hub'",
+        "Call readAitriState(tempDir)",
+        "Assert result.artifactsDir === 'spec'",
+        "Assert result.projectName === 'hub'",
+        "Cleanup temp dir"
+      ],
+      "expected_result": "result.artifactsDir === 'spec', result.projectName === 'hub'",
+      "test_data": { "artifactsDir": "spec", "projectName": "hub" }
+    },
+
+    {
+      "id": "TC-011f",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-022",
+      "title": "readAitriState — defaults artifactsDir to '' (not 'spec') when field absent",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "temp dir created via os.tmpdir(); .aitri file written with JSON: { projectName: 'adopted-project', currentPhase: 2, approvedPhases: [1], completedPhases: [1] } — no artifactsDir field"
+      ],
+      "given": "a .aitri file at /tmp/tc-011f/.aitri with no artifactsDir field (adopted project, pre-v0.1.20 format)",
+      "when": "readAitriState('/tmp/tc-011f') is called",
+      "then": "returned object has artifactsDir === '' (empty string) — NOT 'spec'",
+      "steps": [
+        "Create temp dir using os.tmpdir() + unique suffix",
+        "Write .aitri JSON without artifactsDir field",
+        "Call readAitriState(tempDir)",
+        "Assert result.artifactsDir === ''",
+        "Assert result.artifactsDir !== 'spec'",
+        "Cleanup temp dir"
+      ],
+      "expected_result": "result.artifactsDir === '' (strictly empty string, not 'spec' or undefined)",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-011e",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-023",
+      "title": "readAitriState — defaults projectName to basename of projectDir when field absent",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "temp dir created via os.tmpdir() with suffix '/finance-tracker'; .aitri file written with JSON: { currentPhase: 1, approvedPhases: [], completedPhases: [] } — no projectName field"
+      ],
+      "given": "a .aitri file at os.tmpdir()+'/finance-tracker/.aitri' with no projectName field, and projectDir is the path ending in 'finance-tracker'",
+      "when": "readAitriState(path ending in 'finance-tracker') is called",
+      "then": "returned object has projectName === 'finance-tracker' (path.basename of projectDir)",
+      "steps": [
+        "Create temp dir path ending in 'finance-tracker' using path.join(os.tmpdir(), 'finance-tracker')",
+        "Write .aitri JSON without projectName field",
+        "Call readAitriState(tempDir)",
+        "Assert result.projectName === 'finance-tracker'",
+        "Cleanup temp dir"
+      ],
+      "expected_result": "result.projectName === 'finance-tracker'",
+      "test_data": { "dir_suffix": "finance-tracker" }
+    },
+
+    {
+      "id": "TC-012h",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-024",
+      "title": "detectDrift — returns true immediately from driftPhases fast path (no disk read)",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "temp dir created via os.tmpdir(); .aitri written with driftPhases: ['2'], approvedPhases: [1, 2], artifactHashes: {}",
+        "No artifact files created in the temp dir (verifies no disk read occurs)"
+      ],
+      "given": "a .aitri file containing { driftPhases: ['2'], approvedPhases: [1, 2], artifactHashes: {} } and NO artifact files on disk",
+      "when": "readAitriState(tempDir) is called",
+      "then": "returned object has hasDrift === true — fast path triggered without reading any artifact file",
+      "steps": [
+        "Create temp dir using os.tmpdir() + unique suffix",
+        "Write .aitri JSON with driftPhases: ['2'], approvedPhases: [1, 2], artifactHashes: {}",
+        "Do NOT create any artifact files in the temp dir",
+        "Call readAitriState(tempDir)",
+        "Assert result.hasDrift === true",
+        "Cleanup temp dir"
+      ],
+      "expected_result": "result.hasDrift === true (no artifact files needed — driftPhases fast path returned early)",
+      "test_data": { "driftPhases": ["2"], "approvedPhases": [1, 2] }
+    },
+
+    {
+      "id": "TC-012f",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-024",
+      "title": "detectDrift — driftPhases empty array does not trigger drift",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "temp dir created via os.tmpdir(); .aitri written with driftPhases: [], approvedPhases: [1], artifactHashes: {} (no stored hash for phase 1)"
+      ],
+      "given": "a .aitri file containing { driftPhases: [], approvedPhases: [1], artifactHashes: {} } — driftPhases is an empty array",
+      "when": "readAitriState(tempDir) is called",
+      "then": "returned object has hasDrift === false — empty driftPhases does not trigger fast path; hash check finds no stored hash for phase 1 so also returns false",
+      "steps": [
+        "Create temp dir using os.tmpdir() + unique suffix",
+        "Write .aitri JSON with driftPhases: [], approvedPhases: [1], artifactHashes: {}",
+        "Call readAitriState(tempDir)",
+        "Assert result.hasDrift === false",
+        "Cleanup temp dir"
+      ],
+      "expected_result": "result.hasDrift === false",
+      "test_data": { "driftPhases": [], "approvedPhases": [1] }
+    },
+
+    {
+      "id": "TC-012e",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-024",
+      "title": "detectDrift — absent driftPhases field (pre-v0.1.58 project) falls through without throwing",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "temp dir created via os.tmpdir(); .aitri written with approvedPhases: [1], artifactHashes: {} — no driftPhases field"
+      ],
+      "given": "a .aitri file containing { approvedPhases: [1], artifactHashes: {} } with NO driftPhases field (project created before v0.1.58)",
+      "when": "readAitriState(tempDir) is called",
+      "then": "call completes without throwing TypeError or ReferenceError; result is a valid AitriState object; hasDrift === false (no stored hash, no files to compare)",
+      "steps": [
+        "Create temp dir using os.tmpdir() + unique suffix",
+        "Write .aitri JSON with approvedPhases: [1], artifactHashes: {}, no driftPhases key",
+        "Call readAitriState(tempDir)",
+        "Assert no exception was thrown",
+        "Assert result is not null",
+        "Assert result.hasDrift === false",
+        "Cleanup temp dir"
+      ],
+      "expected_result": "No exception thrown; result.hasDrift === false",
+      "test_data": { "approvedPhases": [1] }
+    },
+
+    {
+      "id": "TC-013h",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-025",
+      "title": "detectDrift — returns false when artifact on disk matches stored sha256 hash",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "temp dir created via os.tmpdir()",
+        "temp/spec/01_REQUIREMENTS.json written with content '{\"project_name\":\"test\"}'",
+        "sha256 of that exact content computed via crypto.createHash('sha256').update('{\"project_name\":\"test\"}').digest('hex') and stored as artifactHashes['1']",
+        ".aitri written with approvedPhases: [1], artifactsDir: 'spec', artifactHashes: { '1': '<computed-sha256>' }"
+      ],
+      "given": "a project at tempDir with spec/01_REQUIREMENTS.json containing '{\"project_name\":\"test\"}' and .aitri.artifactHashes['1'] == sha256('{\"project_name\":\"test\"}')",
+      "when": "readAitriState(tempDir) is called",
+      "then": "result.hasDrift === false — artifact content matches stored hash",
+      "steps": [
+        "Create tempDir and tempDir/spec/ using os.tmpdir()",
+        "Write tempDir/spec/01_REQUIREMENTS.json with content: '{\"project_name\":\"test\"}'",
+        "Compute sha256 of that content in test setup",
+        "Write tempDir/.aitri with approvedPhases:[1], artifactsDir:'spec', artifactHashes:{'1': computedHash}",
+        "Call readAitriState(tempDir)",
+        "Assert result.hasDrift === false",
+        "Cleanup temp dir"
+      ],
+      "expected_result": "result.hasDrift === false",
+      "test_data": { "artifact_content": "{\"project_name\":\"test\"}", "approvedPhases": [1], "artifactsDir": "spec" }
+    },
+
+    {
+      "id": "TC-013f",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-025",
+      "title": "detectDrift — returns true when artifact on disk differs from stored sha256 hash",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "temp dir created via os.tmpdir()",
+        "temp/spec/01_REQUIREMENTS.json written with content '{\"project_name\":\"modified\"}'",
+        ".aitri written with approvedPhases:[1], artifactsDir:'spec', artifactHashes:{ '1': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' } (stale hash, 64 hex chars, does not match current file)"
+      ],
+      "given": "a project at tempDir with spec/01_REQUIREMENTS.json containing '{\"project_name\":\"modified\"}' and .aitri.artifactHashes['1'] === 'aaaa...aaaa' (64-char hex string that does NOT match the current file's sha256)",
+      "when": "readAitriState(tempDir) is called",
+      "then": "result.hasDrift === true — current sha256 of the file does not match stored hash",
+      "steps": [
+        "Create tempDir and tempDir/spec/ using os.tmpdir()",
+        "Write tempDir/spec/01_REQUIREMENTS.json with content: '{\"project_name\":\"modified\"}'",
+        "Write tempDir/.aitri with approvedPhases:[1], artifactsDir:'spec', artifactHashes:{'1': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'}",
+        "Call readAitriState(tempDir)",
+        "Assert result.hasDrift === true",
+        "Cleanup temp dir"
+      ],
+      "expected_result": "result.hasDrift === true",
+      "test_data": { "stale_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" }
+    },
+
+    {
+      "id": "TC-013e",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-026",
+      "title": "detectDrift — approved phase with no stored hash is NOT counted as drifted",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "temp dir created via os.tmpdir()",
+        ".aitri written with approvedPhases:[1], artifactHashes:{} (empty — phase 1 approved before v0.1.51 when hashes were introduced)",
+        "No artifact file created"
+      ],
+      "given": "a .aitri file with approvedPhases:[1] and artifactHashes:{} — phase 1 is approved but has no stored hash (old project pre-v0.1.51)",
+      "when": "readAitriState(tempDir) is called",
+      "then": "result.hasDrift === false — a missing hash means the phase was never hashed, not that it drifted",
+      "steps": [
+        "Create tempDir using os.tmpdir()",
+        "Write tempDir/.aitri with approvedPhases:[1], artifactHashes:{}",
+        "Do NOT create any artifact files",
+        "Call readAitriState(tempDir)",
+        "Assert result.hasDrift === false",
+        "Cleanup temp dir"
+      ],
+      "expected_result": "result.hasDrift === false",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-013e2",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-025",
+      "title": "detectDrift — artifact file missing on disk returns false without throwing",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "temp dir created via os.tmpdir()",
+        ".aitri written with approvedPhases:[1], artifactsDir:'spec', artifactHashes:{'1':'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'}",
+        "spec/01_REQUIREMENTS.json does NOT exist"
+      ],
+      "given": "a .aitri with artifactHashes:{'1':'bbbb...bbbb'} (64-char hex) and approvedPhases:[1], but spec/01_REQUIREMENTS.json does not exist on disk",
+      "when": "readAitriState(tempDir) is called",
+      "then": "result.hasDrift === false and no exception is thrown — missing file treated as unverifiable, not drifted",
+      "steps": [
+        "Create tempDir using os.tmpdir()",
+        "Write tempDir/.aitri with approvedPhases:[1], artifactsDir:'spec', artifactHashes:{'1':'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'}",
+        "Do NOT create tempDir/spec/ or any artifact files",
+        "Call readAitriState(tempDir)",
+        "Assert no exception thrown",
+        "Assert result.hasDrift === false",
+        "Cleanup temp dir"
+      ],
+      "expected_result": "No exception thrown; result.hasDrift === false",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-014h",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-027",
+      "title": "evaluateAlerts — generates VERSION_MISMATCH warning when project version differs from installed CLI",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "Module-level version cache in engine.js must be reset to undefined before this test",
+        "aitri --version subprocess must be stubbed/mocked to return '0.1.63' (or test runs in env where aitri CLI is installed at 0.1.63)"
+      ],
+      "given": "data.aitriState.aitriVersion === '0.1.50' and getInstalledAitriVersion() returns '0.1.63'",
+      "when": "evaluateAlerts({ aitriState: { aitriVersion: '0.1.50', verifyPassed: true, hasDrift: false, verifySummary: null }, gitMeta: { isGitRepo: true, lastCommitAgeHours: 1 }, testSummary: { available: false }, cacheStale: false, complianceSummary: { available: false } }) is called",
+      "then": "returned array contains exactly one alert with type === 'version-mismatch', severity === 'warning', message === 'Aitri version mismatch: project 0.1.50, CLI 0.1.63'",
+      "steps": [
+        "Reset engine module version cache to undefined",
+        "Stub getInstalledAitriVersion to return '0.1.63'",
+        "Call evaluateAlerts with data where aitriState.aitriVersion === '0.1.50'",
+        "Assert alerts array contains an entry with type: 'version-mismatch'",
+        "Assert that entry has severity: 'warning'",
+        "Assert that entry has message: 'Aitri version mismatch: project 0.1.50, CLI 0.1.63'"
+      ],
+      "expected_result": "alerts includes { type: 'version-mismatch', severity: 'warning', message: 'Aitri version mismatch: project 0.1.50, CLI 0.1.63' }",
+      "test_data": {
+        "aitriVersion_project": "0.1.50",
+        "aitriVersion_cli": "0.1.63"
+      }
+    },
+
+    {
+      "id": "TC-014f",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-028",
+      "title": "evaluateAlerts — no VERSION_MISMATCH alert when aitriVersion is null",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "Module-level version cache reset to undefined",
+        "getInstalledAitriVersion stubbed to return '0.1.63'"
+      ],
+      "given": "data.aitriState.aitriVersion === null (pre-v0.1.20 project with no aitriVersion in .aitri) and installed CLI is '0.1.63'",
+      "when": "evaluateAlerts({ aitriState: { aitriVersion: null, verifyPassed: true, hasDrift: false, verifySummary: null }, gitMeta: { isGitRepo: true, lastCommitAgeHours: 1 }, testSummary: { available: false }, cacheStale: false, complianceSummary: { available: false } }) is called",
+      "then": "returned array contains zero alerts with type === 'version-mismatch'",
+      "steps": [
+        "Reset engine module version cache",
+        "Stub getInstalledAitriVersion to return '0.1.63'",
+        "Call evaluateAlerts with data where aitriState.aitriVersion === null",
+        "Assert no alert in returned array has type === 'version-mismatch'"
+      ],
+      "expected_result": "alerts.filter(a => a.type === 'version-mismatch').length === 0",
+      "test_data": { "aitriVersion_project": null }
+    },
+
+    {
+      "id": "TC-014e",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-028",
+      "title": "evaluateAlerts — no VERSION_MISMATCH alert and no crash when aitri CLI is not installed (ENOENT)",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "Module-level version cache reset to undefined",
+        "execFileSync for 'aitri --version' stubbed to throw { code: 'ENOENT' }"
+      ],
+      "given": "data.aitriState.aitriVersion === '0.1.50' and execFileSync('aitri', ['--version']) throws Error with code 'ENOENT' (CLI not installed)",
+      "when": "evaluateAlerts({ aitriState: { aitriVersion: '0.1.50', verifyPassed: true, hasDrift: false, verifySummary: null }, gitMeta: { isGitRepo: true, lastCommitAgeHours: 1 }, testSummary: { available: false }, cacheStale: false, complianceSummary: { available: false } }) is called",
+      "then": "call completes without throwing; returned array contains zero alerts with type === 'version-mismatch'",
+      "steps": [
+        "Reset engine module version cache",
+        "Stub execFileSync to throw { code: 'ENOENT', message: 'spawn aitri ENOENT' }",
+        "Call evaluateAlerts with aitriVersion: '0.1.50'",
+        "Assert no exception thrown by evaluateAlerts",
+        "Assert no alert with type 'version-mismatch' in result"
+      ],
+      "expected_result": "No exception thrown; alerts.filter(a => a.type === 'version-mismatch').length === 0",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-014e2",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-027",
+      "title": "evaluateAlerts — aitri --version called at most once for 20 consecutive evaluateAlerts calls (cache hit)",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "Module-level version cache reset to undefined",
+        "execFileSync stubbed with a call counter; returns '0.1.63' on first call"
+      ],
+      "given": "20 project data objects each with aitriState.aitriVersion === '0.1.50' and execFileSync stubbed with a call counter initialized to 0",
+      "when": "evaluateAlerts is called 20 times sequentially (once per project data object)",
+      "then": "execFileSync('aitri', ['--version']) was invoked exactly 1 time total — subsequent calls used the cached result",
+      "steps": [
+        "Reset engine module version cache",
+        "Create spy/stub that increments callCount on each execFileSync invocation and returns '0.1.63'",
+        "Call evaluateAlerts 20 times with data.aitriState.aitriVersion = '0.1.50'",
+        "Assert callCount === 1"
+      ],
+      "expected_result": "execFileSync called exactly once; callCount === 1 after 20 evaluateAlerts invocations",
+      "test_data": { "project_count": 20 }
+    },
+
+    {
+      "id": "TC-010e2e",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-010",
+      "ac_id": "AC-020",
+      "title": "TC-010e2e: Full collection cycle — aitriVersion flows from .aitri to dashboard.json entry",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "temp project dir created via os.tmpdir() with .aitri containing { projectName: 'e2e-proj', aitriVersion: '0.1.50', currentPhase: 2, approvedPhases: [1], completedPhases: [1] }",
+        "temp hub dir created via os.tmpdir() with projects.json registering the temp project as a local entry",
+        "Collection cycle executed against temp hub dir"
+      ],
+      "given": "a registered project at tempProjectDir with .aitri.aitriVersion === '0.1.50' and projects.json at tempHubDir pointing to it",
+      "when": "the collector runs one full cycle (collectAll + writeDashboard) writing to tempHubDir/dashboard.json",
+      "then": "tempHubDir/dashboard.json is valid JSON; the entry for 'e2e-proj' contains aitriVersion === '0.1.50'",
+      "steps": [
+        "Create tempProjectDir via os.tmpdir(); write .aitri with aitriVersion: '0.1.50'",
+        "Create tempHubDir via os.tmpdir(); write projects.json with one local entry pointing to tempProjectDir",
+        "Run the collector: import collectAll + writeDashboard, pass tempHubDir as the store path",
+        "Read tempHubDir/dashboard.json and parse as JSON",
+        "Find entry where name === 'e2e-proj'",
+        "Assert entry.aitriVersion === '0.1.50'",
+        "Cleanup both temp dirs"
+      ],
+      "expected_result": "dashboard.json entry for 'e2e-proj' has aitriVersion === '0.1.50'",
+      "test_data": { "aitriVersion": "0.1.50" }
+    },
+
+    {
+      "id": "TC-014e3e",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-027",
+      "title": "TC-014e3e: Full collection cycle — VERSION_MISMATCH alert present in dashboard.json when versions differ",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "temp project dir created via os.tmpdir() with .aitri containing { projectName: 'version-test', aitriVersion: '0.1.01', currentPhase: 1, approvedPhases: [], completedPhases: [] }",
+        "temp hub dir created via os.tmpdir() with projects.json registering the temp project",
+        "aitri CLI installed and version > '0.1.01' (test environment has aitri ≥ 0.1.50 installed)"
+      ],
+      "given": "a registered project with aitriVersion: '0.1.01' in .aitri and aitri CLI installed at a version > '0.1.01'",
+      "when": "the collector runs one full cycle writing to tempHubDir/dashboard.json",
+      "then": "dashboard.json entry for 'version-test' has alerts array containing an entry with type === 'version-mismatch' and severity === 'warning'",
+      "steps": [
+        "Create tempProjectDir via os.tmpdir(); write .aitri with aitriVersion: '0.1.01'",
+        "Create tempHubDir via os.tmpdir(); write projects.json pointing to tempProjectDir",
+        "Run full collection cycle",
+        "Read and parse tempHubDir/dashboard.json",
+        "Find entry where name === 'version-test'",
+        "Assert entry.alerts contains an object with type: 'version-mismatch' and severity: 'warning'",
+        "Cleanup both temp dirs"
+      ],
+      "expected_result": "dashboard.json entry alerts array contains { type: 'version-mismatch', severity: 'warning' }",
+      "test_data": { "aitriVersion_project": "0.1.01" }
+    }
+  ]
+}

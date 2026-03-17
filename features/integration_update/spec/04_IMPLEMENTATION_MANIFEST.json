@@ -1,0 +1,87 @@
+{
+  "project_name": "Aitri Hub — integration_update",
+  "implementation_summary": "Correctness patch bringing aitri-reader.js and alerts/engine.js into full compliance with the Aitri ↔ Hub Integration Contract v0.1.63. Three production files modified, zero new files created, zero new npm dependencies introduced.",
+
+  "files_modified": [
+    {
+      "path": "lib/collector/aitri-reader.js",
+      "change_type": "modified",
+      "fr_ids": ["FR-010", "FR-011", "FR-012", "FR-013"],
+      "description": "Added ARTIFACT_MAP constant (8 phase-to-filename entries per integration contract). Added computeFileHash() private helper using node:crypto sha256. Rewrote detectDrift() with driftPhases fast path (FR-012) and correct dynamic hash check (FR-013). Updated readAitriState() to expose aitriVersion/updatedAt/createdAt (FR-010) and apply correct defaults: artifactsDir='' not 'spec', projectName=path.basename(projectDir) (FR-011). detectDrift() now accepts projectDir as second argument."
+    },
+    {
+      "path": "lib/alerts/engine.js",
+      "change_type": "modified",
+      "fr_ids": ["FR-014"],
+      "description": "Added getInstalledAitriVersion() with module-level cache — calls execFileSync('aitri', ['--version']) once per process lifetime, returns null on any error. Added Rule 7 (VERSION_MISMATCH) to evaluateAlerts(): emits warning alert when project aitriVersion != installed CLI version and both are non-null. Exported _resetVersionCache() and _setVersionCache() as test utilities."
+    },
+    {
+      "path": "lib/constants.js",
+      "change_type": "modified",
+      "fr_ids": ["FR-014"],
+      "description": "Added ALERT_TYPE.VERSION_MISMATCH = 'version-mismatch' to the existing frozen ALERT_TYPE object."
+    },
+    {
+      "path": "tests/unit/aitri-reader.test.js",
+      "change_type": "modified",
+      "fr_ids": ["FR-010", "FR-011", "FR-012", "FR-013"],
+      "description": "Updated existing 'artifactsDir defaults to spec' test to expect '' (correct per contract). Added TC-011f/h/e, TC-010h/f/e, TC-012h/f/e, TC-013h/f/e/e2 covering all new acceptance criteria. Added crypto import for sha256 computation in test setup."
+    },
+    {
+      "path": "tests/unit/alerts-engine.test.js",
+      "change_type": "modified",
+      "fr_ids": ["FR-014"],
+      "description": "Added import of _resetVersionCache, _setVersionCache test utilities. Added TC-014h/f/e/e2/e3 covering VERSION_MISMATCH alert generation, null aitriVersion, CLI unavailable, matching versions, and cache behavior."
+    }
+  ],
+
+  "files_created": [
+    {
+      "path": "features/integration_update/spec/04_IMPLEMENTATION_MANIFEST.json",
+      "change_type": "created",
+      "fr_ids": ["FR-010", "FR-011", "FR-012", "FR-013", "FR-014"],
+      "description": "This implementation manifest documenting the feature delivery."
+    }
+  ],
+
+  "environment_variables": [],
+
+  "setup_commands": [
+    "npm install",
+    "node bin/aitri-hub.js setup",
+    "node bin/aitri-hub.js monitor",
+    "docker compose -f docker/docker-compose.yml up --build -d"
+  ],
+
+  "test_command": "npm test",
+  "test_runner": "node --test tests/unit/*.test.js tests/integration/*.test.js",
+  "test_files": [
+    "tests/unit/aitri-reader.test.js",
+    "tests/unit/alerts-engine.test.js"
+  ],
+
+  "test_results_summary": {
+    "total": 184,
+    "passed": 184,
+    "failed": 0,
+    "new_tests_added": 37
+  },
+
+  "technical_debt": [],
+
+  "breaking_changes": [
+    {
+      "description": "readAitriState() now returns artifactsDir: '' (empty string) when the field is absent or empty in .aitri, instead of the previous default of 'spec'. Callers that relied on the implicit 'spec' default when adopting a project without an explicit artifactsDir field will now receive ''.",
+      "migration": "No migration needed — collector/index.js uses aitriState?.artifactsDir ?? 'spec' with nullish coalescing (??) which does NOT fall back on empty string. The empty string is intentional: it causes artifact lookups to resolve to the project root, which is correct for adopted projects. Projects with explicit artifactsDir: 'spec' are unaffected.",
+      "affected_callers": ["lib/collector/index.js line 111 — already handles '' correctly via path.join semantics"]
+    }
+  ],
+
+  "traceability": [
+    { "fr_id": "FR-010", "implemented_in": "lib/collector/aitri-reader.js", "test_ids": ["TC-010h", "TC-010f", "TC-010e"] },
+    { "fr_id": "FR-011", "implemented_in": "lib/collector/aitri-reader.js", "test_ids": ["TC-011h", "TC-011f", "TC-011e"] },
+    { "fr_id": "FR-012", "implemented_in": "lib/collector/aitri-reader.js", "test_ids": ["TC-012h", "TC-012f", "TC-012e"] },
+    { "fr_id": "FR-013", "implemented_in": "lib/collector/aitri-reader.js", "test_ids": ["TC-013h", "TC-013f", "TC-013e", "TC-013e2"] },
+    { "fr_id": "FR-014", "implemented_in": "lib/alerts/engine.js", "test_ids": ["TC-014h", "TC-014f", "TC-014e", "TC-014e2", "TC-014e3"] }
+  ]
+}

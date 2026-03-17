@@ -1,0 +1,30 @@
+version: "3.9"
+
+# docker-compose.yml — integration_update feature
+# Production deployment uses docker/docker-compose.yml in the project root.
+# This file covers the integration_update feature for Phase 5 compliance.
+
+services:
+  aitri-hub:
+    build:
+      context: ../..
+      dockerfile: features/integration_update/Dockerfile
+    image: aitri-hub:integration-update
+    restart: unless-stopped
+    user: "1000:1000"
+    read_only: true
+    volumes:
+      - type: bind
+        source: ${AITRI_HUB_DIR:-~/.aitri-hub}
+        target: /data
+        read_only: false
+    environment:
+      - AITRI_HUB_REFRESH_MS=${AITRI_HUB_REFRESH_MS:-5000}
+      - AITRI_HUB_STALE_HOURS=${AITRI_HUB_STALE_HOURS:-72}
+      - AITRI_HUB_MAX_PROJECTS=${AITRI_HUB_MAX_PROJECTS:-50}
+    healthcheck:
+      test: ["CMD", "node", "bin/aitri-hub.js", "--version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

@@ -1,0 +1,147 @@
+{
+  "executed_at": "2026-03-17T23:41:19.933Z",
+  "test_runner": "npm test",
+  "exit_code": 0,
+  "results": [
+    {
+      "tc_id": "TC-010h",
+      "status": "pass",
+      "notes": "✔ TC-010h: readAitriState — returns aitriVersion, updatedAt, createdAt when present (1.063959ms)"
+    },
+    {
+      "tc_id": "TC-010f",
+      "status": "pass",
+      "notes": "✔ TC-010f: readAitriState — returns null for aitriVersion, updatedAt, createdAt when absent (1.4525ms)"
+    },
+    {
+      "tc_id": "TC-010e",
+      "status": "pass",
+      "notes": "✔ TC-010e: readAitriState — returns aitriVersion=null when field is a number (1.6045ms)"
+    },
+    {
+      "tc_id": "TC-011h",
+      "status": "pass",
+      "notes": "✔ TC-011h: readAitriState — artifactsDir \"spec\" preserved when explicit (1.716542ms)"
+    },
+    {
+      "tc_id": "TC-011f",
+      "status": "pass",
+      "notes": "✔ TC-011f: readAitriState — artifactsDir defaults to \"\" when field absent (1.383375ms)"
+    },
+    {
+      "tc_id": "TC-011e",
+      "status": "pass",
+      "notes": "✔ TC-011e: readAitriState — projectName defaults to path.basename(projectDir) when absent (0.561667ms)"
+    },
+    {
+      "tc_id": "TC-012h",
+      "status": "pass",
+      "notes": "✔ TC-012h: detectDrift — driftPhases fast path returns hasDrift=true (1.032834ms)"
+    },
+    {
+      "tc_id": "TC-012f",
+      "status": "pass",
+      "notes": "✔ TC-012f: detectDrift — empty driftPhases[] does not trigger drift (0.857542ms)"
+    },
+    {
+      "tc_id": "TC-012e",
+      "status": "pass",
+      "notes": "✔ TC-012e: detectDrift — absent driftPhases (pre-v0.1.58) falls through without throwing (12.951792ms)"
+    },
+    {
+      "tc_id": "TC-013h",
+      "status": "pass",
+      "notes": "✔ TC-013h: detectDrift — hasDrift=false when artifact matches stored hash (8.513208ms)"
+    },
+    {
+      "tc_id": "TC-013f",
+      "status": "pass",
+      "notes": "✔ TC-013f: detectDrift — hasDrift=true when artifact differs from stored hash (1.0685ms)"
+    },
+    {
+      "tc_id": "TC-013e",
+      "status": "pass",
+      "notes": "✔ TC-013e: detectDrift — approved phase with no stored hash is NOT counted as drifted (0.407ms)"
+    },
+    {
+      "tc_id": "TC-013e2",
+      "status": "pass",
+      "notes": "✔ TC-013e2: detectDrift — artifact file missing on disk returns hasDrift=false without throwing (0.55175ms)"
+    },
+    {
+      "tc_id": "TC-014h",
+      "status": "pass",
+      "notes": "✔ TC-014h: evaluateAlerts — VERSION_MISMATCH alert when project version differs from CLI (0.272333ms)"
+    },
+    {
+      "tc_id": "TC-014f",
+      "status": "pass",
+      "notes": "✔ TC-014f: evaluateAlerts — no VERSION_MISMATCH when aitriVersion is null (0.4835ms)"
+    },
+    {
+      "tc_id": "TC-014e",
+      "status": "pass",
+      "notes": "✔ TC-014e: evaluateAlerts — no VERSION_MISMATCH when CLI version unavailable (null cache) (0.16175ms)"
+    },
+    {
+      "tc_id": "TC-014e2",
+      "status": "pass",
+      "notes": "✔ TC-014e2: evaluateAlerts — no VERSION_MISMATCH when versions match (0.070292ms)"
+    },
+    {
+      "tc_id": "TC-010e2e",
+      "status": "pass",
+      "notes": "✔ TC-010e2e: aitriVersion flows from .aitri through readAitriState correctly (11.629541ms)"
+    },
+    {
+      "tc_id": "TC-014e3e",
+      "status": "pass",
+      "notes": "✔ TC-014e3e: VERSION_MISMATCH alert generated when project aitriVersion differs from cached CLI version (2.978666ms)"
+    }
+  ],
+  "fr_coverage": [
+    {
+      "fr_id": "FR-010",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-011",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-012",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-013",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-014",
+      "tests_passing": 5,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    }
+  ],
+  "summary": {
+    "total": 19,
+    "passed": 19,
+    "failed": 0,
+    "skipped": 0,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 0
+  }
+}

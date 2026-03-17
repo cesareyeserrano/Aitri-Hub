@@ -337,15 +337,15 @@ describe('readAitriState — features/ subdirs without .aitri are ignored', () =
   });
 });
 
-// ── Extra: artifactsDir defaults to "spec" when missing from config ───────────
+// ── FR-011: artifactsDir defaults to '' (not 'spec') per integration contract ─
 
-describe('readAitriState — artifactsDir defaults to "spec"', () => {
+describe('TC-011f: readAitriState — artifactsDir defaults to "" when field absent', () => {
   let dir;
 
   before(() => {
     dir = tmpDir();
     fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      projectName: 'no-artifacts-dir',
+      projectName: 'adopted-project',
       currentPhase: 1,
       approvedPhases: [],
       completedPhases: [],
@@ -354,8 +354,325 @@ describe('readAitriState — artifactsDir defaults to "spec"', () => {
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
-  it('returns artifactsDir="spec" when field is absent', () => {
+  it('returns artifactsDir="" (empty string) when field is absent — NOT "spec"', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.artifactsDir, '');
+    assert.notEqual(result.artifactsDir, 'spec');
+  });
+});
+
+describe('TC-011h: readAitriState — artifactsDir "spec" preserved when explicit', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      projectName: 'hub',
+      artifactsDir: 'spec',
+      currentPhase: 1,
+      approvedPhases: [],
+      completedPhases: [],
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns artifactsDir="spec" when explicitly set', () => {
     const result = readAitriState(dir);
     assert.equal(result.artifactsDir, 'spec');
+  });
+
+  it('returns projectName="hub"', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.projectName, 'hub');
+  });
+});
+
+describe('TC-011e: readAitriState — projectName defaults to path.basename(projectDir) when absent', () => {
+  let dir;
+
+  before(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'finance-tracker-'));
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      currentPhase: 1,
+      approvedPhases: [],
+      completedPhases: [],
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns projectName equal to path.basename of projectDir when field absent', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.projectName, path.basename(dir));
+  });
+});
+
+// ── FR-010: aitriVersion, updatedAt, createdAt ────────────────────────────────
+
+describe('TC-010h: readAitriState — returns aitriVersion, updatedAt, createdAt when present', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      projectName: 'test',
+      aitriVersion: '0.1.63',
+      updatedAt: '2026-03-17T23:00:00.000Z',
+      createdAt: '2025-11-01T14:00:00.000Z',
+      currentPhase: 2,
+      approvedPhases: [1],
+      completedPhases: [1],
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns aitriVersion="0.1.63"', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.aitriVersion, '0.1.63');
+  });
+
+  it('returns updatedAt="2026-03-17T23:00:00.000Z"', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.updatedAt, '2026-03-17T23:00:00.000Z');
+  });
+
+  it('returns createdAt="2025-11-01T14:00:00.000Z"', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.createdAt, '2025-11-01T14:00:00.000Z');
+  });
+});
+
+describe('TC-010f: readAitriState — returns null for aitriVersion, updatedAt, createdAt when absent', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      projectName: 'legacy-project',
+      currentPhase: 3,
+      approvedPhases: [1, 2],
+      completedPhases: [1, 2],
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns aitriVersion=null when field absent', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.aitriVersion, null);
+  });
+
+  it('returns updatedAt=null when field absent', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.updatedAt, null);
+  });
+
+  it('returns createdAt=null when field absent', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.createdAt, null);
+  });
+
+  it('does not throw', () => {
+    assert.doesNotThrow(() => readAitriState(dir));
+  });
+});
+
+describe('TC-010e: readAitriState — returns aitriVersion=null when field is a number', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      aitriVersion: 163,
+      currentPhase: 1,
+      approvedPhases: [],
+      completedPhases: [],
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns aitriVersion=null when value is number 163 (not string)', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.aitriVersion, null);
+  });
+});
+
+// ── FR-012: driftPhases fast path ─────────────────────────────────────────────
+
+describe('TC-012h: detectDrift — driftPhases fast path returns hasDrift=true', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      currentPhase: 3,
+      approvedPhases: [1, 2],
+      completedPhases: [1, 2],
+      driftPhases: ['2'],
+      artifactHashes: {},
+    }));
+    // No artifact files — proves fast path doesn't need them
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns hasDrift=true from driftPhases fast path without reading artifact files', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.hasDrift, true);
+  });
+});
+
+describe('TC-012f: detectDrift — empty driftPhases[] does not trigger drift', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      currentPhase: 2,
+      approvedPhases: [1],
+      completedPhases: [1],
+      driftPhases: [],
+      artifactHashes: {},
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns hasDrift=false when driftPhases is empty and no stored hashes', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.hasDrift, false);
+  });
+});
+
+describe('TC-012e: detectDrift — absent driftPhases (pre-v0.1.58) falls through without throwing', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      currentPhase: 2,
+      approvedPhases: [1],
+      completedPhases: [1],
+      artifactHashes: {},
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('does not throw when driftPhases field is absent', () => {
+    assert.doesNotThrow(() => readAitriState(dir));
+  });
+
+  it('returns hasDrift=false (no hashes, no artifact files)', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.hasDrift, false);
+  });
+});
+
+// ── FR-013: dynamic sha256 hash check ─────────────────────────────────────────
+
+import crypto from 'node:crypto';
+
+function sha256(content) {
+  return crypto.createHash('sha256').update(content).digest('hex');
+}
+
+describe('TC-013h: detectDrift — hasDrift=false when artifact matches stored hash', () => {
+  let dir;
+  const content = '{"project_name":"test"}';
+
+  before(() => {
+    dir = tmpDir();
+    fs.mkdirSync(path.join(dir, 'spec'));
+    fs.writeFileSync(path.join(dir, 'spec', '01_REQUIREMENTS.json'), content);
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      currentPhase: 2,
+      approvedPhases: [1],
+      completedPhases: [1],
+      artifactsDir: 'spec',
+      artifactHashes: { '1': sha256(content) },
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns hasDrift=false when artifact content matches stored sha256', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.hasDrift, false);
+  });
+});
+
+describe('TC-013f: detectDrift — hasDrift=true when artifact differs from stored hash', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.mkdirSync(path.join(dir, 'spec'));
+    fs.writeFileSync(path.join(dir, 'spec', '01_REQUIREMENTS.json'), '{"project_name":"modified"}');
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      currentPhase: 2,
+      approvedPhases: [1],
+      completedPhases: [1],
+      artifactsDir: 'spec',
+      artifactHashes: { '1': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns hasDrift=true when current sha256 differs from stored hash', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.hasDrift, true);
+  });
+});
+
+describe('TC-013e: detectDrift — approved phase with no stored hash is NOT counted as drifted', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      currentPhase: 2,
+      approvedPhases: [1],
+      completedPhases: [1],
+      artifactHashes: {},
+    }));
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('returns hasDrift=false when phase 1 approved but artifactHashes is empty', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.hasDrift, false);
+  });
+});
+
+describe('TC-013e2: detectDrift — artifact file missing on disk returns hasDrift=false without throwing', () => {
+  let dir;
+
+  before(() => {
+    dir = tmpDir();
+    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
+      currentPhase: 2,
+      approvedPhases: [1],
+      completedPhases: [1],
+      artifactsDir: 'spec',
+      artifactHashes: { '1': 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
+    }));
+    // spec/01_REQUIREMENTS.json intentionally NOT created
+  });
+
+  after(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('does not throw when artifact file is missing', () => {
+    assert.doesNotThrow(() => readAitriState(dir));
+  });
+
+  it('returns hasDrift=false when artifact file does not exist on disk', () => {
+    const result = readAitriState(dir);
+    assert.equal(result.hasDrift, false);
   });
 });
