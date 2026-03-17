@@ -50,43 +50,43 @@ describe('TC-005e: renderDashboard — 60-column terminal hides ALERTS column', 
   it('includes project name in output at width=60', () => {
     const output = renderDashboard(data, 60);
     const plain = output.replace(/\x1b\[[0-9;]*m/g, '');
-    assert.ok(plain.includes('my-app'), `Expected project name in output, got:\n${plain}`);
+    assert.ok(plain.includes('MY-APP'), `Expected project name in output, got:\n${plain}`);
   });
 });
 
-// ── Full-width mode includes all column headers ───────────────────────────────
+// ── Full-width mode renders card with all key sections ────────────────────────
 
-describe('renderDashboard — full-width mode (80 cols) includes all headers', () => {
+describe('renderDashboard — full-width mode (80 cols) renders card content', () => {
   const data = makeData([makeProject()]);
 
-  it('includes PROJECT column header', () => {
+  it('includes project name (uppercased) in card output', () => {
     const plain = renderDashboard(data, 80).replace(/\x1b\[[0-9;]*m/g, '');
-    assert.ok(plain.includes('PROJECT'));
+    assert.ok(plain.includes('MY-APP'));
   });
 
-  it('includes PHASES column header', () => {
+  it('includes status label in card output', () => {
     const plain = renderDashboard(data, 80).replace(/\x1b\[[0-9;]*m/g, '');
-    assert.ok(plain.includes('PHASES'));
+    assert.ok(plain.includes('HEALTHY'));
   });
 
-  it('includes TESTS column header', () => {
+  it('includes phase progress in card output', () => {
     const plain = renderDashboard(data, 80).replace(/\x1b\[[0-9;]*m/g, '');
-    assert.ok(plain.includes('TESTS'));
+    assert.ok(plain.includes('Phase'));
   });
 
-  it('includes LAST COMMIT column header', () => {
+  it('includes tests row in card output', () => {
     const plain = renderDashboard(data, 80).replace(/\x1b\[[0-9;]*m/g, '');
-    assert.ok(plain.includes('LAST COMMIT'));
+    assert.ok(plain.includes('Tests:'));
   });
 
-  it('includes ALERTS column header', () => {
+  it('includes commit row in card output', () => {
     const plain = renderDashboard(data, 80).replace(/\x1b\[[0-9;]*m/g, '');
-    assert.ok(plain.includes('ALERTS'));
+    assert.ok(plain.includes('Commit:'));
   });
 
-  it('includes project name in output', () => {
+  it('includes AITRI HUB header', () => {
     const plain = renderDashboard(data, 80).replace(/\x1b\[[0-9;]*m/g, '');
-    assert.ok(plain.includes('my-app'));
+    assert.ok(plain.includes('AITRI HUB'));
   });
 });
 

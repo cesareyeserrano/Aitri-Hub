@@ -59,7 +59,7 @@ test('TC-006f: when dashboard.json missing, empty state is shown', async ({ page
 
 // ── Header summary pills are visible ─────────────────────────────────────────
 
-test('Header renders healthy/warning/error summary pills', async ({ page }) => {
+test('TC-006g: Header renders healthy/warning/error summary pills', async ({ page }) => {
   await page.goto(BASE_URL);
   await page.waitForSelector('[data-testid="pill-healthy"], .skeleton', { timeout: 10_000 });
 

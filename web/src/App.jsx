@@ -6,7 +6,7 @@
  * @aitri-trace FR-ID: FR-006, FR-009, US-ID: US-006, AC-ID: AC-009
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Header from './components/Header.jsx';
 import ProjectCard from './components/ProjectCard.jsx';
 import ConnectionBanner from './components/ConnectionBanner.jsx';
@@ -73,6 +73,9 @@ export default function App() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [activeTab,   setActiveTab]   = useState(TABS.OVERVIEW);
 
+  // Use a ref to track failCount so fetchData stays stable (no stale closure).
+  const failCountRef = useRef(0);
+
   const fetchData = useCallback(async () => {
     try {
       const res = await fetch(DASHBOARD_URL, { cache: 'no-store' });
@@ -81,30 +84,31 @@ export default function App() {
       setData(json);
       setLoading(false);
       setLastUpdated(new Date());
-      if (failCount > 0) {
+      if (failCountRef.current > 0) {
         setConnStatus(CONN.RESTORED);
         setTimeout(() => setConnStatus(CONN.CONNECTED), 2_000);
       } else {
         setConnStatus(CONN.CONNECTED);
       }
+      failCountRef.current = 0;
       setFailCount(0);
     } catch {
-      const newCount = failCount + 1;
-      setFailCount(newCount);
-      if (newCount >= FAILURE_THRESHOLD) {
+      failCountRef.current += 1;
+      setFailCount(failCountRef.current);
+      if (failCountRef.current >= FAILURE_THRESHOLD) {
         setConnStatus(CONN.FAILED);
       } else {
         setConnStatus(CONN.RETRYING);
       }
       setLoading(false);
     }
-  }, [failCount]);
+  }, []); // stable — reads failCount via ref, not closure over state
 
   useEffect(() => {
     fetchData();
     const timer = setInterval(fetchData, POLL_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fetchData]);
 
   const projects = data?.projects ?? [];
   const healthy  = projects.filter(p => p.status === 'healthy').length;

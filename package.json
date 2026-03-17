@@ -10,7 +10,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "test": "node --test tests/unit/aitri-reader.test.js tests/unit/git-reader.test.js tests/unit/test-reader.test.js tests/unit/compliance-reader.test.js tests/unit/requirements-reader.test.js tests/unit/alerts-engine.test.js tests/unit/cli-renderer.test.js tests/unit/dashboard-store.test.js tests/unit/web-config.test.js tests/integration/setup.test.js tests/integration/dashboard-write.test.js tests/integration/remote-collector.test.js",
+    "test": "node --test tests/unit/*.test.js tests/integration/*.test.js",
     "test:e2e": "npx playwright test tests/e2e/",
     "test:all": "npm test && npm run test:e2e"
   },

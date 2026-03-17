@@ -132,7 +132,7 @@ describe('TC-001e: writeProjects — preserves existing data until explicitly ov
 
 // ── inferName and projectId helpers ──────────────────────────────────────────
 
-describe('inferName()', () => {
+describe('TC-001g: inferName() — infers display name from path and URL', () => {
   it('infers name from local path last segment', () => {
     assert.equal(inferName('/home/user/projects/finance-app'), 'finance-app');
   });
@@ -146,7 +146,7 @@ describe('inferName()', () => {
   });
 });
 
-describe('projectId()', () => {
+describe('TC-001i: projectId() — generates deterministic 8-char hex ID', () => {
   it('returns an 8-character hex string', () => {
     const id = projectId('/home/user/projects/test');
     assert.equal(id.length, 8);

@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Unit + Integration Tests ──────────────────────────────────────────────────
+  test:
+    name: Test (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18, 20]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure git (required by remote-collector tests)
+        run: |
+          git config --global user.email "ci@aitri-hub.test"
+          git config --global user.name "CI"
+
+      - name: Run unit and integration tests
+        run: npm test
+
+  # ── Web App Build ─────────────────────────────────────────────────────────────
+  build-web:
+    name: Build Web App
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install web dependencies
+        run: npm ci
+        working-directory: web
+
+      - name: Build React app
+        run: npm run build
+        working-directory: web
+
+      - name: Upload web dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: docker/web-dist/
+          retention-days: 7
+
+  # ── E2E Tests ─────────────────────────────────────────────────────────────────
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: build-web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download web dist
+        uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: docker/web-dist/
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start dashboard server
+        run: |
+          mkdir -p ~/.aitri-hub
+          echo '{"schemaVersion":"1","collectedAt":"2026-01-01T00:00:00.000Z","projects":[]}' > ~/.aitri-hub/dashboard.json
+          node bin/aitri-hub.js web &
+          echo "SERVER_PID=$!" >> $GITHUB_ENV
+
+      - name: Wait for server to be ready
+        run: |
+          for i in $(seq 1 15); do
+            curl -sf http://localhost:3000/health && break
+            sleep 1
+          done
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Stop server
+        if: always()
+        run: kill $SERVER_PID || true

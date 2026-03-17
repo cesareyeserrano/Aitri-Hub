@@ -6,7 +6,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
-const VERSION = '0.1.0';
+/* global __APP_VERSION__ */
+const VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0';
 
 /**
  * Format a Date into HH:MM:SS clock string.
