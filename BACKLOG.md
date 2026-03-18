@@ -7,6 +7,40 @@
 
 ## Open
 
+- [ ] P2 — **External signals contract (`spec/06_EXTERNAL_SIGNALS.json`)** — Hub can't run static analysis, security scans, or dependency audits directly. External tools (ESLint, npm audit, GitLeaks, Snyk, etc.) should be able to write their findings into a standardized file that Hub reads and surfaces as alerts.
+
+  Schema proposal:
+  ```json
+  {
+    "generatedAt": "ISO8601",
+    "signals": [
+      {
+        "tool": "eslint",
+        "type": "code-quality",
+        "severity": "warning",
+        "message": "15 lint errors in src/",
+        "command": "npm run lint"
+      }
+    ]
+  }
+  ```
+
+  Files:
+  - `lib/collector/external-signals-reader.js` — reads `spec/06_EXTERNAL_SIGNALS.json`, validates schema, returns signals[]
+  - `lib/alerts/engine.js` — pass signals through as-is into the alerts array (tool owns severity)
+  - `docs/integrations/ARTIFACTS.md` — document schema for tool authors
+
+  Decisions:
+  - Hub never knows about specific tools — it just reads signals and passes them through
+  - `severity` in the file maps to Hub's BLOCKING/WARNING/INFO
+  - File is optional — if absent, no signals (no crash)
+  - Tools write this file; it is NOT written by Aitri Core
+
+  Acceptance:
+  - Write a `spec/06_EXTERNAL_SIGNALS.json` manually with 1 warning → appears in Hub alerts tab
+  - File absent → no alert, no crash
+  - Invalid JSON → no alert, no crash
+
 - [ ] P2 — **Self-managed project registry** — Since Aitri v0.1.64, `aitri init` no longer auto-registers projects in Hub. New users won't know they need to run `aitri-hub setup` manually.
 
   Problem: First-time Hub users initialize an Aitri project and expect it to appear in Hub automatically. It no longer does. Without clear onboarding guidance, Hub appears broken.
