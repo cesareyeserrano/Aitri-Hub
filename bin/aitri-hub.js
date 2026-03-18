@@ -44,9 +44,12 @@ async function main() {
     case 'init':
       await cmdInit();
       break;
-    case 'setup':
-      await cmdSetup();
+    case 'setup': {
+      const scanIdx = rest.indexOf('--scan');
+      const scanDir = scanIdx !== -1 ? rest[scanIdx + 1] : undefined;
+      await cmdSetup({ scanDir });
       break;
+    }
     case 'monitor':
       await cmdMonitor();
       break;

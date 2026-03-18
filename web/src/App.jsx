@@ -8,18 +8,13 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Header from './components/Header.jsx';
-import ProjectCard from './components/ProjectCard.jsx';
 import ConnectionBanner from './components/ConnectionBanner.jsx';
+import OverviewTab from './components/OverviewTab.jsx';
 import AlertsTab from './components/AlertsTab.jsx';
 import VelocityTab from './components/VelocityTab.jsx';
 import ProjectsTable from './components/ProjectsTable.jsx';
 import ActivityTab from './components/ActivityTab.jsx';
 
-/**
- * Group projects by parent folder name (basename of parent dir for local, 'remote' for URLs).
- * @param {object[]} projects
- * @returns {{ folder: string, projects: object[] }[]}
- */
 function groupByFolder(projects) {
   const groups = new Map();
   for (const p of projects) {
@@ -192,48 +187,7 @@ export default function App() {
       <main className="main">
         {/* ── Overview tab ── */}
         {activeTab === TABS.OVERVIEW && (
-          <>
-            {loading && (
-              <div className="project-grid">
-                {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
-              </div>
-            )}
-            {!loading && projects.length === 0 && (
-              <div className="empty-state">
-                <p>No projects registered.</p>
-                <p>
-                  Run <code>aitri-hub setup</code> to add projects, then{' '}
-                  <code>aitri-hub monitor</code> to start collecting data.
-                </p>
-              </div>
-            )}
-            {!loading && projects.length > 0 && (() => {
-              const groups = groupByFolder(projects);
-              const multiGroup = groups.length > 1;
-              let globalIdx = 0;
-              return groups.map(({ folder, projects: groupProjects }) => (
-                <div key={folder}>
-                  {multiGroup && (
-                    <div className="folder-group-header">
-                      <span className="folder-group-header__label">{folder}/</span>
-                    </div>
-                  )}
-                  <div className="project-grid">
-                    {groupProjects.map((project) => {
-                      const delay = globalIdx++ * 50;
-                      return (
-                        <ProjectCard
-                          key={project.id}
-                          project={project}
-                          animationDelay={delay}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              ));
-            })()}
-          </>
+          <OverviewTab projects={projects} loading={loading} />
         )}
 
         {/* ── Alerts tab ── */}
@@ -285,20 +239,3 @@ export default function App() {
   );
 }
 
-function SkeletonCard() {
-  return (
-    <div className="card" data-status="loading">
-      <div className="card__header">
-        <div className="skeleton skeleton--text" style={{ width: '60%' }} />
-        <div className="skeleton skeleton--pill" />
-      </div>
-      <hr className="card__divider" />
-      <div className="card__fields">
-        <div className="skeleton skeleton--bar" />
-        <div className="skeleton skeleton--text" style={{ width: '80%' }} />
-        <div className="skeleton skeleton--text" style={{ width: '50%' }} />
-        <div className="skeleton skeleton--text" style={{ width: '65%' }} />
-      </div>
-    </div>
-  );
-}

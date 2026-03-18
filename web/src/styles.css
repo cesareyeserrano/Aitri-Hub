@@ -965,6 +965,206 @@ body {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
+/* Overview tab — stat tiles + triage section                                   */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.overview-tab {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.overview-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-4);
+}
+@media (max-width: 900px) { .overview-stats { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 600px) { .overview-stats { grid-template-columns: repeat(2, 1fr); } }
+
+.overview-stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  border-left: 3px solid var(--border);
+}
+.overview-stat--alert {
+  border-left-color: currentColor;
+}
+.overview-stat__value {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.overview-stat__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--syn-comment);
+}
+
+/* ── Triage section ── */
+.triage {
+  border: 1px solid var(--syn-red);
+  border-radius: 3px;
+  overflow: hidden;
+  background: rgba(248, 81, 73, 0.04);
+}
+.triage__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: rgba(248, 81, 73, 0.08);
+  border-bottom: 1px solid rgba(248, 81, 73, 0.25);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.triage__glyph  { color: var(--syn-red); }
+.triage__title  { flex: 1; color: var(--syn-red); }
+.triage__count  {
+  color: var(--syn-red);
+  background: rgba(248, 81, 73, 0.1);
+  border: 1px solid var(--syn-red);
+  border-radius: 2px;
+  padding: 0 6px;
+  font-size: 10px;
+}
+.triage__rows {
+  display: flex;
+  flex-direction: column;
+}
+.triage__row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: 6px var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  border-bottom: 1px solid rgba(248, 81, 73, 0.12);
+}
+.triage__row:last-child { border-bottom: none; }
+.triage__project { color: var(--syn-blue); font-weight: 500; min-width: 120px; flex-shrink: 0; }
+.triage__arrow   { color: var(--text-muted); flex-shrink: 0; }
+.triage__msg     { color: var(--text-dim); flex: 1; }
+.triage__cmd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--syn-comment);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 0 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* Health report — issue sections (BLOCKING / WARNING / INFO)                   */
+/* ─────────────────────────────────────────────────────────────────────────── */
+.health-score-bar {
+  display: flex;
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  gap: 2px;
+  margin: var(--space-3) 0 var(--space-5);
+}
+.health-score-bar__seg { border-radius: 2px; transition: flex .4s ease; }
+.health-score-bar__seg--blocking { background: var(--syn-red);    }
+.health-score-bar__seg--warning  { background: var(--syn-yellow); }
+.health-score-bar__seg--info     { background: var(--syn-teal);   }
+
+.health-report {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.health-section {
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.health-section__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.health-section__glyph--blocking { color: var(--syn-red);    }
+.health-section__glyph--warning  { color: var(--syn-yellow); }
+.health-section__glyph--info     { color: var(--syn-teal);   }
+
+.health-section__label { flex: 1; }
+.health-section--blocking .health-section__label { color: var(--syn-red);    }
+.health-section--warning  .health-section__label { color: var(--syn-yellow); }
+.health-section--info     .health-section__label { color: var(--syn-teal);   }
+
+.health-section__count {
+  padding: 1px 6px;
+  border-radius: 2px;
+  border: 1px solid currentColor;
+  font-size: 10px;
+}
+.health-section--blocking .health-section__count { color: var(--syn-red);    background: rgba(248,81,73,0.1);  }
+.health-section--warning  .health-section__count { color: var(--syn-yellow); background: rgba(227,179,65,0.1); }
+.health-section--info     .health-section__count { color: var(--syn-teal);   background: rgba(57,197,207,0.1); }
+
+.health-section__rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.health-issue {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: 6px var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+  border-left: 3px solid transparent;
+}
+.health-issue:last-child { border-bottom: none; }
+
+.health-issue--blocking { border-left-color: var(--syn-red);    background: rgba(248,81,73,0.04);  }
+.health-issue--warning  { border-left-color: var(--syn-yellow); background: rgba(227,179,65,0.04); }
+.health-issue--info     { border-left-color: var(--syn-teal);   background: rgba(57,197,207,0.04); }
+
+.health-issue__ln      { color: var(--text-muted); font-size: 11px; min-width: 22px; flex-shrink: 0; }
+.health-issue__project { color: var(--syn-blue); font-weight: 500; min-width: 120px; flex-shrink: 0; }
+.health-issue__arrow   { color: var(--text-muted); flex-shrink: 0; }
+.health-issue__msg     { color: var(--text-dim); flex: 1; }
+.health-issue__cmd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--syn-comment);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 0 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
 /* Velocity tab — metrics/stats code style                                      */
 /* ─────────────────────────────────────────────────────────────────────────── */
 .velocity-tab {}

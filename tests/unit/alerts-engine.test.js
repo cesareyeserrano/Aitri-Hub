@@ -79,9 +79,9 @@ describe('TC-007f: evaluateAlerts — verifyPassed=false generates verify-failed
     assert.equal(result[0].type, 'verify-failed');
   });
 
-  it('alert severity is error', () => {
+  it('alert severity is blocking', () => {
     const result = evaluateAlerts(data);
-    assert.equal(result[0].severity, 'error');
+    assert.equal(result[0].severity, 'blocking');
   });
 
   it('alert message is "Verify failed"', () => {
@@ -231,10 +231,10 @@ describe('deriveStatus()', () => {
     assert.equal(deriveStatus([{ severity: 'warning', type: 'stale', message: 'x' }]), 'warning');
   });
 
-  it('returns "error" for array with at least one error-severity alert', () => {
+  it('returns "error" for array with at least one blocking-severity alert', () => {
     assert.equal(deriveStatus([
       { severity: 'warning', type: 'stale', message: 'x' },
-      { severity: 'error', type: 'verify-failed', message: 'y' },
+      { severity: 'blocking', type: 'verify-failed', message: 'y' },
     ]), 'error');
   });
 });

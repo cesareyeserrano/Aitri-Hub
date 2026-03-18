@@ -29,9 +29,13 @@ Cuando gestionas N proyectos con Aitri, necesitas entrar en cada uno para ejecut
 
 ```bash
 npm install
-node bin/aitri-hub.js setup    # Registrar proyectos (interactivo)
-node bin/aitri-hub.js monitor  # Iniciar dashboard en terminal
+aitri-hub setup    # Registrar proyectos (interactivo)
+aitri-hub monitor  # Iniciar dashboard en terminal
 ```
+
+> **Nota:** Desde Aitri v0.1.64, `aitri init` ya no registra proyectos automáticamente en Hub.
+> Hub gestiona su propio registro de proyectos en `~/.aitri-hub/projects.json`.
+> Usa `aitri-hub setup` para registrar proyectos nuevos.
 
 ### Web Dashboard
 
@@ -92,6 +96,14 @@ npm run test:all   # Todos
 ```
 
 ## Arquitectura
+
+### Modelo de integración
+
+Hub es **read-only** sobre los proyectos Aitri. Nunca escribe en `.aitri` ni en `spec/` de ningún proyecto. Lee el estado directamente del filesystem (local) o de GitHub (remoto).
+
+Hub gestiona su propio registro de proyectos en `~/.aitri-hub/projects.json`. Aitri Core no escribe en ese archivo. La fuente de verdad del schema que Hub lee está documentada en el repositorio de Aitri: [`docs/integrations/SCHEMA.md`](https://github.com/cesareyeserrano/aitri/blob/main/docs/integrations/SCHEMA.md).
+
+### Flujo de datos
 
 El CLI recolecta métricas de cada proyecto (estado `.aitri`, historial Git, resultados de tests) y las escribe en `~/.aitri-hub/dashboard.json`. El web dashboard lee ese archivo vía nginx y lo muestra en una interfaz React. La comunicación entre ambos es exclusivamente por filesystem — sin IPC, sin base de datos.
 
