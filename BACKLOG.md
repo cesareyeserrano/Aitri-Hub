@@ -7,7 +7,7 @@
 
 ## Open
 
-- [ ] P2 — **External signals contract (`spec/06_EXTERNAL_SIGNALS.json`)** — Hub can't run static analysis, security scans, or dependency audits directly. External tools (ESLint, npm audit, GitLeaks, Snyk, etc.) should be able to write their findings into a standardized file that Hub reads and surfaces as alerts.
+- [x] P2 — **External signals contract (`spec/06_EXTERNAL_SIGNALS.json`)** *(implemented)* — Hub can't run static analysis, security scans, or dependency audits directly. External tools (ESLint, npm audit, GitLeaks, Snyk, etc.) should be able to write their findings into a standardized file that Hub reads and surfaces as alerts.
 
   Schema proposal:
   ```json
