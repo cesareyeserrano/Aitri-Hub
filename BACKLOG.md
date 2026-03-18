@@ -41,7 +41,7 @@
   - File absent → no alert, no crash
   - Invalid JSON → no alert, no crash
 
-- [ ] P2 — **Self-managed project registry** — Since Aitri v0.1.64, `aitri init` no longer auto-registers projects in Hub. New users won't know they need to run `aitri-hub setup` manually.
+- [x] P2 — **Self-managed project registry** *(implemented)* — Since Aitri v0.1.64, `aitri init` no longer auto-registers projects in Hub. New users won't know they need to run `aitri-hub setup` manually.
 
   Problem: First-time Hub users initialize an Aitri project and expect it to appear in Hub automatically. It no longer does. Without clear onboarding guidance, Hub appears broken.
 
@@ -65,7 +65,7 @@
   - `aitri-hub setup --scan ~/projects` finds all Aitri projects and offers to register them
   - `aitri-hub monitor` shows registered projects correctly
 
-- [ ] P3 — **GitHub remote project polling** — Hub monitors local projects via filesystem poll every 5s. Remote projects (GitHub repos) have no equivalent live monitoring mechanism.
+- [x] P3 — **GitHub remote project polling** *(implemented)* — Hub monitors local projects via filesystem poll every 5s. Remote projects (GitHub repos) have no equivalent live monitoring mechanism.
 
   Problem: Teams working on separate machines use GitHub as the shared source. Hub can register remote projects but cannot detect when the pipeline advances (new approval, drift, etc.) without a manual refresh.
 
