@@ -57,6 +57,38 @@ const EVENT_COLOR = {
   rejected:  'var(--syn-red)',
 };
 
+/**
+ * Derive how long the project has been in its current phase.
+ * Returns { label, days } or null if indeterminate.
+ */
+function phaseAge(aitriState) {
+  if (!aitriState) return null;
+  const { currentPhase, events = [], createdAt, approvedPhases = [] } = aitriState;
+  if (currentPhase === null || currentPhase === undefined) return null;
+  if (approvedPhases.length >= 5) return null; // pipeline complete
+
+  const priorTimes = (events ?? [])
+    .filter(e => {
+      const p = e.phase ?? e.phaseId ?? null;
+      return p !== null && Number(p) < currentPhase;
+    })
+    .map(e => new Date(e.at ?? e.timestamp ?? 0).getTime())
+    .filter(t => t > 0)
+    .sort((a, b) => b - a);
+
+  const enteredAt = priorTimes.length > 0
+    ? priorTimes[0]
+    : (createdAt ? new Date(createdAt).getTime() : null);
+
+  if (!enteredAt || enteredAt <= 0) return null;
+
+  const ms   = Date.now() - enteredAt;
+  const h    = ms / 3_600_000;
+  const days = h / 24;
+  const label = h < 1 ? 'just entered' : h < 48 ? `${Math.round(h)}h` : `${Math.round(days)}d`;
+  return { label, days };
+}
+
 function lastEventLabel(events) {
   if (!Array.isArray(events) || events.length === 0) return null;
   const ev = events[events.length - 1];
@@ -81,6 +113,7 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
   const isStalled          = (gitMeta?.lastCommitAgeHours ?? 0) > 72;
   const tests              = formatTests(testSummary);
   const lastEvent          = lastEventLabel(aitriState?.events);
+  const timeInPhase        = phaseAge(aitriState);
   const complianceSummary  = project.complianceSummary ?? null;
   const requirementsSummary = project.requirementsSummary ?? null;
 
@@ -226,6 +259,19 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
               </span>
             </div>
           </div>
+
+          {/* ── Time in current phase ────────────── */}
+          {timeInPhase && (
+            <div className="metric-row" style={{ marginTop: '2px' }}>
+              <span className="metric-row__icon" style={{ color: 'var(--syn-comment)' }}>⏱</span>
+              <span className="metric-row__label">phase {aitriState?.currentPhase}</span>
+              <span className="metric-row__value" style={{
+                color: timeInPhase.days > 14 ? 'var(--syn-orange)' : 'var(--text-dim)'
+              }}>
+                {timeInPhase.label} in phase
+              </span>
+            </div>
+          )}
 
           {/* ── Last pipeline event ───────────────── */}
           {lastEvent && (

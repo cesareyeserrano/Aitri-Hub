@@ -14,6 +14,7 @@ import AlertsTab from './components/AlertsTab.jsx';
 import VelocityTab from './components/VelocityTab.jsx';
 import ProjectsTable from './components/ProjectsTable.jsx';
 import ActivityTab from './components/ActivityTab.jsx';
+import FRCoverageTab from './components/FRCoverageTab.jsx';
 
 function groupByFolder(projects) {
   const groups = new Map();
@@ -52,6 +53,7 @@ const CONN = Object.freeze({
 const TABS = Object.freeze({
   OVERVIEW:  'overview',
   ALERTS:    'alerts',
+  COVERAGE:  'coverage',
   VELOCITY:  'velocity',
   ACTIVITY:  'activity',
   ALL:       'all',
@@ -154,6 +156,19 @@ export default function App() {
 
         <button
           role="tab"
+          className={`tab-btn ${activeTab === TABS.COVERAGE ? 'tab-btn--active' : ''}`}
+          onClick={() => setActiveTab(TABS.COVERAGE)}
+          aria-selected={activeTab === TABS.COVERAGE}
+        >
+          coverage.json
+          {!loading && (() => {
+            const n = projects.filter(p => (p.testSummary?.frCoverage?.length ?? 0) > 0).length;
+            return n > 0 ? <span className="tab-badge">{n}</span> : null;
+          })()}
+        </button>
+
+        <button
+          role="tab"
           className={`tab-btn ${activeTab === TABS.VELOCITY ? 'tab-btn--active' : ''}`}
           onClick={() => setActiveTab(TABS.VELOCITY)}
           aria-selected={activeTab === TABS.VELOCITY}
@@ -195,6 +210,13 @@ export default function App() {
           loading
             ? <div className="empty-state"><p>Loading…</p></div>
             : <AlertsTab projects={projects} />
+        )}
+
+        {/* ── FR Coverage tab ── */}
+        {activeTab === TABS.COVERAGE && (
+          loading
+            ? <div className="empty-state"><p>Loading…</p></div>
+            : <FRCoverageTab projects={projects} />
         )}
 
         {/* ── Velocity tab ── */}

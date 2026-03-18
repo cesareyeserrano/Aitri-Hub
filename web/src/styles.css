@@ -1066,6 +1066,160 @@ body {
   flex-shrink: 0;
 }
 
+/* ── Overview insights: phase distribution + health scores ── */
+.overview-insights {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+@media (max-width: 800px) { .overview-insights { grid-template-columns: 1fr; } }
+
+.phase-dist,
+.health-scores {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: var(--space-4);
+}
+
+.phase-dist__header,
+.health-scores__header {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--syn-comment);
+  margin-bottom: var(--space-3);
+  letter-spacing: 0.04em;
+}
+
+.phase-dist__bars,
+.health-scores__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.phase-dist__row,
+.health-scores__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.phase-dist__label { color: var(--text-dim); min-width: 130px; flex-shrink: 0; }
+.phase-dist__bar-wrap,
+.health-scores__bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.phase-dist__bar {
+  height: 100%;
+  background: var(--syn-teal);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.phase-dist__count { color: var(--text-muted); min-width: 20px; text-align: right; }
+
+.health-scores__grade { font-weight: 700; min-width: 18px; text-align: center; }
+.health-scores__name  { color: var(--text-dim); min-width: 120px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.health-scores__bar   { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
+.health-scores__value { min-width: 30px; text-align: right; font-weight: 600; }
+
+/* ── FR coverage tab ── */
+.fr-portfolio {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: var(--space-4);
+  margin-bottom: var(--space-2);
+}
+.fr-portfolio__bar-wrap {
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: var(--space-3);
+}
+.fr-portfolio__bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.fr-portfolio__stats {
+  display: flex;
+  gap: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+.fr-projects { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.fr-project {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.fr-project__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+  text-align: left;
+}
+.fr-project__header:hover { background: var(--surface-2); }
+.fr-project__toggle { color: var(--syn-comment); min-width: 12px; }
+.fr-project__name   { flex-shrink: 0; font-weight: 600; min-width: 120px; }
+.fr-project__bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: var(--surface-raised);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.fr-project__bar { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
+.fr-project__pct  { min-width: 36px; text-align: right; font-weight: 600; font-size: 11px; }
+.fr-project__stats {
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 140px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.fr-project__rows {
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.fr-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 4px var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border-bottom: 1px solid var(--surface-2);
+}
+.fr-row:last-child { border-bottom: none; }
+.fr-row--missing { background: rgba(248, 81, 73, 0.03); }
+.fr-row--partial { background: rgba(227, 179, 65, 0.03); }
+.fr-row__glyph  { font-size: 12px; min-width: 14px; }
+.fr-row__id     { color: var(--syn-blue); min-width: 80px; }
+.fr-row__status { color: var(--text-muted); }
+
 /* ─────────────────────────────────────────────────────────────────────────── */
 /* Health report — issue sections (BLOCKING / WARNING / INFO)                   */
 /* ─────────────────────────────────────────────────────────────────────────── */

@@ -36,6 +36,53 @@ function avgPipelinePct(projects) {
   return Math.round((sum / projects.length) * 100);
 }
 
+/**
+ * Count projects per phase (1-5). Returns array of { phase, count } sorted 1→5.
+ */
+function phaseDistribution(projects) {
+  const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (const p of projects) {
+    const phase = p.aitriState?.currentPhase;
+    if (phase >= 1 && phase <= 5) counts[phase]++;
+  }
+  return [1, 2, 3, 4, 5].map(phase => ({ phase, count: counts[phase] }));
+}
+
+/**
+ * Compute health score 0–100 for a single project.
+ * - Pipeline (40pts): 8pts per approved phase
+ * - Tests (30pts): pass rate × 30
+ * - No blocking alerts (20pts): 20 if none, 0 otherwise
+ * - Compliance (10pts): 10=compliant, 5=partial, 0=other
+ */
+export function healthScore(project) {
+  const approved  = project.aitriState?.approvedPhases?.length ?? 0;
+  const pipeline  = Math.min(40, approved * 8);
+
+  const ts        = project.testSummary;
+  const testPts   = ts?.available && ts.total > 0
+    ? Math.round((ts.passed / ts.total) * 30)
+    : 0;
+
+  const hasBlocking = (project.alerts ?? []).some(a => a.severity === 'blocking');
+  const blockPts  = hasBlocking ? 0 : 20;
+
+  const cs        = project.complianceSummary;
+  const compPts   = cs?.available
+    ? cs.overallStatus === 'compliant' ? 10 : cs.overallStatus === 'partial' ? 5 : 0
+    : 0;
+
+  return Math.min(100, pipeline + testPts + blockPts + compPts);
+}
+
+function scoreGrade(score) {
+  if (score >= 90) return { label: 'A', color: 'var(--syn-green)' };
+  if (score >= 75) return { label: 'B', color: 'var(--syn-teal)' };
+  if (score >= 55) return { label: 'C', color: 'var(--syn-yellow)' };
+  if (score >= 35) return { label: 'D', color: 'var(--syn-orange)' };
+  return               { label: 'F', color: 'var(--syn-red)' };
+}
+
 // ── Stat tile ─────────────────────────────────────────────────────────────────
 
 function StatTile({ label, value, colorVar, alert = false }) {
@@ -70,6 +117,66 @@ function TriageSection({ issues }) {
             )}
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Phase distribution ────────────────────────────────────────────────────────
+
+const PHASE_LABELS = { 1: 'Requirements', 2: 'Design', 3: 'Tests', 4: 'Implementation', 5: 'Compliance' };
+
+function PhaseDistribution({ projects }) {
+  const dist = phaseDistribution(projects);
+  const max  = Math.max(...dist.map(d => d.count), 1);
+  return (
+    <div className="phase-dist">
+      <div className="phase-dist__header">// phase_distribution</div>
+      <div className="phase-dist__bars">
+        {dist.map(({ phase, count }) => (
+          <div key={phase} className="phase-dist__row">
+            <span className="phase-dist__label">P{phase} {PHASE_LABELS[phase]}</span>
+            <div className="phase-dist__bar-wrap">
+              <div
+                className="phase-dist__bar"
+                style={{ width: count === 0 ? '2px' : `${Math.round((count / max) * 100)}%` }}
+              />
+            </div>
+            <span className="phase-dist__count">{count}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Health score row ──────────────────────────────────────────────────────────
+
+function HealthScoreRow({ projects }) {
+  const sorted = [...projects]
+    .map(p => ({ name: p.name, score: healthScore(p) }))
+    .sort((a, b) => a.score - b.score); // worst first
+
+  return (
+    <div className="health-scores">
+      <div className="health-scores__header">// health_score</div>
+      <div className="health-scores__rows">
+        {sorted.map(({ name, score }) => {
+          const grade = scoreGrade(score);
+          return (
+            <div key={name} className="health-scores__row">
+              <span className="health-scores__grade" style={{ color: grade.color }}>{grade.label}</span>
+              <span className="health-scores__name">{name}</span>
+              <div className="health-scores__bar-wrap">
+                <div
+                  className="health-scores__bar"
+                  style={{ width: `${score}%`, background: grade.color }}
+                />
+              </div>
+              <span className="health-scores__value" style={{ color: grade.color }}>{score}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -146,6 +253,14 @@ export default function OverviewTab({ projects, loading }) {
       {/* ── Triage — blocking issues only ── */}
       {blockingIssues.length > 0 && (
         <TriageSection issues={blockingIssues} />
+      )}
+
+      {/* ── Phase distribution + Health scores ── */}
+      {projects.length > 1 && (
+        <div className="overview-insights">
+          <PhaseDistribution projects={projects} />
+          <HealthScoreRow projects={projects} />
+        </div>
       )}
 
       {/* ── Project grid ── */}
