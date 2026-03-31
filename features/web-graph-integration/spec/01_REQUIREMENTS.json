@@ -1,0 +1,296 @@
+{
+  "project_name": "Aitri Hub — web-graph-integration",
+  "project_summary": {
+    "description": "Remove the CLI terminal dashboard (`aitri-hub monitor`) and absorb Aitri Graph as a native Artifact Graph tab in the Aitri Hub web dashboard. The CLI becomes a setup-and-launch tool only; all monitoring and visualization happens in the browser.",
+    "product_analysis": {
+      "north_star_kpi": "Artifact graph renders for a selected project within 2 seconds of tab open, with zero separate tool switches required",
+      "jtbd": "When I need to understand how my requirements, user stories, and test cases are connected across an Aitri project, let me see the full dependency graph inside Hub without opening a separate tool",
+      "guardrail_metric": "Existing web dashboard tabs (Overview, Alerts, Coverage, Velocity, Activity, All) must render in ≤2s and function correctly after CLI removal"
+    },
+    "idea_gaps": []
+  },
+
+  "no_go_zone": [
+    "No GitHub remote graph loading — graph reads local spec files only; remote URL projects show 'Graph not available for remote projects' in the Graph tab",
+    "No artifact editing from graph — graph is strictly read-only; no create, update, or delete actions on spec files",
+    "No migration of AITRI-GRAPH's standalone server.js, localStorage registry, or its own project management UI — only the rendering logic (normalizer, graph engine) is absorbed",
+    "No force-directed or 3D graph layouts — only dagre hierarchical DAG layout is supported in v1",
+    "No partial CLI monitor retained — `aitri-hub monitor` is fully removed, not deprecated with a flag; users are directed to `aitri-hub web`",
+    "No changes to the alerts engine — alert rules and evaluation logic are untouched",
+    "No CSS or styles imported from Aitri Graph — all visual styling uses Hub's existing design tokens and component styles; only graph rendering logic (normalizer + Cytoscape engine) is absorbed"
+  ],
+
+  "user_personas": [
+    {
+      "role": "Solo Developer",
+      "tech_level": "high",
+      "goal": "Inspect how requirements map to test cases for a specific project without leaving the Hub dashboard",
+      "pain_point": "Currently must open a separate Aitri Graph server and re-register the project there — duplicated setup, context switch"
+    },
+    {
+      "role": "Team Lead",
+      "tech_level": "high",
+      "goal": "Verify that all FRs have linked test cases before approving a phase, using the same tool the team already has open",
+      "pain_point": "No visual dependency map in Hub; must cross-reference JSON files manually or run a separate graph tool"
+    }
+  ],
+
+  "functional_requirements": [
+    {
+      "id": "FR-010",
+      "title": "Remove `aitri-hub monitor` CLI command",
+      "description": "The `aitri-hub monitor` subcommand and its supporting ANSI terminal renderer (`lib/renderer/cli.js`) are deleted. The CLI entry point no longer recognizes the `monitor` argument. Users are directed to `aitri-hub web` for monitoring.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Running `aitri-hub monitor` prints 'monitor removed — run `aitri-hub web` to open the dashboard' and exits with code 0",
+        "`lib/renderer/cli.js` is absent from the codebase; no ANSI terminal rendering code remains",
+        "`aitri-hub --help` no longer lists `monitor` as a valid command",
+        "`aitri-hub setup` and `aitri-hub web` continue to function correctly after the removal"
+      ],
+      "implementation_level": "complete"
+    },
+    {
+      "id": "FR-011",
+      "title": "Artifact Graph tab in the web dashboard",
+      "description": "The web dashboard gains a 7th navigation tab labeled 'Graph'. The tab is visible in the tab bar at all supported viewport widths (≥768px) without requiring scroll. When active, it renders the artifact dependency graph for the selected project.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Web dashboard renders 7 tabs; 'Graph' tab is visible in the tab bar at 768px viewport width without horizontal scroll",
+        "Clicking the 'Graph' tab activates it and renders the graph panel; no full page reload occurs",
+        "Graph tab is accessible via keyboard (Tab key cycles through all 7 tabs)"
+      ],
+      "implementation_level": "complete"
+    },
+    {
+      "id": "FR-012",
+      "title": "Collector reads spec artifacts per project and includes them in dashboard.json",
+      "description": "The collector gains a new reader `readSpecArtifacts(projectPath)` that reads `spec/01_REQUIREMENTS.json` and `spec/03_TEST_CASES.json` for each local project and includes their contents in that project's entry in dashboard.json. The React frontend reads spec data from dashboard.json via the existing `/data/dashboard.json` polling — no new API endpoint or nginx change required.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a project with a valid spec/01_REQUIREMENTS.json, when the Graph tab loads that project, then FR nodes are extracted and available for rendering within ≤1 second",
+        "Given a project with spec/03_TEST_CASES.json present, when the graph loads, then TC nodes are linked to their parent FR nodes using the test case's `requirement_id` field",
+        "Given a project with no spec/01_REQUIREMENTS.json, when the graph loads, then an empty-state message 'No artifacts found for this project' is displayed and no JavaScript error occurs",
+        "Given a project registered with a remote URL (not a local path), when the Graph tab is opened, then a message 'Graph not available for remote projects' is shown"
+      ],
+      "implementation_level": "complete"
+    },
+    {
+      "id": "FR-013",
+      "title": "Render artifact dependency graph as interactive DAG",
+      "description": "Artifact nodes (FRs at top tier, TCs at bottom tier) are rendered using Cytoscape.js with dagre hierarchical layout. The graph is pannable by drag and zoomable by mouse wheel. A fit-to-screen button resets the viewport.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Graph renders using dagre top-to-bottom hierarchical layout with FR nodes above TC nodes",
+        "Graph renders within ≤2 seconds of project selection for a spec with up to 50 FRs and 150 TCs",
+        "User can pan the graph by dragging the canvas and zoom with the mouse wheel without any additional controls",
+        "A 'Fit to screen' button resets the viewport so all nodes are visible within the canvas bounds"
+      ],
+      "implementation_level": "complete"
+    },
+    {
+      "id": "FR-014",
+      "title": "Color nodes by artifact approval status",
+      "description": "Each node in the graph is colored according to the artifact's approval status as read from the project's .aitri state: approved (green), in_progress (blue), pending (gray), drift (orange).",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Approved nodes render with background color #34D399; pending nodes with #94A3B8; in_progress nodes with #60A5FA; drift nodes with #FB923C",
+        "All four status colors meet a minimum contrast ratio of 4.5:1 against the graph canvas background",
+        "A legend showing the 4 status colors and their labels is visible within the Graph tab panel"
+      ],
+      "implementation_level": "complete"
+    },
+    {
+      "id": "FR-015",
+      "title": "Expand and collapse subtrees by node click",
+      "description": "Clicking a parent FR node toggles visibility of its descendant TC nodes. A collapsed node displays a badge showing the count of hidden children.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given a parent FR node with visible child TC nodes, when the user clicks the FR node, then all descendant TC nodes are hidden and the FR node shows a badge with the count of hidden children (e.g. '(3)')",
+        "Given a collapsed FR node with a children badge, when the user clicks it again, then all descendant nodes are restored to their layout positions",
+        "Collapse/expand transition completes within ≤200ms with no layout reflow of non-affected nodes"
+      ],
+      "implementation_level": "complete"
+    },
+    {
+      "id": "FR-016",
+      "title": "Project selector within the Graph tab",
+      "description": "The Graph tab provides a dropdown listing all projects registered in Hub. Selecting a project loads its artifact graph. The selection persists across tab switches within the same browser session.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Graph tab shows a dropdown populated with all projects from dashboard.json; dropdown renders within ≤500ms of tab activation",
+        "Selecting a project from the dropdown triggers graph load for that project within ≤2 seconds",
+        "Previously selected project is restored when the user navigates away and returns to the Graph tab within the same browser session (sessionStorage or React state)",
+        "If only one project is registered, it is auto-selected on tab open"
+      ],
+      "implementation_level": "complete"
+    }
+  ],
+
+  "user_stories": [
+    {
+      "id": "US-009",
+      "requirement_id": "FR-010",
+      "as_a": "developer",
+      "i_want": "the terminal monitor command to be removed and redirected to the web dashboard",
+      "so_that": "there is a single monitoring surface and I'm not confused by two diverging interfaces",
+      "acceptance_criteria": [
+        {
+          "id": "AC-015",
+          "given": "a developer runs `aitri-hub monitor` after upgrading",
+          "when": "the command executes",
+          "then": "output reads 'monitor removed — run `aitri-hub web` to open the dashboard' and the process exits with code 0"
+        }
+      ]
+    },
+    {
+      "id": "US-010",
+      "requirement_id": "FR-011",
+      "as_a": "developer",
+      "i_want": "to see a Graph tab in the Hub web dashboard",
+      "so_that": "I can access artifact visualization without switching to a separate tool",
+      "acceptance_criteria": [
+        {
+          "id": "AC-016",
+          "given": "the Hub web dashboard is open at 768px viewport",
+          "when": "the user looks at the tab bar",
+          "then": "all 7 tabs including 'Graph' are visible without horizontal scroll"
+        }
+      ]
+    },
+    {
+      "id": "US-011",
+      "requirement_id": "FR-012",
+      "as_a": "team lead",
+      "i_want": "the graph to load the project's spec files automatically",
+      "so_that": "I don't need to point the tool at files manually",
+      "acceptance_criteria": [
+        {
+          "id": "AC-017",
+          "given": "a project registered in Hub with spec/01_REQUIREMENTS.json containing 10 FRs and spec/03_TEST_CASES.json containing 20 TCs",
+          "when": "the user selects that project in the Graph tab",
+          "then": "10 FR nodes and 20 TC nodes are rendered with edges connecting TCs to their parent FRs within ≤2 seconds"
+        },
+        {
+          "id": "AC-018",
+          "given": "a project registered in Hub with no spec/ directory",
+          "when": "the user selects it in the Graph tab",
+          "then": "the message 'No artifacts found for this project' is displayed and no JavaScript error is thrown"
+        }
+      ]
+    },
+    {
+      "id": "US-012",
+      "requirement_id": "FR-013",
+      "as_a": "developer",
+      "i_want": "to pan and zoom the dependency graph",
+      "so_that": "I can navigate large specs with many FRs and TCs",
+      "acceptance_criteria": [
+        {
+          "id": "AC-019",
+          "given": "a graph with 30 FR nodes is rendered",
+          "when": "the user drags the canvas and scrolls the mouse wheel",
+          "then": "the graph pans and zooms fluidly with no layout recalculation"
+        }
+      ]
+    },
+    {
+      "id": "US-013",
+      "requirement_id": "FR-014",
+      "as_a": "team lead",
+      "i_want": "to see at a glance which FRs are approved vs pending",
+      "so_that": "I can identify coverage gaps without reading raw JSON",
+      "acceptance_criteria": [
+        {
+          "id": "AC-020",
+          "given": "a project with FR-001 approved, FR-002 in_progress, and FR-003 pending",
+          "when": "the graph renders",
+          "then": "FR-001 node is #34D399, FR-002 node is #60A5FA, FR-003 node is #94A3B8, and a legend is visible"
+        }
+      ]
+    },
+    {
+      "id": "US-014",
+      "requirement_id": "FR-015",
+      "as_a": "developer",
+      "i_want": "to collapse test case nodes under an FR to reduce visual noise",
+      "so_that": "I can focus on the FR structure when the graph is large",
+      "acceptance_criteria": [
+        {
+          "id": "AC-021",
+          "given": "FR-005 has 8 visible child TC nodes",
+          "when": "the user clicks the FR-005 node",
+          "then": "all 8 TC nodes are hidden, FR-005 shows badge '(8)', and the transition completes in ≤200ms"
+        },
+        {
+          "id": "AC-022",
+          "given": "FR-005 is collapsed showing badge '(8)'",
+          "when": "the user clicks FR-005 again",
+          "then": "all 8 TC nodes are restored to their dagre layout positions"
+        }
+      ]
+    },
+    {
+      "id": "US-015",
+      "requirement_id": "FR-016",
+      "as_a": "developer",
+      "i_want": "to switch between projects within the Graph tab",
+      "so_that": "I can compare artifact structures across projects without navigating away",
+      "acceptance_criteria": [
+        {
+          "id": "AC-023",
+          "given": "Hub has 3 registered projects",
+          "when": "the user opens the Graph tab and clicks the project dropdown",
+          "then": "all 3 project names appear in the dropdown within ≤500ms"
+        },
+        {
+          "id": "AC-024",
+          "given": "the user selected 'Project B' in the Graph tab and navigated to the Overview tab",
+          "when": "the user clicks back to the Graph tab",
+          "then": "'Project B' is still selected and its graph is displayed"
+        }
+      ]
+    }
+  ],
+
+  "non_functional_requirements": [
+    {
+      "id": "NFR-006",
+      "category": "Performance",
+      "requirement": "Graph tab must render a spec with up to 50 FRs and 150 TCs within 2 seconds of project selection",
+      "acceptance_criteria": "Measured from project dropdown selection to first paint of all nodes: ≤2000ms in Chrome 120+ on a machine with 8GB RAM"
+    },
+    {
+      "id": "NFR-007",
+      "category": "Reliability",
+      "requirement": "Missing or malformed spec files must not crash the Graph tab or any other Hub tab",
+      "acceptance_criteria": "Given spec/01_REQUIREMENTS.json contains invalid JSON, the Graph tab shows an error message and all other tabs continue rendering correctly; no unhandled JavaScript exception is thrown"
+    },
+    {
+      "id": "NFR-008",
+      "category": "Usability",
+      "requirement": "CLI removal must not break existing `aitri-hub setup` or `aitri-hub web` workflows",
+      "acceptance_criteria": "`aitri-hub setup` completes project registration successfully and `aitri-hub web` starts the dashboard after the `monitor` command and its renderer are removed; verified by running both commands end-to-end"
+    }
+  ],
+
+  "constraints": [
+    "Cytoscape.js and cytoscape-dagre added as npm devDependencies in web/package.json — bundled by Vite; zero new CLI runtime dependencies",
+    "Spec data flows exclusively through dashboard.json — the frontend has no direct filesystem access and no new endpoints are added to the server",
+    "All graph rendering happens client-side in the browser — no server-side graph computation",
+    "Graph node colors and all visual styling use Hub's existing CSS tokens — no styles imported or copied from Aitri Graph"
+  ],
+
+  "technology_preferences": [
+    "Graph engine: Cytoscape.js 3.x + cytoscape-dagre installed as npm devDependencies, bundled by Vite",
+    "Graph normalizer: logic adapted from Aitri Graph's normalizer.js (FR/TC JSON → Cytoscape nodes/edges) — rewritten as a plain JS module with no external dependencies",
+    "Spec data source: dashboard.json extended by collector's new readSpecArtifacts reader — same polling mechanism the frontend already uses",
+    "Project selector: React controlled dropdown using existing dashboard.json project list"
+  ]
+}

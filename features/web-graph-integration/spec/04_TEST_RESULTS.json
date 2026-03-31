@@ -1,0 +1,186 @@
+{
+  "executed_at": "2026-03-31T22:32:37.156Z",
+  "test_runner": "npm test",
+  "exit_code": 0,
+  "results": [
+    {
+      "tc_id": "TC-010h",
+      "status": "pass",
+      "notes": "✔ TC-010h: readAitriState — returns aitriVersion, updatedAt, createdAt when present (0.43575ms)"
+    },
+    {
+      "tc_id": "TC-010e",
+      "status": "pass",
+      "notes": "✔ TC-010e: readAitriState — returns aitriVersion=null when field is a number (0.485417ms)"
+    },
+    {
+      "tc_id": "TC-010f",
+      "status": "pass",
+      "notes": "✔ TC-010f: readAitriState — returns null for aitriVersion, updatedAt, createdAt when absent (0.71ms)"
+    },
+    {
+      "tc_id": "TC-011h",
+      "status": "pass",
+      "notes": "✔ TC-011h: readAitriState — artifactsDir \"spec\" preserved when explicit (0.896125ms)"
+    },
+    {
+      "tc_id": "TC-011e",
+      "status": "pass",
+      "notes": "✔ TC-011e: readAitriState — projectName defaults to path.basename(projectDir) when absent (0.387083ms)"
+    },
+    {
+      "tc_id": "TC-011f",
+      "status": "pass",
+      "notes": "✔ TC-011f: readAitriState — artifactsDir defaults to \"\" when field absent (1.495292ms)"
+    },
+    {
+      "tc_id": "TC-012h",
+      "status": "pass",
+      "notes": "✔ TC-012h: detectDrift — driftPhases fast path returns hasDrift=true (0.886584ms)"
+    },
+    {
+      "tc_id": "TC-012e",
+      "status": "pass",
+      "notes": "✔ TC-012e: detectDrift — absent driftPhases (pre-v0.1.58) falls through without throwing (1.124833ms)"
+    },
+    {
+      "tc_id": "TC-012f",
+      "status": "pass",
+      "notes": "✔ TC-012f: detectDrift — empty driftPhases[] does not trigger drift (1.252834ms)"
+    },
+    {
+      "tc_id": "TC-012f2",
+      "status": "skip",
+      "notes": "Not detected in test runner output — test name must start with \"TC-012f2:\" to be auto-detected. Likely requires browser or integration environment."
+    },
+    {
+      "tc_id": "TC-012e2",
+      "status": "skip",
+      "notes": "Not detected in test runner output — test name must start with \"TC-012e2:\" to be auto-detected. Likely requires browser or integration environment."
+    },
+    {
+      "tc_id": "TC-012h2",
+      "status": "skip",
+      "notes": "Not detected in test runner output — test name must start with \"TC-012h2:\" to be auto-detected. Likely requires browser or integration environment."
+    },
+    {
+      "tc_id": "TC-013h",
+      "status": "pass",
+      "notes": "✔ TC-013h: detectDrift — hasDrift=false when artifact matches stored hash (2.217875ms)"
+    },
+    {
+      "tc_id": "TC-013e",
+      "status": "pass",
+      "notes": "✔ TC-013e: detectDrift — approved phase with no stored hash is NOT counted as drifted (0.769542ms)"
+    },
+    {
+      "tc_id": "TC-013f",
+      "status": "pass",
+      "notes": "✔ TC-013f: detectDrift — hasDrift=true when artifact differs from stored hash (1.368625ms)"
+    },
+    {
+      "tc_id": "TC-014h",
+      "status": "pass",
+      "notes": "✔ TC-014h: evaluateAlerts — VERSION_MISMATCH alert when project version differs from CLI (0.308125ms)"
+    },
+    {
+      "tc_id": "TC-014e",
+      "status": "pass",
+      "notes": "✔ TC-014e: evaluateAlerts — no VERSION_MISMATCH when CLI version unavailable (null cache) (0.140667ms)"
+    },
+    {
+      "tc_id": "TC-014f",
+      "status": "pass",
+      "notes": "✔ TC-014f: evaluateAlerts — no VERSION_MISMATCH when aitriVersion is null (0.125167ms)"
+    },
+    {
+      "tc_id": "TC-015h",
+      "status": "pass",
+      "notes": "✔ TC-015h: normalizeSpecArtifacts — correct node/edge structure (2.672542ms)"
+    },
+    {
+      "tc_id": "TC-015e",
+      "status": "pass",
+      "notes": "✔ TC-015e: normalizeSpecArtifacts — edge cases (0.579958ms)"
+    },
+    {
+      "tc_id": "TC-015f",
+      "status": "pass",
+      "notes": "✔ TC-015f: normalizeSpecArtifacts — phase-based node status (0.887166ms)"
+    },
+    {
+      "tc_id": "TC-016h",
+      "status": "pass",
+      "notes": "✔ TC-016h: GraphLegend.jsx — renders all legend items (0.683334ms)"
+    },
+    {
+      "tc_id": "TC-016e",
+      "status": "skip",
+      "notes": "Not detected in test runner output — test name must start with \"TC-016e:\" to be auto-detected. Likely requires browser or integration environment."
+    },
+    {
+      "tc_id": "TC-016f",
+      "status": "skip",
+      "notes": "Not detected in test runner output — test name must start with \"TC-016f:\" to be auto-detected. Likely requires browser or integration environment."
+    }
+  ],
+  "fr_coverage": [
+    {
+      "fr_id": "FR-010",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-011",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-012",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 3,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-013",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-014",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-015",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-016",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 2,
+      "status": "covered"
+    }
+  ],
+  "summary": {
+    "total": 24,
+    "passed": 19,
+    "failed": 0,
+    "skipped": 5,
+    "skipped_e2e": 2,
+    "skipped_no_marker": 3
+  }
+}

@@ -7,7 +7,6 @@
 
 import { cmdInit } from '../lib/commands/init.js';
 import { cmdSetup } from '../lib/commands/setup.js';
-import { cmdMonitor } from '../lib/commands/monitor.js';
 import { cmdWeb } from '../lib/commands/web.js';
 
 const USAGE = `
@@ -16,7 +15,6 @@ Aitri Hub — Centralized monitoring dashboard for Aitri projects.
 Usage:
   aitri-hub init      First-time setup wizard
   aitri-hub setup     Add or update registered projects
-  aitri-hub monitor   Start the CLI terminal dashboard
   aitri-hub web       Start the web dashboard at localhost:3000
   aitri-hub help      Show this message
 
@@ -51,7 +49,8 @@ async function main() {
       break;
     }
     case 'monitor':
-      await cmdMonitor();
+      console.log("aitri-hub monitor has been removed — run 'aitri-hub web' to open the dashboard.");
+      process.exitCode = 0;
       break;
     case 'web':
       await cmdWeb();

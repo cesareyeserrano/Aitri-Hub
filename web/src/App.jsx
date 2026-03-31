@@ -15,6 +15,7 @@ import VelocityTab from './components/VelocityTab.jsx';
 import ProjectsTable from './components/ProjectsTable.jsx';
 import ActivityTab from './components/ActivityTab.jsx';
 import FRCoverageTab from './components/FRCoverageTab.jsx';
+import GraphTab from './components/GraphTab.jsx';
 
 function groupByFolder(projects) {
   const groups = new Map();
@@ -57,6 +58,7 @@ const TABS = Object.freeze({
   VELOCITY:  'velocity',
   ACTIVITY:  'activity',
   ALL:       'all',
+  GRAPH:     'graph',
 });
 
 /**
@@ -197,6 +199,19 @@ export default function App() {
         >
           projects.js
         </button>
+
+        <button
+          role="tab"
+          className={`tab-btn ${activeTab === TABS.GRAPH ? 'tab-btn--active' : ''}`}
+          onClick={() => setActiveTab(TABS.GRAPH)}
+          aria-selected={activeTab === TABS.GRAPH}
+        >
+          graph.ts
+          {!loading && (() => {
+            const n = projects.filter(p => p.specArtifacts != null).length;
+            return n > 0 ? <span className="tab-badge">{n}</span> : null;
+          })()}
+        </button>
       </nav>
 
       <main className="main">
@@ -231,6 +246,13 @@ export default function App() {
           loading
             ? <div className="empty-state"><p>Loading…</p></div>
             : <ActivityTab projects={projects} />
+        )}
+
+        {/* ── Graph tab ── */}
+        {activeTab === TABS.GRAPH && (
+          loading
+            ? <div className="empty-state"><p>Loading…</p></div>
+            : <GraphTab projects={projects} />
         )}
 
         {/* ── All Projects tab ── */}

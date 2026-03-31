@@ -33,7 +33,7 @@
     "tests/unit/git-reader.test.js",
     "tests/unit/test-reader.test.js",
     "tests/unit/alerts-engine.test.js",
-    "tests/unit/cli-renderer.test.js",
+    "tests/unit/monitor-stub.test.js",
     "tests/unit/dashboard-store.test.js",
     "tests/integration/setup.test.js",
     "tests/integration/dashboard-write.test.js",
@@ -43,7 +43,7 @@
   "setup_commands": [
     "npm install",
     "node bin/aitri-hub.js setup",
-    "node bin/aitri-hub.js monitor",
+    "node bin/aitri-hub.js web",
     "docker compose -f docker/docker-compose.yml up --build -d"
   ],
 
@@ -77,16 +77,19 @@
     }
   ],
 
-  "test_runner": "node --test tests/unit/aitri-reader.test.js tests/unit/git-reader.test.js tests/unit/test-reader.test.js tests/unit/alerts-engine.test.js tests/unit/cli-renderer.test.js tests/unit/dashboard-store.test.js tests/unit/web-config.test.js tests/integration/setup.test.js tests/integration/dashboard-write.test.js tests/integration/remote-collector.test.js",
+  "test_runner": "node --test tests/unit/aitri-reader.test.js tests/unit/git-reader.test.js tests/unit/test-reader.test.js tests/unit/alerts-engine.test.js tests/unit/monitor-stub.test.js tests/unit/dashboard-store.test.js tests/unit/web-config.test.js tests/unit/graph-components.test.js tests/unit/spec-reader.test.js tests/unit/graph-normalizer.test.js tests/integration/setup.test.js tests/integration/dashboard-write.test.js tests/integration/remote-collector.test.js",
 
   "test_files": [
     "tests/unit/aitri-reader.test.js",
     "tests/unit/git-reader.test.js",
     "tests/unit/test-reader.test.js",
     "tests/unit/alerts-engine.test.js",
-    "tests/unit/cli-renderer.test.js",
+    "tests/unit/monitor-stub.test.js",
     "tests/unit/dashboard-store.test.js",
     "tests/unit/web-config.test.js",
+    "tests/unit/graph-components.test.js",
+    "tests/unit/spec-reader.test.js",
+    "tests/unit/graph-normalizer.test.js",
     "tests/integration/setup.test.js",
     "tests/integration/dashboard-write.test.js",
     "tests/integration/remote-collector.test.js"

@@ -1,0 +1,116 @@
+{
+  "feature": "web-graph-integration",
+  "phase": 4,
+  "title": "Implementation Manifest — Web Graph Integration",
+  "description": "Records all files created, modified, and deleted during Phase 4 build. Covers Step A (CLI removal) and Step B (spec-artifact DAG tab).",
+  "changes": [
+    {
+      "action": "modified",
+      "path": "bin/aitri-hub.js",
+      "reason": "Remove monitor import and dispatch; replace with deprecation stub; update USAGE string."
+    },
+    {
+      "action": "deleted",
+      "path": "lib/commands/monitor.js",
+      "reason": "CLI dashboard command removed — web dashboard is the sole monitoring surface."
+    },
+    {
+      "action": "deleted",
+      "path": "lib/renderer/cli.js",
+      "reason": "CLI renderer removed together with monitor command."
+    },
+    {
+      "action": "deleted",
+      "path": "tests/unit/cli-renderer.test.js",
+      "reason": "Test file for deleted module removed to prevent broken import errors."
+    },
+    {
+      "action": "modified",
+      "path": "lib/collector/aitri-reader.js",
+      "reason": "Expose driftPhases[] as string array in readAitriState return value so graphNormalizer can do per-phase drift detection."
+    },
+    {
+      "action": "created",
+      "path": "lib/collector/spec-reader.js",
+      "reason": "New reader: reads 01_REQUIREMENTS.json and 03_TEST_CASES.json, strips verbose fields, returns {frs, tcs} for dashboard.json."
+    },
+    {
+      "action": "modified",
+      "path": "lib/collector/index.js",
+      "reason": "Import and call readSpecArtifacts; add specArtifacts field to per-project data object."
+    },
+    {
+      "action": "modified",
+      "path": "web/package.json",
+      "reason": "Add cytoscape ^3.30.4 and cytoscape-dagre ^2.5.0 as devDependencies (bundled by Vite)."
+    },
+    {
+      "action": "created",
+      "path": "web/src/lib/graphNormalizer.js",
+      "reason": "Pure function normalizeSpecArtifacts(specArtifacts, aitriState) → {nodes, edges} for Cytoscape."
+    },
+    {
+      "action": "created",
+      "path": "web/src/components/GraphTab.jsx",
+      "reason": "7th dashboard tab: lazy-loads Cytoscape+dagre on first activation, renders the spec artifact DAG with tap-to-tooltip."
+    },
+    {
+      "action": "created",
+      "path": "web/src/components/GraphLegend.jsx",
+      "reason": "Legend chip strip: maps node color → status and shape → artifact kind (FR rect / TC diamond)."
+    },
+    {
+      "action": "modified",
+      "path": "web/src/App.jsx",
+      "reason": "Add GRAPH tab identifier, import GraphTab, add graph.ts button with badge, add Graph panel in main."
+    },
+    {
+      "action": "modified",
+      "path": "web/src/styles.css",
+      "reason": "Add graph-tab, graph-legend, graph-tooltip CSS blocks using existing Hub design tokens."
+    },
+    {
+      "action": "created",
+      "path": "tests/unit/spec-reader.test.js",
+      "reason": "Unit tests for readSpecArtifacts — TC-014h, TC-014f, TC-014e."
+    },
+    {
+      "action": "created",
+      "path": "tests/unit/graph-normalizer.test.js",
+      "reason": "Unit tests for normalizeSpecArtifacts — TC-015h, TC-015f, TC-015e."
+    }
+  ],
+  "files_created": [
+    "lib/collector/spec-reader.js",
+    "web/src/lib/graphNormalizer.js",
+    "web/src/components/GraphTab.jsx",
+    "web/src/components/GraphLegend.jsx",
+    "tests/unit/spec-reader.test.js",
+    "tests/unit/graph-normalizer.test.js",
+    "features/web-graph-integration/spec/04_IMPLEMENTATION_MANIFEST.json"
+  ],
+  "setup_commands": [
+    "cd web && npm install",
+    "cd web && npm run build"
+  ],
+  "environment_variables": [],
+  "technical_debt": [],
+  "test_runner": "npm test",
+  "test_files": [
+    "tests/unit/spec-reader.test.js",
+    "tests/unit/graph-normalizer.test.js",
+    "tests/unit/monitor-stub.test.js"
+  ],
+  "build_artifacts": [
+    "docker/web-dist/index.html",
+    "docker/web-dist/assets/index-*.js",
+    "docker/web-dist/assets/index-*.css",
+    "docker/web-dist/assets/cytoscape.esm-*.js",
+    "docker/web-dist/assets/cytoscape-dagre-*.js"
+  ],
+  "test_results": {
+    "total": 197,
+    "passed": 197,
+    "failed": 0
+  }
+}
