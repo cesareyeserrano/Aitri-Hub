@@ -8,6 +8,7 @@ import React from 'react';
 import PhaseProgress from './PhaseProgress.jsx';
 import AlertBadge from './AlertBadge.jsx';
 import ProgressBar from './ProgressBar.jsx';
+import BugBadge from './BugBadge.jsx';
 
 /**
  * Format commit age in hours to human-readable string.
@@ -258,6 +259,16 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
                   : 'N/A'}
               </span>
             </div>
+            {/* Bug badge (FR-021) */}
+            {project.bugsSummary?.open > 0 && (
+              <div className="metric-row" style={{ marginTop: '2px' }}>
+                <span className="metric-row__icon">⚠</span>
+                <span className="metric-row__label">bugs</span>
+                <span className="metric-row__value">
+                  <BugBadge bugsSummary={project.bugsSummary} />
+                </span>
+              </div>
+            )}
           </div>
 
           {/* ── Time in current phase ────────────── */}

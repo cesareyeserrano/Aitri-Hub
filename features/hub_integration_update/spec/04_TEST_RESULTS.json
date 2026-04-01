@@ -1,0 +1,137 @@
+{
+  "executed_at": "2026-04-01T00:41:45.806Z",
+  "test_runner": "node --test ../../tests/unit/bugs-reader.test.js ../../tests/unit/bugs-alerts.test.js ../../tests/unit/bugs-integration.test.js ../../tests/unit/hub-integration-components.test.js",
+  "exit_code": 0,
+  "results": [
+    {
+      "tc_id": "TC-017h",
+      "status": "pass",
+      "notes": "✔ TC-017h: returns correct counts for each status and severity bucket (1.308834ms)"
+    },
+    {
+      "tc_id": "TC-017f",
+      "status": "pass",
+      "notes": "✔ TC-017f: returns null without throwing (0.158792ms)"
+    },
+    {
+      "tc_id": "TC-017e",
+      "status": "pass",
+      "notes": "✔ TC-017e: returns null without throwing (0.120542ms)"
+    },
+    {
+      "tc_id": "TC-018h",
+      "status": "pass",
+      "notes": "✔ TC-018h: generates one blocking alert when critical>0 || high>0 (40.453917ms)"
+    },
+    {
+      "tc_id": "TC-018f",
+      "status": "pass",
+      "notes": "✔ TC-018f: generates one warning alert when only medium/low bugs open (0.089084ms)"
+    },
+    {
+      "tc_id": "TC-018e",
+      "status": "pass",
+      "notes": "✔ TC-018e: generates zero bug-related alerts when bugsSummary is null (0.057209ms)"
+    },
+    {
+      "tc_id": "TC-019h",
+      "status": "pass",
+      "notes": "✔ TC-019h: lastSession fields are preserved exactly (2.414292ms)"
+    },
+    {
+      "tc_id": "TC-019f",
+      "status": "pass",
+      "notes": "✔ TC-019f: lastSession is null and no exception is thrown (0.35475ms)"
+    },
+    {
+      "tc_id": "TC-019e",
+      "status": "pass",
+      "notes": "✔ TC-019e: files_touched is null (not undefined) (0.153959ms)"
+    },
+    {
+      "tc_id": "TC-020h",
+      "status": "pass",
+      "notes": "✔ TC-020h: ActivityTab.jsx imports LastSessionRow (0.218417ms)"
+    },
+    {
+      "tc_id": "TC-020f",
+      "status": "pass",
+      "notes": "✔ TC-020f: LastSessionRow.jsx has early return null when lastSession is falsy (0.218167ms)"
+    },
+    {
+      "tc_id": "TC-020e",
+      "status": "pass",
+      "notes": "✔ TC-020e: AGENT_COLORS map contains unknown entry using --syn-comment (0.088667ms)"
+    },
+    {
+      "tc_id": "TC-021h",
+      "status": "pass",
+      "notes": "✔ TC-021h: BugBadge.jsx uses syn-red for blocking state (0.325667ms)"
+    },
+    {
+      "tc_id": "TC-021f",
+      "status": "pass",
+      "notes": "✔ TC-021f: BugBadge.jsx returns null when bugsSummary is null or open===0 (0.10775ms)"
+    },
+    {
+      "tc_id": "TC-017i",
+      "status": "pass",
+      "notes": "✔ TC-017i: collected data includes bugsSummary with correct counts (48.987542ms)"
+    },
+    {
+      "tc_id": "TC-018i",
+      "status": "pass",
+      "notes": "✔ TC-018i: project.alerts contains one blocking open-bugs alert (11.585125ms)"
+    },
+    {
+      "tc_id": "TC-021e",
+      "status": "pass",
+      "notes": "✔ TC-021e: BugBadge.jsx uses syn-yellow for warning state (0.057917ms)"
+    }
+  ],
+  "fr_coverage": [
+    {
+      "fr_id": "FR-017",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-018",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-021",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-019",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-020",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "status": "covered"
+    }
+  ],
+  "summary": {
+    "total": 17,
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 0
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "files_created": [
+    "lib/collector/bugs-reader.js",
+    "web/src/components/BugBadge.jsx",
+    "web/src/components/LastSessionRow.jsx",
+    "tests/unit/bugs-reader.test.js",
+    "tests/unit/bugs-alerts.test.js",
+    "tests/unit/bugs-integration.test.js",
+    "tests/unit/hub-integration-components.test.js"
+  ],
+  "files_modified": [
+    "lib/collector/aitri-reader.js",
+    "lib/collector/index.js",
+    "lib/alerts/engine.js",
+    "lib/constants.js",
+    "web/src/components/ProjectCard.jsx",
+    "web/src/components/ActivityTab.jsx"
+  ],
+  "setup_commands": [],
+  "environment_variables": [],
+  "technical_debt": [],
+  "test_runner": "node --test ../../tests/unit/bugs-reader.test.js ../../tests/unit/bugs-alerts.test.js ../../tests/unit/bugs-integration.test.js ../../tests/unit/hub-integration-components.test.js",
+  "test_files": [
+    "../../tests/unit/bugs-reader.test.js",
+    "../../tests/unit/bugs-alerts.test.js",
+    "../../tests/unit/bugs-integration.test.js",
+    "../../tests/unit/hub-integration-components.test.js"
+  ]
+}

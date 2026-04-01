@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import LastSessionRow from './LastSessionRow.jsx';
 
 const EVENT_META = {
   approved:  { icon: '✓', colorVar: '--syn-green',  label: 'approved'  },
@@ -69,6 +70,21 @@ export default function ActivityTab({ projects }) {
           {events.length === 0 ? '// no events yet' : `${events.length} events`}
         </span>
       </div>
+
+      {/* ── Last session rows (FR-020) — one per project with lastSession data ── */}
+      {projects.some(p => p.aitriState?.lastSession) && (
+        <div className="activity-sessions" style={{ marginBottom: '8px' }}>
+          {projects
+            .filter(p => p.aitriState?.lastSession)
+            .map(p => (
+              <LastSessionRow
+                key={p.id}
+                projectName={p.name}
+                lastSession={p.aitriState.lastSession}
+              />
+            ))}
+        </div>
+      )}
 
       {events.length === 0 ? (
         <div className="activity-empty">

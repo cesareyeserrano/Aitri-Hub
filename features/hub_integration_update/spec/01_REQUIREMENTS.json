@@ -1,0 +1,230 @@
+{
+  "project_name": "AITRI-HUB — hub_integration_update",
+  "project_summary": "Close two integration gaps against the Aitri Integration Contract v0.1.70: (1) Hub does not read BUGS.json (v0.1.67+) so open critical/high bugs are invisible in the dashboard; (2) Hub does not expose the lastSession field (v0.1.70+) from .aitri so session activity is lost. North Star KPI: zero integration contract fields missing from Hub collection. JTBD: developers hire Hub to know the full health of their Aitri projects without switching to the CLI. Guardrail metric: collection cycle time must not increase by more than 50ms per project.",
+
+  "no_go_zone": [
+    "No BUGS.json writing or editing from Hub — Hub is strictly read-only; bug lifecycle is owned by Aitri CLI",
+    "No bug triage, assignment, or commenting UI in Hub — Hub surfaces counts and alerts only",
+    "No 04_CODE_REVIEW.md integration — deferred to a separate feature",
+    "No graph node changes (US/AC nodes) — deferred to graph product revision",
+    "No lastSession.context field rendering — too verbose for a dashboard card; only agent, event, and timestamp are displayed"
+  ],
+
+  "functional_requirements": [
+    {
+      "id": "FR-017",
+      "title": "Collector reads BUGS.json and returns bug summary per project",
+      "priority": "MUST",
+      "type": "logic",
+      "description": "A new reader lib/collector/bugs-reader.js reads <artifactsDir>/BUGS.json and returns a compact summary: counts by status (open/fixed/verified/closed) and counts by severity (critical/high/medium/low), plus a list of open bug IDs. Returns null when the file is absent or malformed — no crash.",
+      "acceptance_criteria": [
+        "Given a valid BUGS.json with 3 open bugs (1 critical, 1 high, 1 medium), readBugsSummary returns { open: 3, fixed: 0, verified: 0, closed: 0, critical: 1, high: 1, medium: 1, low: 0, openIds: ['BG-001','BG-002','BG-003'] }",
+        "Given an absent BUGS.json, readBugsSummary returns null without throwing",
+        "Given a malformed BUGS.json (invalid JSON), readBugsSummary returns null without throwing",
+        "readBugsSummary completes in ≤10ms for a file with up to 200 bugs"
+      ]
+    },
+    {
+      "id": "FR-018",
+      "title": "Alerts engine generates alerts for open critical and high bugs",
+      "priority": "MUST",
+      "type": "logic",
+      "description": "The alerts engine evaluates bugsSummary and generates alerts: a blocking alert when any open critical or high bugs exist, a warning alert when only open medium/low bugs exist. No alert when bugsSummary is null or all bugs are fixed/verified/closed.",
+      "acceptance_criteria": [
+        "Given bugsSummary.open > 0 and (bugsSummary.critical > 0 or bugsSummary.high > 0), evaluateAlerts generates exactly one alert with severity 'blocking' and message containing the counts",
+        "Given bugsSummary.open > 0 and bugsSummary.critical === 0 and bugsSummary.high === 0, evaluateAlerts generates exactly one alert with severity 'warning'",
+        "Given bugsSummary null or bugsSummary.open === 0, evaluateAlerts generates zero bug-related alerts",
+        "Alert message format: 'Open bugs: N critical, N high' for blocking; 'Open bugs: N medium/low' for warning"
+      ]
+    },
+    {
+      "id": "FR-021",
+      "title": "Project cards in the Overview tab display open bug count badge",
+      "priority": "MUST",
+      "type": "UX",
+      "description": "Each project card in the Overview tab shows a bug count badge when bugsSummary.open > 0. The badge is color-coded: red for critical/high open bugs, yellow for medium/low only. No badge is shown when open count is 0 or bugsSummary is null.",
+      "acceptance_criteria": [
+        "Given a project with 2 open bugs (1 critical), the project card shows a red badge with '2 bugs' within the card metrics area",
+        "Given a project with 1 open medium bug and no critical/high bugs, the card shows a yellow badge with '1 bug'",
+        "Given a project with 0 open bugs or null bugsSummary, no bug badge is rendered on the card",
+        "Bug badge renders within the existing card layout without increasing card height on viewport widths ≥768px"
+      ]
+    },
+    {
+      "id": "FR-019",
+      "title": "aitri-reader exposes lastSession field from .aitri",
+      "priority": "MUST",
+      "type": "logic",
+      "description": "readAitriState returns a lastSession object when the field is present in .aitri: { at, agent, event, files_touched }. Returns lastSession: null when the field is absent (backward compatible with pre-v0.1.70 projects).",
+      "acceptance_criteria": [
+        "Given .aitri with lastSession: { at, agent, event, files_touched }, readAitriState returns lastSession with all four fields preserved as-is",
+        "Given .aitri without a lastSession field, readAitriState returns lastSession: null without throwing",
+        "Given lastSession.files_touched absent, readAitriState returns lastSession.files_touched as null (not undefined)",
+        "lastSession.agent is returned as a string exactly as stored (no normalization)"
+      ]
+    },
+    {
+      "id": "FR-020",
+      "title": "Activity tab displays lastSession per project",
+      "priority": "MUST",
+      "type": "UX",
+      "description": "The Activity tab renders a lastSession row for each project that has a non-null lastSession. Shows: agent name (color-coded by agent type), event string, and relative timestamp. Projects with null lastSession show no session row. Renders within the existing ActivityTab layout without layout shifts or new tabs.",
+      "acceptance_criteria": [
+        "Given a project with lastSession.agent='claude', the Activity tab renders a row with a color-coded agent badge and event text within ≤100ms of data load",
+        "Given a project with lastSession: null, the Activity tab renders no lastSession row for that project and shows no empty placeholder",
+        "lastSession rows are visually distinct from pipeline event rows (different label/icon) so users can distinguish session checkpoints from phase events",
+        "Relative timestamp shown in the same format as existing event timestamps (e.g. '2h ago', '5m ago')"
+      ]
+    }
+  ],
+
+  "user_personas": [
+    {
+      "id": "UP-001",
+      "role": "Lead Developer / Tech Lead",
+      "tech_level": "high",
+      "goal": "Monitor health of 5–15 Aitri-managed projects from one dashboard without switching to CLI",
+      "pain_point": "Open critical bugs and last-agent-session info are not visible in Hub — requires running aitri status per project to find them"
+    }
+  ],
+
+  "user_stories": [
+    {
+      "id": "US-017",
+      "requirement_id": "FR-017",
+      "as_a": "lead developer",
+      "i_want": "Hub to read each project's BUGS.json",
+      "so_that": "bug data is available in the dashboard without leaving Hub",
+      "acceptance_criteria": [
+        {
+          "id": "AC-033",
+          "given": "a project with a valid BUGS.json at <artifactsDir>/BUGS.json",
+          "when": "Hub's collector runs",
+          "then": "the project entry in dashboard.json includes bugsSummary with open/fixed/verified/closed and critical/high/medium/low counts"
+        },
+        {
+          "id": "AC-034",
+          "given": "a project with no BUGS.json",
+          "when": "Hub's collector runs",
+          "then": "bugsSummary is null and collection succeeds without error"
+        }
+      ]
+    },
+    {
+      "id": "US-018",
+      "requirement_id": "FR-018",
+      "as_a": "lead developer",
+      "i_want": "Hub to alert me when a project has open critical or high bugs",
+      "so_that": "I can prioritize fixing blocking issues before they go unnoticed",
+      "acceptance_criteria": [
+        {
+          "id": "AC-035",
+          "given": "a project with 2 open bugs: 1 critical, 1 medium",
+          "when": "the Alerts tab is viewed",
+          "then": "a blocking alert 'Open bugs: 1 critical, 0 high' is shown for that project"
+        },
+        {
+          "id": "AC-036",
+          "given": "a project with 0 open bugs",
+          "when": "the Alerts tab is viewed",
+          "then": "no bug-related alert is shown for that project"
+        }
+      ]
+    },
+    {
+      "id": "US-021",
+      "requirement_id": "FR-021",
+      "as_a": "lead developer",
+      "i_want": "to see a bug count badge on each project card",
+      "so_that": "I can spot projects with open blocking bugs from the Overview tab without opening Alerts",
+      "acceptance_criteria": [
+        {
+          "id": "AC-041",
+          "given": "a project with bugsSummary.open=2 and bugsSummary.critical=1",
+          "when": "the Overview tab is loaded",
+          "then": "the project card shows a red badge labeled '2 bugs'"
+        },
+        {
+          "id": "AC-042",
+          "given": "a project with bugsSummary null",
+          "when": "the Overview tab is loaded",
+          "then": "no bug badge is rendered on the card and no layout shift occurs"
+        }
+      ]
+    },
+    {
+      "id": "US-019",
+      "requirement_id": "FR-019",
+      "as_a": "lead developer",
+      "i_want": "Hub to read the lastSession field from each project's .aitri",
+      "so_that": "session data is available without additional API calls",
+      "acceptance_criteria": [
+        {
+          "id": "AC-037",
+          "given": "a .aitri file with lastSession: { at, agent: 'claude', event: 'complete requirements' }",
+          "when": "readAitriState runs",
+          "then": "aitriState.lastSession contains the correct at, agent, and event values"
+        },
+        {
+          "id": "AC-038",
+          "given": "a .aitri file from before v0.1.70 with no lastSession field",
+          "when": "readAitriState runs",
+          "then": "aitriState.lastSession is null and no exception is thrown"
+        }
+      ]
+    },
+    {
+      "id": "US-020",
+      "requirement_id": "FR-020",
+      "as_a": "lead developer",
+      "i_want": "to see which agent last worked on each project and what they did",
+      "so_that": "I can coordinate with teammates and understand project momentum at a glance",
+      "acceptance_criteria": [
+        {
+          "id": "AC-039",
+          "given": "a project with lastSession.agent='claude' and lastSession.event='complete requirements'",
+          "when": "the Activity tab is viewed",
+          "then": "a row shows a 'claude' badge, 'complete requirements' text, and a relative timestamp like '3h ago'"
+        },
+        {
+          "id": "AC-040",
+          "given": "a project with lastSession: null",
+          "when": "the Activity tab is viewed",
+          "then": "no lastSession row is rendered for that project"
+        }
+      ]
+    }
+  ],
+
+  "non_functional_requirements": [
+    {
+      "id": "NFR-009",
+      "category": "Performance",
+      "requirement": "BUGS.json collection must not increase the per-project collection cycle time by more than 50ms",
+      "acceptance_criteria": "readBugsSummary completes in ≤10ms for files with up to 200 bug entries (synchronous file read)"
+    },
+    {
+      "id": "NFR-010",
+      "category": "Reliability",
+      "requirement": "Absent, malformed, or empty BUGS.json must not affect collection of other project fields",
+      "acceptance_criteria": "Given any BUGS.json error condition, collectOne returns the same fields it would return without BUGS.json support; collectionError remains null unless the .aitri file is also missing"
+    },
+    {
+      "id": "NFR-011",
+      "category": "Reliability",
+      "requirement": "lastSession field must be backward-compatible with pre-v0.1.70 .aitri files",
+      "acceptance_criteria": "Given a .aitri file with no lastSession field, readAitriState returns lastSession: null and all other fields are unaffected"
+    }
+  ],
+
+  "constraints": [
+    "Hub is read-only — it never writes to project directories or .aitri files",
+    "BUGS.json lives at <project>/<artifactsDir>/BUGS.json — path constructed using aitriState.artifactsDir ('' or 'spec')",
+    "Collection must remain a single synchronous pass per project — no new async I/O patterns"
+  ],
+
+  "technology_preferences": [
+    "Node.js built-in fs (synchronous) for BUGS.json reader — consistent with all other readers",
+    "React functional components for Activity tab lastSession rows — consistent with existing tab components"
+  ]
+}
