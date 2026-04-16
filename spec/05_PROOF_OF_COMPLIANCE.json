@@ -2,7 +2,7 @@
   "project": "Aitri Hub",
   "version": "0.1.0",
   "phases_completed": [1, 2, 3, 4, 5],
-  "overall_status": "complete",
+  "overall_status": "compliant",
   "requirement_compliance": [
     {
       "id": "FR-001",
