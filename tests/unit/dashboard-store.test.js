@@ -80,6 +80,56 @@ describe('TC-009h: writeDashboard — writes valid JSON dashboard.json', () => {
   });
 });
 
+// ── TC-009f: write failure preserves previous dashboard.json ─────────────────
+
+describe('TC-009f: writeDashboard — write failure preserves previous dashboard.json', () => {
+  let tmpHubDir;
+  let origRenameSync;
+
+  let hubDirOrig;
+
+  before(() => {
+    tmpHubDir = tmpDir();
+    hubDirOrig = process.env.AITRI_HUB_DIR;
+    process.env.AITRI_HUB_DIR = tmpHubDir;
+  });
+
+  after(() => {
+    process.env.AITRI_HUB_DIR = hubDirOrig;
+    if (origRenameSync) fs.renameSync = origRenameSync;
+    fs.rmSync(tmpHubDir, { recursive: true, force: true });
+  });
+
+  it('TC-009f: previous dashboard.json survives when renameSync throws ENOSPC', async () => {
+    const { writeDashboard } = await import('../../lib/store/dashboard.js');
+    const dashPath = path.join(tmpHubDir, 'dashboard.json');
+
+    // Write a valid previous dashboard
+    const prevData = { schemaVersion: '1', collectedAt: new Date().toISOString(), projects: [{ name: 'previous-project' }] };
+    writeDashboard(prevData);
+    assert.ok(fs.existsSync(dashPath), 'initial dashboard.json must exist');
+
+    // Stub renameSync to throw ENOSPC (disk full)
+    origRenameSync = fs.renameSync;
+    fs.renameSync = () => {
+      const err = new Error('ENOSPC: no space left on device');
+      err.code = 'ENOSPC';
+      throw err;
+    };
+
+    // writeDashboard must NOT throw
+    assert.doesNotThrow(() => writeDashboard({ schemaVersion: '1', collectedAt: new Date().toISOString(), projects: [{ name: 'new-project' }] }));
+
+    // Restore renameSync before reading
+    fs.renameSync = origRenameSync;
+    origRenameSync = null;
+
+    // Previous content must be intact
+    const content = JSON.parse(fs.readFileSync(dashPath, 'utf8'));
+    assert.equal(content.projects[0].name, 'previous-project', 'previous dashboard.json must be preserved on write failure');
+  });
+});
+
 // ── TC-009e: atomic write uses temp file + rename ────────────────────────────
 
 describe('TC-009e: writeDashboard — uses atomic temp+rename pattern', () => {
