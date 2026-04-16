@@ -16,6 +16,7 @@ import ProjectsTable from './components/ProjectsTable.jsx';
 import ActivityTab from './components/ActivityTab.jsx';
 import FRCoverageTab from './components/FRCoverageTab.jsx';
 import GraphTab from './components/GraphTab.jsx';
+import IntegrationAlertBanner from './components/IntegrationAlertBanner.jsx';
 
 function groupByFolder(projects) {
   const groups = new Map();
@@ -109,7 +110,8 @@ export default function App() {
     return () => clearInterval(timer);
   }, [fetchData]);
 
-  const projects = data?.projects ?? [];
+  const projects         = data?.projects ?? [];
+  const integrationAlert = data?.integrationAlert ?? null;
   const healthy  = projects.filter(p => p.status === 'healthy').length;
   const warning  = projects.filter(p => p.status === 'warning').length;
   const error    = projects.filter(p => p.status === 'error' || p.status === 'unreadable').length;
@@ -119,6 +121,7 @@ export default function App() {
   return (
     <div className="app">
       <ConnectionBanner status={connStatus} />
+      <IntegrationAlertBanner alert={integrationAlert} />
 
       <Header
         loading={loading}

@@ -1,0 +1,25 @@
+# docker-compose.yml — integration-last-reviewed-gate
+#
+# For local development/testing of this feature's web components.
+# For production, use the root-level docker-compose.yml.
+
+services:
+  aitri-hub-web:
+    build:
+      context: ../..
+      dockerfile: features/integration-last-reviewed-gate/Dockerfile
+    image: aitri-hub-web:integration-last-reviewed-gate
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    volumes:
+      # Mount hub data directory read-only so dashboard.json is served
+      - ${AITRI_HUB_DIR:-~/.aitri-hub}:/data:ro
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped

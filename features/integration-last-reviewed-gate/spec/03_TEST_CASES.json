@@ -1,0 +1,730 @@
+{
+  "project_name": "Aitri Hub — Feature: integration-last-reviewed-gate",
+  "test_plan": {
+    "scope": "Unit, integration, and e2e tests for the integration-last-reviewed-gate feature: version gate logic, feature sub-pipeline aggregation, CLI and web rendering, dashboard.json schema extension",
+    "out_of_scope": [
+      "Tests for existing FR-001 through FR-009 behavior (covered by parent project test suite)",
+      "Manual browser visual regression tests",
+      "Docker container startup tests"
+    ],
+    "test_environments": [
+      "Node.js 18+ on macOS/Linux using os.tmpdir() for filesystem fixtures",
+      "React component tests using @testing-library/react with jsdom"
+    ],
+    "automation_framework": "Node.js built-in test runner (node:test) for CLI unit/integration; Vitest + @testing-library/react for web components",
+    "entry_point": "npm test",
+    "total_tcs": 27,
+    "happy_path_count": 10,
+    "edge_case_count": 8,
+    "negative_count": 9,
+    "e2e_count": 4,
+    "must_fr_coverage": "5/5"
+  },
+  "type_coverage_matrix": [
+    {
+      "fr_id": "FR-010",
+      "fr_type": "logic",
+      "required_levels": [
+        "unit",
+        "integration"
+      ],
+      "tc_ids": [
+        "TC-010h",
+        "TC-010e1",
+        "TC-010e2",
+        "TC-010f"
+      ]
+    },
+    {
+      "fr_id": "FR-011",
+      "fr_type": "logic",
+      "required_levels": [
+        "unit",
+        "integration"
+      ],
+      "tc_ids": [
+        "TC-011h",
+        "TC-011h2",
+        "TC-011e1",
+        "TC-011e2",
+        "TC-011f",
+        "TC-011f2"
+      ]
+    },
+    {
+      "fr_id": "FR-012",
+      "fr_type": "UX",
+      "required_levels": [
+        "integration",
+        "e2e"
+      ],
+      "tc_ids": [
+        "TC-012h",
+        "TC-012h2",
+        "TC-012h3",
+        "TC-012e1",
+        "TC-012f",
+        "TC-012f2"
+      ]
+    },
+    {
+      "fr_id": "FR-013",
+      "fr_type": "logic",
+      "required_levels": [
+        "unit"
+      ],
+      "tc_ids": [
+        "TC-013h",
+        "TC-013e1",
+        "TC-013f",
+        "TC-013f2"
+      ]
+    },
+    {
+      "fr_id": "FR-014",
+      "fr_type": "persistence",
+      "required_levels": [
+        "unit",
+        "integration"
+      ],
+      "tc_ids": [
+        "TC-014h",
+        "TC-014h2",
+        "TC-014e1",
+        "TC-014e2",
+        "TC-014f"
+      ]
+    }
+  ],
+  "test_cases": [
+    {
+      "id": "TC-010h",
+      "title": "Version gate generates warning alert when detected version exceeds INTEGRATION_LAST_REVIEWED",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-010",
+      "ac_id": "AC-020",
+      "priority": "critical",
+      "given": "INTEGRATION_LAST_REVIEWED = '0.1.76' in constants.js and detectedVersion = '0.1.77'",
+      "when": "evaluateIntegrationAlert('0.1.77') is called",
+      "then": "returns { severity: 'warning', message: 'Aitri 0.1.77 detected — Hub integration not reviewed past 0.1.76', changelogUrl: 'https://github.com/cesareyeserrano/Aitri/blob/main/docs/integrations/CHANGELOG.md' }",
+      "expected_result": "Object with severity='warning', message containing both version strings '0.1.77' and '0.1.76', non-empty changelogUrl",
+      "tags": [
+        "unit",
+        "fr-010",
+        "integration-gate"
+      ],
+      "scenario": "happy_path"
+    },
+    {
+      "id": "TC-010e1",
+      "title": "Version gate returns null when detected version equals INTEGRATION_LAST_REVIEWED",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-010",
+      "ac_id": "AC-021",
+      "priority": "critical",
+      "given": "INTEGRATION_LAST_REVIEWED = '0.1.76' and detectedVersion = '0.1.76'",
+      "when": "evaluateIntegrationAlert('0.1.76') is called",
+      "then": "returns null",
+      "expected_result": "null — no alert generated; strict equality is not a mismatch",
+      "tags": [
+        "unit",
+        "fr-010",
+        "integration-gate",
+        "boundary"
+      ],
+      "scenario": "edge_case"
+    },
+    {
+      "id": "TC-010e2",
+      "title": "Version gate returns null when detected version is older than INTEGRATION_LAST_REVIEWED",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-010",
+      "ac_id": "AC-021",
+      "priority": "high",
+      "given": "INTEGRATION_LAST_REVIEWED = '0.1.76' and detectedVersion = '0.1.70'",
+      "when": "evaluateIntegrationAlert('0.1.70') is called",
+      "then": "returns null",
+      "expected_result": "null — older CLI is not a mismatch; Hub is ahead of the installed CLI",
+      "tags": [
+        "unit",
+        "fr-010",
+        "integration-gate",
+        "boundary"
+      ],
+      "scenario": "edge_case"
+    },
+    {
+      "id": "TC-010f",
+      "title": "Version gate generates 'undetectable' warning when detectedVersion is null",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-010",
+      "ac_id": "AC-020",
+      "priority": "high",
+      "given": "INTEGRATION_LAST_REVIEWED = '0.1.76' and detectedVersion = null",
+      "when": "evaluateIntegrationAlert(null) is called",
+      "then": "returns { severity: 'warning', message: 'Aitri CLI version undetectable — integration status unknown', changelogUrl: non-empty string }",
+      "expected_result": "Object with severity='warning'; message contains 'undetectable'; changelogUrl is non-empty",
+      "tags": [
+        "unit",
+        "fr-010",
+        "integration-gate",
+        "failure-path"
+      ],
+      "scenario": "negative"
+    },
+    {
+      "id": "TC-011h",
+      "title": "Feature reader extracts phase data and TC count from a single valid feature",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-022",
+      "priority": "critical",
+      "given": "A temp project dir containing: features/auth/.aitri = {approvedPhases:[1,2], currentPhase:3, verifyPassed:false} and features/auth/spec/04_TEST_RESULTS.json = {summary:{passed:30,failed:0,total:61}}; main TC total = 30",
+      "when": "readFeaturePipelines(projectDir, 30) is called",
+      "then": "returns { featurePipelines: [{name:'auth', approvedPhases:[1,2], currentPhase:3, totalPhases:5, tcCount:61, verifyStatus:{passed:false}}], aggregatedTcTotal: 91 }",
+      "expected_result": "featurePipelines array length = 1; featurePipelines[0].name = 'auth'; featurePipelines[0].tcCount = 61; aggregatedTcTotal = 91",
+      "tags": [
+        "unit",
+        "fr-011",
+        "feature-aggregation"
+      ],
+      "scenario": "happy_path"
+    },
+    {
+      "id": "TC-011h2",
+      "title": "Feature reader aggregates TC counts from two features and sums with main",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-022",
+      "priority": "critical",
+      "given": "A temp project dir with two features: features/auth/spec/04_TEST_RESULTS.json {summary:{total:61}} and features/payments/spec/04_TEST_RESULTS.json {summary:{total:20}}; both have valid .aitri files; mainTcTotal = 30",
+      "when": "readFeaturePipelines(projectDir, 30) is called",
+      "then": "returns aggregatedTcTotal = 111 (30 + 61 + 20) and featurePipelines array of length 2 containing entries for 'auth' and 'payments'",
+      "expected_result": "aggregatedTcTotal = 111; featurePipelines.length = 2; featurePipelines map to names ['auth', 'payments'] (order may vary)",
+      "tags": [
+        "unit",
+        "fr-011",
+        "feature-aggregation"
+      ],
+      "scenario": "happy_path"
+    },
+    {
+      "id": "TC-011e1",
+      "title": "Feature reader returns empty array and unmodified mainTcTotal when features/ dir is absent",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-023",
+      "priority": "critical",
+      "given": "A temp project dir with no features/ directory; mainTcTotal = 30",
+      "when": "readFeaturePipelines(projectDir, 30) is called",
+      "then": "returns { featurePipelines: [], aggregatedTcTotal: 30 } with no error thrown",
+      "expected_result": "featurePipelines = []; aggregatedTcTotal = 30; no exception thrown; no log entry written",
+      "tags": [
+        "unit",
+        "fr-011",
+        "feature-aggregation",
+        "edge-case"
+      ],
+      "scenario": "edge_case"
+    },
+    {
+      "id": "TC-011e2",
+      "title": "Feature reader sets tcCount=0 for a feature missing 04_TEST_RESULTS.json",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-022",
+      "priority": "high",
+      "given": "A temp project dir with features/no-tests/.aitri = {approvedPhases:[1], currentPhase:2} but no spec/04_TEST_RESULTS.json; mainTcTotal = 30",
+      "when": "readFeaturePipelines(projectDir, 30) is called",
+      "then": "returns featurePipelines[0].tcCount = 0 and aggregatedTcTotal = 30 (30 + 0)",
+      "expected_result": "featurePipelines[0].name = 'no-tests'; featurePipelines[0].tcCount = 0; aggregatedTcTotal = 30; no exception thrown",
+      "tags": [
+        "unit",
+        "fr-011",
+        "feature-aggregation",
+        "edge-case"
+      ],
+      "scenario": "edge_case"
+    },
+    {
+      "id": "TC-011f",
+      "title": "Feature reader skips subdirectory with no .aitri file without affecting valid features",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-023",
+      "priority": "high",
+      "given": "A temp project dir with features/valid-feat/.aitri = {approvedPhases:[1,2,3], currentPhase:4} and features/invalid-dir/ (no .aitri file); mainTcTotal = 10",
+      "when": "readFeaturePipelines(projectDir, 10) is called",
+      "then": "returns featurePipelines array of length 1 containing only 'valid-feat'; 'invalid-dir' is absent from results; no exception thrown",
+      "expected_result": "featurePipelines.length = 1; featurePipelines[0].name = 'valid-feat'; no error thrown; WARN log entry for 'invalid-dir' skipped is optional",
+      "tags": [
+        "unit",
+        "fr-011",
+        "feature-aggregation",
+        "failure-path"
+      ],
+      "scenario": "negative"
+    },
+    {
+      "id": "TC-011f2",
+      "title": "Feature reader handles malformed .aitri JSON gracefully",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-023",
+      "priority": "high",
+      "given": "A temp project dir with features/broken/.aitri containing '{invalid json}'; mainTcTotal = 5",
+      "when": "readFeaturePipelines(projectDir, 5) is called",
+      "then": "returns { featurePipelines: [], aggregatedTcTotal: 5 }; a WARN entry containing 'broken' is written to ~/.aitri-hub/logs/aitri-hub.log; no exception propagates",
+      "expected_result": "featurePipelines = []; aggregatedTcTotal = 5; no throw; log file contains WARN line mentioning the feature directory name",
+      "tags": [
+        "unit",
+        "fr-011",
+        "feature-aggregation",
+        "failure-path",
+        "reliability"
+      ],
+      "scenario": "negative"
+    },
+    {
+      "id": "TC-012h",
+      "title": "CLI renderer outputs integration alert line as first visible line before project rows",
+      "type": "integration",
+      "automation": "automated",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-024",
+      "priority": "critical",
+      "given": "dashboard state contains integrationAlert = {severity:'warning', message:'Aitri 0.1.77 detected — Hub integration not reviewed past 0.1.76'} and 2 registered projects",
+      "when": "the CLI renderer produces its output string",
+      "then": "the string '⚠' or '[INTEGRATION]' appears at a character index before the first project name in the output; specifically the alert line occupies line index 0 or 1 of the rendered output (before any project row)",
+      "expected_result": "rendered output split by newline: lines[0] or lines[1] contains '0.1.77' AND '0.1.76'; first line containing a project name appears after the alert line",
+      "tags": [
+        "integration",
+        "fr-012",
+        "cli-rendering"
+      ],
+      "scenario": "happy_path"
+    },
+    {
+      "id": "TC-012h2",
+      "title": "CLI TC column shows aggregatedTcTotal with '(+N features)' indicator",
+      "type": "integration",
+      "automation": "automated",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-024",
+      "priority": "critical",
+      "given": "A project entry in dashboard state with testSummary.total=30, aggregatedTcTotal=91, featurePipelines array of length 2",
+      "when": "the CLI renderer renders the project row for that project in a terminal width ≥100 columns",
+      "then": "the rendered row contains the string '91' and the string '+2 features' (or '(+2 features)')",
+      "expected_result": "row string includes '91' as the TC count and '(+2' substring indicating 2 features; '30' is not used as the TC count",
+      "tags": [
+        "integration",
+        "fr-012",
+        "cli-rendering"
+      ],
+      "scenario": "happy_path"
+    },
+    {
+      "id": "TC-012h3",
+      "title": "Web IntegrationAlertBanner renders above project cards when integrationAlert is non-null",
+      "type": "e2e",
+      "automation": "automated",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-024",
+      "priority": "critical",
+      "given": "React app receives dashboard JSON with integrationAlert = {severity:'warning', message:'Aitri 0.1.77 detected — Hub integration not reviewed past 0.1.76', changelogUrl:'https://github.com/cesareyeserrano/Aitri/blob/main/docs/integrations/CHANGELOG.md'}",
+      "when": "App component renders",
+      "then": "IntegrationAlertBanner is present in the DOM with role='alert' or data-testid='integration-alert-banner'; its text content includes both '0.1.77' and '0.1.76'; an anchor element with href matching the changelogUrl is present; IntegrationAlertBanner appears before the first element with data-testid='project-card' in document order",
+      "expected_result": "DOM query '#integration-alert-banner' or '[data-testid=integration-alert-banner]' returns 1 node; it precedes the first '[data-testid=project-card]' in the DOM; text contains '0.1.77' and '0.1.76'; link href = 'https://github.com/cesareyeserrano/Aitri/blob/main/docs/integrations/CHANGELOG.md'",
+      "tags": [
+        "e2e",
+        "fr-012",
+        "web-rendering",
+        "react"
+      ],
+      "scenario": "happy_path"
+    },
+    {
+      "id": "TC-012e1",
+      "title": "CLI renders no alert line when integrationAlert is null",
+      "type": "integration",
+      "automation": "automated",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-025",
+      "priority": "high",
+      "given": "dashboard state with integrationAlert = null and 2 registered healthy projects",
+      "when": "the CLI renderer produces its output string",
+      "then": "the output does not contain the substring '[INTEGRATION]' or 'Hub integration not reviewed'",
+      "expected_result": "rendered output contains no alert line; output starts directly with the dashboard header or first project row; no blank line left in place of the absent alert",
+      "tags": [
+        "integration",
+        "fr-012",
+        "cli-rendering",
+        "edge-case"
+      ],
+      "scenario": "edge_case"
+    },
+    {
+      "id": "TC-012f",
+      "title": "Web FeatureSummarySection is absent when featurePipelines is empty",
+      "type": "e2e",
+      "automation": "automated",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-025",
+      "priority": "high",
+      "given": "React app receives a project entry with featurePipelines = [] and aggregatedTcTotal = 30",
+      "when": "ProjectCard renders for that project",
+      "then": "no element with data-testid='feature-summary-section' exists within that ProjectCard's DOM subtree",
+      "expected_result": "DOM query within ProjectCard for '[data-testid=feature-summary-section]' returns 0 nodes; card renders without any 'Features' section",
+      "tags": [
+        "e2e",
+        "fr-012",
+        "web-rendering",
+        "edge-case"
+      ],
+      "scenario": "negative"
+    },
+    {
+      "id": "TC-012f2",
+      "title": "Web IntegrationAlertBanner is absent when integrationAlert is null",
+      "type": "e2e",
+      "automation": "automated",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-025",
+      "priority": "high",
+      "given": "React app receives dashboard JSON with integrationAlert = null",
+      "when": "App component renders",
+      "then": "no element with data-testid='integration-alert-banner' exists in the DOM",
+      "expected_result": "DOM query '[data-testid=integration-alert-banner]' returns 0 nodes; no layout gap or empty div in place of the absent banner",
+      "tags": [
+        "e2e",
+        "fr-012",
+        "web-rendering",
+        "edge-case"
+      ],
+      "scenario": "negative"
+    },
+    {
+      "id": "TC-013h",
+      "title": "detectAitriVersion returns clean semver string from aitri --version output",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-026",
+      "priority": "critical",
+      "given": "aitri --version stdout = 'v0.1.77\\n' (with prefix and trailing newline, as the CLI actually outputs)",
+      "when": "detectAitriVersion() is called with a stub that returns 'v0.1.77\\n'",
+      "then": "returns the string '0.1.77' (no 'v' prefix, no whitespace)",
+      "expected_result": "return value === '0.1.77'; typeof return value === 'string'",
+      "tags": [
+        "unit",
+        "fr-013",
+        "version-detection"
+      ],
+      "scenario": "happy_path"
+    },
+    {
+      "id": "TC-013e1",
+      "title": "detectAitriVersion parses version from multi-word stdout correctly",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-026",
+      "priority": "high",
+      "given": "aitri --version stdout = '⚒  Spec-Driven Development Engine  v0.1.76\\n' (banner-style output)",
+      "when": "detectAitriVersion() is called with a stub returning that string",
+      "then": "returns '0.1.76'",
+      "expected_result": "return value === '0.1.76'; regex correctly extracts first N.N.N pattern from anywhere in the string",
+      "tags": [
+        "unit",
+        "fr-013",
+        "version-detection",
+        "edge-case"
+      ],
+      "scenario": "edge_case"
+    },
+    {
+      "id": "TC-013f",
+      "title": "detectAitriVersion returns null and logs WARN when aitri is not on PATH",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-027",
+      "priority": "critical",
+      "given": "execFileSync('aitri', ['--version']) throws Error with code 'ENOENT'",
+      "when": "detectAitriVersion() is called",
+      "then": "returns null; does not throw; a WARN log entry containing 'Aitri CLI version undetectable' is written to ~/.aitri-hub/logs/aitri-hub.log",
+      "expected_result": "return value === null; no exception propagates; log file contains line with 'WARN' level and 'undetectable'",
+      "tags": [
+        "unit",
+        "fr-013",
+        "version-detection",
+        "failure-path"
+      ],
+      "scenario": "negative"
+    },
+    {
+      "id": "TC-013f2",
+      "title": "detectAitriVersion returns null when aitri --version times out after 3000ms",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-027",
+      "priority": "high",
+      "given": "execFileSync('aitri', ['--version'], {timeout:3000}) throws Error with code 'ETIMEDOUT' or 'SIGTERM'",
+      "when": "detectAitriVersion() is called",
+      "then": "returns null; does not throw; log entry written",
+      "expected_result": "return value === null; no exception propagates to caller; subsequent collection cycle is not blocked",
+      "tags": [
+        "unit",
+        "fr-013",
+        "version-detection",
+        "failure-path",
+        "timeout"
+      ],
+      "scenario": "negative"
+    },
+    {
+      "id": "TC-014h",
+      "title": "dashboard.json written with featurePipelines and aggregatedTcTotal per project after collection",
+      "type": "integration",
+      "automation": "automated",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-028",
+      "priority": "critical",
+      "given": "A dashboard data object containing projects[0] = { name:'my-project', testSummary:{total:30}, featurePipelines:[{name:'feat-a', tcCount:61}], aggregatedTcTotal:91 } and integrationAlert = null",
+      "when": "writeDashboard(data) is called and the file is read back from disk",
+      "then": "the parsed JSON contains projects[0].featurePipelines array of length 1 with featurePipelines[0].name='feat-a' and featurePipelines[0].tcCount=61; projects[0].aggregatedTcTotal=91; integrationAlert=null",
+      "expected_result": "JSON.parse(fs.readFileSync(dashboardFilePath())).projects[0].aggregatedTcTotal === 91; .featurePipelines[0].tcCount === 61",
+      "tags": [
+        "integration",
+        "fr-014",
+        "persistence",
+        "dashboard-schema"
+      ],
+      "scenario": "happy_path"
+    },
+    {
+      "id": "TC-014h2",
+      "title": "dashboard.json written with top-level integrationAlert when version mismatch exists",
+      "type": "integration",
+      "automation": "automated",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-029",
+      "priority": "critical",
+      "given": "A dashboard data object with integrationAlert = {severity:'warning', message:'Aitri 0.1.77 detected — Hub integration not reviewed past 0.1.76', changelogUrl:'https://github.com/cesareyeserrano/Aitri/blob/main/docs/integrations/CHANGELOG.md'}",
+      "when": "writeDashboard(data) is called and the file is read back",
+      "then": "parsed JSON.integrationAlert.severity === 'warning'; JSON.integrationAlert.message includes '0.1.77'; JSON.integrationAlert.changelogUrl is a non-empty string; file is valid JSON (JSON.parse does not throw)",
+      "expected_result": "integrationAlert present at top-level; severity='warning'; message contains both version strings; changelogUrl non-empty",
+      "tags": [
+        "integration",
+        "fr-014",
+        "persistence",
+        "dashboard-schema"
+      ],
+      "scenario": "happy_path"
+    },
+    {
+      "id": "TC-014e1",
+      "title": "dashboard.json written with featurePipelines=[] and aggregatedTcTotal=mainCount for project with no features",
+      "type": "integration",
+      "automation": "automated",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-028",
+      "priority": "high",
+      "given": "A dashboard data object with projects[0] = { name:'no-feat-project', testSummary:{total:15}, featurePipelines:[], aggregatedTcTotal:15 }",
+      "when": "writeDashboard(data) is called and file is read back",
+      "then": "projects[0].featurePipelines is an empty array ([]) and projects[0].aggregatedTcTotal === 15",
+      "expected_result": "Array.isArray(projects[0].featurePipelines) === true; projects[0].featurePipelines.length === 0; aggregatedTcTotal === 15",
+      "tags": [
+        "integration",
+        "fr-014",
+        "persistence",
+        "edge-case"
+      ],
+      "scenario": "edge_case"
+    },
+    {
+      "id": "TC-014e2",
+      "title": "dashboard.json schema extension does not break existing FR-001 through FR-009 fields",
+      "type": "integration",
+      "automation": "automated",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-028",
+      "priority": "high",
+      "given": "A full dashboard data object including all pre-existing fields: name, location, status, phases, verifyStatus, gitMeta, testSummary, alerts AND the new featurePipelines, aggregatedTcTotal, integrationAlert fields",
+      "when": "writeDashboard(data) is called and file is read back",
+      "then": "all original fields are present and unmodified: projects[0].phases.current is a number; projects[0].gitMeta.branch is a string; projects[0].alerts is an array; AND new fields coexist without overwriting existing ones",
+      "expected_result": "Backward compatibility confirmed: all existing required fields present with correct types alongside new fields",
+      "tags": [
+        "integration",
+        "fr-014",
+        "persistence",
+        "backward-compatibility"
+      ],
+      "scenario": "edge_case"
+    },
+    {
+      "id": "TC-014f",
+      "title": "Previous valid dashboard.json is preserved when a write fails mid-operation",
+      "type": "integration",
+      "automation": "automated",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-029",
+      "priority": "high",
+      "given": "dashboard.json already contains valid data = {projects:[{name:'existing-project', aggregatedTcTotal:30}]}; a subsequent writeDashboard call fails at the fs.renameSync step (simulated by making the tmp file path unwritable)",
+      "when": "the failing writeDashboard is called",
+      "then": "the original dashboard.json still contains {projects:[{name:'existing-project', aggregatedTcTotal:30}]}; the tmp file does not exist; no exception propagates to the caller",
+      "expected_result": "dashboard.json content unchanged from before the failing write; tmp file absent; no unhandled exception",
+      "tags": [
+        "integration",
+        "fr-014",
+        "persistence",
+        "atomic-write",
+        "failure-path"
+      ],
+      "scenario": "negative"
+    },
+    {
+      "id": "TC-NFR010",
+      "title": "Collection cycle for 1 project with 10 features completes within 5000ms",
+      "type": "integration",
+      "automation": "automated",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-022",
+      "priority": "high",
+      "given": "A temp project dir with 10 feature subdirectories each containing a valid .aitri file and spec/04_TEST_RESULTS.json; mainTcTotal = 30",
+      "when": "readFeaturePipelines(projectDir, 30) is called and timed with Date.now()",
+      "then": "the function returns within 5000ms; featurePipelines.length = 10; aggregatedTcTotal = 30 + sum of 10 feature TC counts",
+      "expected_result": "elapsed = Date.now() - start; elapsed < 5000; featurePipelines.length === 10",
+      "tags": [
+        "integration",
+        "nfr-010",
+        "performance"
+      ],
+      "scenario": "edge_case"
+    },
+    {
+      "id": "TC-NFR011",
+      "title": "Malformed feature .aitri does not crash collector or affect other projects",
+      "type": "integration",
+      "automation": "automated",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-023",
+      "priority": "high",
+      "given": "A temp project dir with 3 feature subdirectories: features/ok1 (valid .aitri, tcCount:10), features/broken (malformed .aitri = 'not-json'), features/ok2 (valid .aitri, tcCount:20); mainTcTotal = 5",
+      "when": "readFeaturePipelines(projectDir, 5) is called",
+      "then": "returns featurePipelines of length 2 (ok1 and ok2 only); aggregatedTcTotal = 35 (5+10+20); 'broken' is absent from featurePipelines; no exception thrown",
+      "expected_result": "featurePipelines.length === 2; aggregatedTcTotal === 35; names in featurePipelines include 'ok1' and 'ok2'; 'broken' absent",
+      "tags": [
+        "integration",
+        "nfr-011",
+        "reliability",
+        "failure-path"
+      ],
+      "scenario": "edge_case"
+    },
+    {
+      "id": "TC-NFR012",
+      "title": "CLI version detection failure writes WARN entry to aitri-hub.log",
+      "type": "unit",
+      "automation": "automated",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-027",
+      "priority": "medium",
+      "given": "execFileSync stub throws ENOENT; appendLog function is spied upon",
+      "when": "detectAitriVersion() is called",
+      "then": "appendLog is called once with a string containing 'WARN' (case-insensitive) and 'undetectable'",
+      "expected_result": "spy on appendLog records exactly 1 call; call argument matches /warn/i and /undetectable/i",
+      "tags": [
+        "unit",
+        "nfr-012",
+        "observability",
+        "logging"
+      ],
+      "scenario": "edge_case"
+    },
+    {
+      "id": "TC-E2E-001",
+      "title": "Full collector cycle with version mismatch produces integrationAlert in dashboard.json and CLI shows alert before project rows",
+      "type": "e2e",
+      "automation": "automated",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-010",
+      "ac_id": "AC-020",
+      "priority": "critical",
+      "given": "A registered local project with a valid .aitri; INTEGRATION_LAST_REVIEWED = '0.1.76'; detectAitriVersion stubbed to return '0.1.77'; dashboard.json written to os.tmpdir()",
+      "when": "A full collection cycle runs (collector/index.js collectAll()) and the CLI renderer processes the resulting state",
+      "then": "(1) dashboard.json contains top-level integrationAlert with severity='warning' and message containing '0.1.77'; (2) CLI renderer output string has the alert line at line position 0 or 1, before any project name",
+      "expected_result": "dashboard.json.integrationAlert.severity === 'warning'; CLI output lines[0..2] contains '0.1.77'; first project name in output appears after the alert line",
+      "tags": [
+        "e2e",
+        "fr-010",
+        "fr-012",
+        "fr-014",
+        "integration-gate",
+        "end-to-end"
+      ],
+      "scenario": "happy_path"
+    },
+    {
+      "id": "TC-E2E-002",
+      "title": "Full collector cycle with feature sub-pipelines produces correct aggregated TC count in dashboard.json",
+      "type": "e2e",
+      "automation": "automated",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-022",
+      "priority": "critical",
+      "given": "A registered local project in os.tmpdir() with: spec/04_TEST_RESULTS.json {summary:{passed:30,failed:0,total:30}}; features/feat-a/.aitri = {approvedPhases:[1,2,3], currentPhase:4}; features/feat-a/spec/04_TEST_RESULTS.json = {summary:{passed:58,failed:3,total:61}}; integrationAlert = null",
+      "when": "A full collection cycle runs (collectAll()) writing to os.tmpdir()/dashboard.json",
+      "then": "dashboard.json projects[0].aggregatedTcTotal === 91; projects[0].featurePipelines.length === 1; projects[0].featurePipelines[0].name === 'feat-a'; projects[0].featurePipelines[0].tcCount === 61; projects[0].testSummary.total remains 30 (main only)",
+      "expected_result": "All 5 assertions above pass; dashboard.json is valid JSON; no exception thrown during collection",
+      "tags": [
+        "e2e",
+        "fr-011",
+        "fr-014",
+        "feature-aggregation",
+        "end-to-end"
+      ],
+      "scenario": "happy_path"
+    }
+  ]
+}

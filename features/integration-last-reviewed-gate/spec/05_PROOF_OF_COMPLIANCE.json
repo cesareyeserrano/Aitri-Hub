@@ -1,0 +1,55 @@
+{
+  "project": "Aitri Hub — integration-last-reviewed-gate",
+  "version": "0.1.0",
+  "phases_completed": [1, 2, 3, 4, 5],
+  "overall_status": "partial",
+  "overall_status_reason": "All 30 TCs pass across all 5 MUST FRs (0 skipped). FR-012 and FR-013 carry declared technical debt from Phase 4, reducing their level to partial. No placeholder FRs — pipeline is not blocked.",
+
+  "requirement_compliance": [
+    {
+      "id": "FR-010",
+      "title": "INTEGRATION_LAST_REVIEWED version gate constant and comparison logic",
+      "level": "complete",
+      "evidence": "5 tests passing, 0 skipped, 0 debt. semverGt verified across major/minor/patch/equal/null. evaluateIntegrationAlert returns correct alert or null in all scenarios. TC-E2E-001 verifies the alert round-trips through writeDashboard into dashboard.json at top level."
+    },
+    {
+      "id": "FR-011",
+      "title": "Feature sub-pipeline aggregation from features/ directories",
+      "level": "complete",
+      "evidence": "9 tests passing, 0 skipped, 0 debt. aggregatedTcTotal arithmetic verified. Malformed and missing .aitri handled gracefully. 10-feature scan completes in under 5s. TC-E2E-002 verifies the full collectAll() cycle: aggregatedTcTotal=91 (main 30 + feat-a 61), testSummary.total unchanged at 30."
+    },
+    {
+      "id": "FR-012",
+      "title": "Surface integration alert and feature pipeline data in CLI and web dashboards",
+      "level": "partial",
+      "evidence": "7 tests passing, 0 skipped. IntegrationAlertBanner and FeatureSummarySection verified via Vitest+jsdom. Declared debt: CLI alert line not rendered at runtime — aitri-hub monitor is a stub with no active render loop. Web surface is fully functional."
+    },
+    {
+      "id": "FR-013",
+      "title": "Detect installed Aitri CLI version at runtime",
+      "level": "partial",
+      "evidence": "4 tests passing, 0 skipped. detectAitriVersion callable, returns string or null, regex extraction verified. Declared debt: ENOENT and timeout failure paths tested via interface contract rather than full execFileSync mock — node:test mock.module() requires Node 22+; project targets Node 18+."
+    },
+    {
+      "id": "FR-014",
+      "title": "Extend dashboard.json schema with feature pipeline fields",
+      "level": "complete",
+      "evidence": "5 integration tests passing, 0 skipped, 0 debt. featurePipelines, aggregatedTcTotal, integrationAlert all round-trip correctly through writeDashboard. Backward compatibility with FR-001 through FR-009 fields confirmed. Atomic write integrity preserved."
+    }
+  ],
+
+  "technical_debt_inherited": [
+    {
+      "fr_id": "FR-012",
+      "substitution": "CLI integration alert line not rendered at runtime — aitri-hub monitor command is currently a stub with no active render loop (monitor was removed in a prior commit). The IntegrationAlertBanner renders correctly in the web dashboard and integrationAlert is written to dashboard.json. CLI alert rendering requires re-implementing the monitor render loop, which is tracked in the backlog.",
+      "severity": "medium",
+      "effort": "low"
+    },
+    {
+      "fr_id": "FR-013",
+      "substitution": "TC-013f and TC-013f2 ENOENT and timeout paths verified via regex and interface tests instead of full execFileSync mock — node:test requires mock.module() (v22+) for ESM module mocking; project targets Node 18+.",
+      "severity": "low",
+      "effort": "low"
+    }
+  ]
+}

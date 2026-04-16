@@ -1,0 +1,55 @@
+{
+  "project_name": "Aitri Hub — Feature: integration-last-reviewed-gate",
+  "feature": "integration-last-reviewed-gate",
+  "implementation_complete": true,
+  "test_runner": "npm run test:feature",
+  "files_created": [
+    "lib/collector/aitri-version-reader.js",
+    "lib/collector/integration-guard.js",
+    "lib/collector/feature-reader.js",
+    "web/src/components/IntegrationAlertBanner.jsx",
+    "web/src/components/FeatureSummarySection.jsx",
+    "tests/unit/aitri-version-reader.test.js",
+    "tests/unit/integration-guard.test.js",
+    "tests/unit/feature-reader.test.js",
+    "tests/integration/dashboard-feature-schema.test.js"
+  ],
+  "files_modified": [
+    "lib/constants.js",
+    "lib/collector/index.js",
+    "web/src/App.jsx",
+    "web/src/components/ProjectCard.jsx",
+    "web/src/styles.css"
+  ],
+  "environment_variables": [],
+  "fr_traceability": [
+    { "fr_id": "FR-010", "implemented_in": ["lib/collector/integration-guard.js", "lib/constants.js", "lib/collector/index.js"] },
+    { "fr_id": "FR-011", "implemented_in": ["lib/collector/feature-reader.js", "lib/collector/index.js"] },
+    { "fr_id": "FR-012", "implemented_in": ["web/src/components/IntegrationAlertBanner.jsx", "web/src/components/FeatureSummarySection.jsx", "web/src/App.jsx", "web/src/components/ProjectCard.jsx"] },
+    { "fr_id": "FR-013", "implemented_in": ["lib/collector/aitri-version-reader.js", "lib/collector/index.js"] },
+    { "fr_id": "FR-014", "implemented_in": ["lib/collector/index.js", "lib/store/dashboard.js"] }
+  ],
+  "test_files": [
+    "tests/unit/aitri-version-reader.test.js",
+    "tests/unit/integration-guard.test.js",
+    "tests/unit/feature-reader.test.js",
+    "tests/integration/dashboard-feature-schema.test.js"
+  ],
+  "setup_commands": [
+    "npm install"
+  ],
+  "technical_debt": [
+    {
+      "fr_id": "FR-012",
+      "substitution": "CLI integration alert line not rendered at runtime — `aitri-hub monitor` command is currently a stub with no active render loop (monitor was removed in a prior commit). The IntegrationAlertBanner renders correctly in the web dashboard and integrationAlert is written to dashboard.json. CLI alert rendering requires re-implementing the monitor render loop, which is tracked in the backlog.",
+      "severity": "medium",
+      "effort": "low"
+    },
+    {
+      "fr_id": "FR-013",
+      "substitution": "TC-013f and TC-013f2 (ENOENT and timeout paths) verified via regex and interface tests instead of full execFileSync mock — Node.js built-in `node:test` runner requires `mock.module()` (v22+) for ESM module mocking; the project targets Node 18+. Failure-path behavior (null return + WARN log) is covered by the integration guard tests (TC-010f) which exercise the full null-input path. Full subprocess mock can be added when Node 22 becomes the minimum.",
+      "severity": "low",
+      "effort": "low"
+    }
+  ]
+}

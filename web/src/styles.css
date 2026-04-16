@@ -1961,3 +1961,121 @@ body {
     min-height: 240px;
   }
 }
+
+/* ── IntegrationAlertBanner (FR-012) ───────────────────────────────────────── */
+.integration-alert-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+  background: var(--syn-yellow);
+  color: #0d1117;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+
+.integration-alert-banner__icon {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.integration-alert-banner__message {
+  flex: 1;
+  min-width: 0;
+}
+
+.integration-alert-banner__link {
+  flex-shrink: 0;
+  color: #0d1117;
+  text-decoration: underline;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.integration-alert-banner__link:hover {
+  opacity: 0.75;
+}
+
+@media (max-width: 600px) {
+  .integration-alert-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* ── FeatureSummarySection (FR-012) ────────────────────────────────────────── */
+.feature-summary {
+  margin-top: 6px;
+  border-top: 1px solid var(--border);
+  padding-top: 4px;
+}
+
+.feature-summary__toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  padding: 2px 0;
+  line-height: 1.4;
+}
+
+.feature-summary__toggle:hover {
+  color: var(--text);
+}
+
+.feature-summary__chevron {
+  font-size: 9px;
+  flex-shrink: 0;
+}
+
+.feature-summary__list {
+  list-style: none;
+  margin: 4px 0 0 0;
+  padding: 0 0 0 12px;
+}
+
+.feature-summary__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  padding: 2px 0;
+  flex-wrap: wrap;
+}
+
+.feature-summary__name {
+  color: var(--text);
+  font-weight: 500;
+  min-width: 80px;
+}
+
+.feature-summary__phases {
+  color: var(--text-dim);
+}
+
+.feature-summary__verify {
+  margin-left: auto;
+}
+
+@media (max-width: 600px) {
+  .feature-summary__item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .feature-summary__verify {
+    margin-left: 0;
+  }
+}

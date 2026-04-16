@@ -1,0 +1,243 @@
+{
+  "project_name": "Aitri Hub — Feature: integration-last-reviewed-gate",
+  "project_summary": "Adds two capabilities to Aitri Hub: (1) an INTEGRATION_LAST_REVIEWED version gate that surfaces a visible warning when the installed Aitri CLI version exceeds what Hub has been reviewed against, preventing silent display of stale or mismatched data; (2) feature sub-pipeline aggregation that scans features/*/ directories and includes each feature's phase progress, TC count, and verify status in the dashboard output, correcting the observed TC count discrepancy (30 shown vs 91 actual).\n\nProduct Analysis:\n  North Star KPI: TC count accuracy — Hub displays the mathematically correct total TC count (main + all features) within one collection cycle after this feature ships.\n  JTBD: 'When I have active feature sub-pipelines, show me the complete health picture of my project — including all features — without me checking each one separately.'\n  Guardrail metric: Collection cycle time must remain ≤5s for up to 20 projects with up to 10 features each after feature scanning is added.",
+
+  "no_go_zone": [
+    "No automatic bumping of INTEGRATION_LAST_REVIEWED — the constant must be updated manually by a developer after reviewing CHANGELOG.md; automated version tracking is out of scope",
+    "No writes to feature .aitri files — Hub is read-only; it must never modify any project artifact",
+    "No per-feature git metadata — feature-level branch names, commit counts, or commit timestamps are not surfaced separately; only main pipeline git data is shown",
+    "No recursive feature scanning — only one level deep (features/*/); nested features (features/feat-a/features/) are not supported",
+    "No UI to configure which features to include — all subdirectories under features/ with a valid .aitri file are scanned automatically; no allow/deny list"
+  ],
+
+  "user_personas": [
+    {
+      "role": "Solo Developer",
+      "tech_level": "high",
+      "goal": "See the accurate total TC count and feature pipeline progress for all active features without switching directories",
+      "pain_point": "Hub shows 30 TCs when 91 exist — the discrepancy silently misleads decisions about verify readiness"
+    },
+    {
+      "role": "Team Lead",
+      "tech_level": "high",
+      "goal": "Know immediately when Hub's data may be unreliable due to a Aitri Core version mismatch",
+      "pain_point": "No signal exists today when Aitri Core evolves — Hub can display data based on stale schema assumptions without any warning"
+    }
+  ],
+
+  "functional_requirements": [
+    {
+      "id": "FR-010",
+      "title": "INTEGRATION_LAST_REVIEWED version gate constant and comparison logic",
+      "description": "Hub must define a constant INTEGRATION_LAST_REVIEWED (semver string, initially '0.1.76') in a config/constants module. On every collection cycle startup, Hub must read the installed Aitri CLI version and compare it against INTEGRATION_LAST_REVIEWED using semver comparison. When the CLI version is strictly greater, an integration alert must be generated at severity 'warning' before any project data is collected or rendered.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given INTEGRATION_LAST_REVIEWED = '0.1.76' and installed CLI version = '0.1.77', when Hub starts a collection cycle, then an integration alert with severity 'warning' and message containing 'Aitri 0.1.77 detected — Hub integration not reviewed past 0.1.76' is generated before any project entry is processed",
+        "Given INTEGRATION_LAST_REVIEWED = '0.1.76' and installed CLI version = '0.1.76', when Hub starts, then no integration alert is generated",
+        "Given INTEGRATION_LAST_REVIEWED = '0.1.76' and installed CLI version = '0.1.70' (older), when Hub starts, then no integration alert is generated",
+        "Given the Aitri CLI is not installed or its version cannot be detected, when Hub starts, then a 'warning' alert 'Aitri CLI version undetectable — integration status unknown' is generated and collection proceeds normally"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-011",
+      "title": "Feature sub-pipeline aggregation from features/*/ directories",
+      "description": "For each registered project, after reading the root .aitri file, the collector must scan the project's features/ directory (if it exists). For each subdirectory containing a .aitri file, the collector must read phase progress (approvedPhases, currentPhase), TC count from 04_TEST_RESULTS.json (if present), and verify status. Aggregated feature data must be merged into the project's dashboard entry: total TC count = main TCs + sum of all feature TCs; a featurePipelines array contains one entry per feature with name, phases, verifyStatus, and tcCount.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a project with features/feat-a/ containing a valid .aitri (approvedPhases:[1,2], currentPhase:3) and 04_TEST_RESULTS.json (passed:30, total:61), when the collector runs, then the project entry includes featurePipelines[0] = {name:'feat-a', approvedPhases:[1,2], currentPhase:3, tcCount:61, verifyStatus: ...}",
+        "Given a main project with testSummary.total:30 and one feature with tcCount:61, when the collector runs, then the project's aggregatedTcTotal equals 91",
+        "Given a project with no features/ directory, when the collector runs, then featurePipelines is an empty array, aggregatedTcTotal equals main TC count, and no error occurs",
+        "Given a project with features/feat-b/ that has no .aitri file (invalid feature dir), when the collector runs, then that directory is silently skipped and other features and the main pipeline are unaffected",
+        "Given a project with 5 features each containing .aitri and 04_TEST_RESULTS.json, when the collector runs, then all 5 appear in featurePipelines and aggregatedTcTotal equals main + sum of all feature TCs"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-013",
+      "title": "Detect installed Aitri CLI version at runtime",
+      "description": "Hub must detect the installed Aitri CLI version by executing `aitri --version` (or equivalent) via child_process at collection cycle startup. The detected version must be stored in the dashboard state and passed to the version gate logic (FR-010). Detection must be non-blocking and must not crash Hub if the CLI is absent.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given Aitri CLI v0.1.77 is installed, when Hub runs version detection, then the returned string is '0.1.77' (semver without prefix)",
+        "Given Aitri CLI is not installed or not on PATH, when Hub runs version detection, then the function returns null and logs a WARN entry — no exception is thrown",
+        "Given version detection runs on a cold start, when the collection cycle completes, then the detected version is present in the dashboard.json system metadata field"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-014",
+      "title": "Extend dashboard.json schema with feature pipeline fields",
+      "description": "The dashboard.json project entry schema must be extended to include: featurePipelines (array of feature state objects), aggregatedTcTotal (number), and integrationAlert (object or null). This ensures the web dashboard can read feature data without direct filesystem access, consistent with the existing dashboard.json contract (FR-009).",
+      "priority": "MUST",
+      "type": "persistence",
+      "acceptance_criteria": [
+        "Given a project with 2 features, when dashboard.json is written after a collection cycle, then each project entry contains featurePipelines (array of length 2), aggregatedTcTotal (integer ≥ main TC count), and integrationAlert (null or object with severity and message fields)",
+        "Given a project with no features/ directory, when dashboard.json is written, then featurePipelines is an empty array and aggregatedTcTotal equals the main pipeline TC count",
+        "Given a collection cycle with an integration version mismatch, when dashboard.json is written, then the top-level object contains an integrationAlert field with severity:'warning' and a non-empty message string",
+        "dashboard.json written with the new schema remains valid JSON and does not break existing web dashboard rendering of FR-001 through FR-009 fields"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-012",
+      "title": "Surface integration alert and feature pipeline data in CLI and web dashboards",
+      "description": "Both the CLI terminal dashboard and the web React dashboard must display: (a) the integration version mismatch alert (FR-010) prominently before any project data when triggered; (b) feature pipeline summary per project — total feature count, aggregated TC count (main + features), and a collapsed summary line per feature showing name, phase progress, and verify status.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given an integration alert exists, when the CLI dashboard renders, then the alert line appears as the first visible output before any project row, with a yellow/warning color prefix distinguishable from project rows",
+        "Given an integration alert exists, when the web dashboard renders, then a full-width banner appears above the project cards grid with the alert message and a link to the CHANGELOG.md URL",
+        "Given a project with 2 features, when the CLI dashboard renders that project row, then the TC count shown is aggregatedTcTotal (main + features) and the row includes a '(+2 features)' indicator",
+        "Given a project with 2 features, when the web dashboard renders that project card, then the card shows aggregatedTcTotal and a collapsed 'Features (2)' section listing each feature's name and phase progress",
+        "Given no integration alert and no features in any project, when both dashboards render, then no new UI elements are visible and existing layout is unchanged — rendering time remains ≤2s for up to 20 projects"
+      ],
+      "implementation_level": "functional"
+    }
+  ],
+
+  "user_stories": [
+    {
+      "id": "US-010",
+      "requirement_id": "FR-010",
+      "as_a": "team lead",
+      "i_want": "to see a warning when the installed Aitri version exceeds what Hub was designed for",
+      "so_that": "I know to check the CHANGELOG before trusting the dashboard data",
+      "acceptance_criteria": [
+        {
+          "id": "AC-020",
+          "given": "Aitri CLI v0.1.80 is installed and INTEGRATION_LAST_REVIEWED is '0.1.76'",
+          "when": "I run `aitri-hub monitor` or open the web dashboard",
+          "then": "a warning 'Aitri 0.1.80 detected — Hub integration not reviewed past 0.1.76' appears before any project data is shown, with a link to the CHANGELOG"
+        },
+        {
+          "id": "AC-021",
+          "given": "Aitri CLI v0.1.76 is installed and INTEGRATION_LAST_REVIEWED is '0.1.76'",
+          "when": "I run `aitri-hub monitor`",
+          "then": "no integration warning appears and the dashboard renders normally"
+        }
+      ]
+    },
+    {
+      "id": "US-011",
+      "requirement_id": "FR-011",
+      "as_a": "solo developer",
+      "i_want": "Hub to scan my project's feature sub-pipelines and include their TC counts",
+      "so_that": "the total TC count shown in the dashboard matches the real total across main and all features",
+      "acceptance_criteria": [
+        {
+          "id": "AC-022",
+          "given": "a project with main pipeline 04_TEST_RESULTS.json (total:30) and one feature features/auth/ with 04_TEST_RESULTS.json (total:61)",
+          "when": "the collector runs",
+          "then": "the project's displayed TC count is 91 and featurePipelines contains one entry for 'auth'"
+        },
+        {
+          "id": "AC-023",
+          "given": "a project with no features/ directory",
+          "when": "the collector runs",
+          "then": "the project's TC count is identical to its main pipeline count and no featurePipelines error is logged"
+        }
+      ]
+    },
+    {
+      "id": "US-013",
+      "requirement_id": "FR-013",
+      "as_a": "solo developer",
+      "i_want": "Hub to automatically detect the installed Aitri CLI version",
+      "so_that": "I don't need to manually configure version numbers for the integration gate to work",
+      "acceptance_criteria": [
+        {
+          "id": "AC-026",
+          "given": "Aitri CLI v0.1.77 is installed and on PATH",
+          "when": "Hub starts a collection cycle",
+          "then": "the detected version '0.1.77' is available to the version gate logic and appears in dashboard.json system metadata"
+        },
+        {
+          "id": "AC-027",
+          "given": "Aitri CLI is not installed or not on PATH",
+          "when": "Hub starts a collection cycle",
+          "then": "Hub logs a WARN 'Aitri CLI version undetectable' and continues — no crash and no error shown to the user in the project rows"
+        }
+      ]
+    },
+    {
+      "id": "US-014",
+      "requirement_id": "FR-014",
+      "as_a": "web dashboard",
+      "i_want": "to read feature pipeline data and integration alerts from dashboard.json",
+      "so_that": "the React frontend can display complete project health without direct filesystem access to features/ directories",
+      "acceptance_criteria": [
+        {
+          "id": "AC-028",
+          "given": "a collection cycle completes for a project with 2 features",
+          "when": "dashboard.json is read by the web frontend",
+          "then": "the project entry contains featurePipelines (array length 2), aggregatedTcTotal (integer), and integrationAlert (null or object)"
+        },
+        {
+          "id": "AC-029",
+          "given": "an integration version mismatch exists",
+          "when": "dashboard.json is written",
+          "then": "the top-level integrationAlert field contains {severity:'warning', message:'Aitri X.Y.Z detected — Hub integration not reviewed past A.B.C'} and the file is valid JSON"
+        }
+      ]
+    },
+    {
+      "id": "US-012",
+      "requirement_id": "FR-012",
+      "as_a": "solo developer",
+      "i_want": "to see the integration alert and feature summaries directly in the CLI and web dashboards",
+      "so_that": "I don't need to run separate commands to know about version mismatches or feature pipeline status",
+      "acceptance_criteria": [
+        {
+          "id": "AC-024",
+          "given": "CLI version exceeds INTEGRATION_LAST_REVIEWED and `aitri-hub monitor` is running",
+          "when": "the dashboard renders",
+          "then": "the integration warning is the first line shown, visually distinct (warning prefix), before any project row"
+        },
+        {
+          "id": "AC-025",
+          "given": "a project has 2 feature sub-pipelines and the web dashboard is open",
+          "when": "the project card renders",
+          "then": "the TC count reflects main + feature totals and a 'Features (2)' expandable section is visible on the card"
+        }
+      ]
+    }
+  ],
+
+  "non_functional_requirements": [
+    {
+      "id": "NFR-010",
+      "category": "Performance",
+      "requirement": "Feature sub-pipeline scanning must not push the total collection cycle time beyond 5 seconds for a project with up to 10 features",
+      "acceptance_criteria": "Collector run against 1 project with 10 features (each with valid .aitri and 04_TEST_RESULTS.json) completes within 5000ms total — measured from collection start to dashboard.json write"
+    },
+    {
+      "id": "NFR-011",
+      "category": "Reliability",
+      "requirement": "A malformed or missing feature .aitri file must not crash the collector or affect other projects",
+      "acceptance_criteria": "Given one feature directory with a corrupted .aitri among 5 valid features, the collector logs a warning to ~/.aitri-hub/logs/aitri-hub.log, skips that feature, and all other features and the main pipeline display correctly"
+    },
+    {
+      "id": "NFR-012",
+      "category": "Observability",
+      "requirement": "CLI version detection failure must be observable in logs",
+      "acceptance_criteria": "When Aitri CLI version cannot be detected, a log entry at level WARN is written to ~/.aitri-hub/logs/aitri-hub.log with message 'aitri CLI version undetectable' and the collection cycle continues"
+    }
+  ],
+
+  "constraints": [
+    "Node.js 18+ for CLI; Docker required for web dashboard (inherited from parent project)",
+    "Zero npm runtime dependencies for CLI — Node.js built-ins only",
+    "All persistent data written under ~/.aitri-hub/ — no writes to project or feature directories",
+    "INTEGRATION_LAST_REVIEWED must be defined in a single source-of-truth location (config/constants) — not duplicated across files"
+  ],
+
+  "technology_preferences": [
+    "CLI: Node.js (ESM, zero dependencies) — same as parent project",
+    "Web: React — same as parent project",
+    "Semver comparison: implement inline using string split/compare or a lightweight built-in approach — no semver npm package (zero-dep constraint)"
+  ]
+}

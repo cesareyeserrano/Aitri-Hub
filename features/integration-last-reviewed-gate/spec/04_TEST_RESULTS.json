@@ -1,0 +1,209 @@
+{
+  "executed_at": "2026-04-16T21:36:06.644Z",
+  "test_runner": "npm run test:feature",
+  "exit_code": 0,
+  "results": [
+    {
+      "tc_id": "TC-010h",
+      "status": "pass",
+      "notes": "✔ TC-010h: readAitriState — returns aitriVersion, updatedAt, createdAt when present"
+    },
+    {
+      "tc_id": "TC-010e1",
+      "status": "pass",
+      "notes": "✔ TC-010e1: evaluateIntegrationAlert — null when CLI equals reviewed"
+    },
+    {
+      "tc_id": "TC-010e2",
+      "status": "pass",
+      "notes": "✔ TC-010e2: evaluateIntegrationAlert — null when CLI is older"
+    },
+    {
+      "tc_id": "TC-010f",
+      "status": "pass",
+      "notes": "✔ TC-010f: readAitriState — returns null for aitriVersion, updatedAt, createdAt when absent"
+    },
+    {
+      "tc_id": "TC-011h",
+      "status": "pass",
+      "notes": "✔ TC-011h: readAitriState — artifactsDir spec preserved when explicit"
+    },
+    {
+      "tc_id": "TC-011h2",
+      "status": "pass",
+      "notes": "✔ TC-011h2: readFeaturePipelines — two features, correct aggregation"
+    },
+    {
+      "tc_id": "TC-011e1",
+      "status": "pass",
+      "notes": "✔ TC-011e1: readFeaturePipelines — absent features/ directory"
+    },
+    {
+      "tc_id": "TC-011e2",
+      "status": "pass",
+      "notes": "✔ TC-011e2: readFeaturePipelines — feature without test results"
+    },
+    {
+      "tc_id": "TC-011f",
+      "status": "pass",
+      "notes": "✔ TC-011f: readAitriState — artifactsDir defaults to empty string when field absent"
+    },
+    {
+      "tc_id": "TC-011f2",
+      "status": "pass",
+      "notes": "✔ TC-011f2: readFeaturePipelines — malformed .aitri skipped"
+    },
+    {
+      "tc_id": "TC-012h",
+      "status": "pass",
+      "notes": "✔ TC-012h: detectDrift — driftPhases fast path returns hasDrift=true"
+    },
+    {
+      "tc_id": "TC-012h2",
+      "status": "pass",
+      "notes": "✓ TC-012h2: FeatureSummarySection renders toggle button and section when featurePipelines is non-empty (Vitest/jsdom)"
+    },
+    {
+      "tc_id": "TC-012h3",
+      "status": "pass",
+      "notes": "✓ TC-012h3: IntegrationAlertBanner renders banner with message and link when alert is non-null (Vitest/jsdom)"
+    },
+    {
+      "tc_id": "TC-012e1",
+      "status": "pass",
+      "notes": "✓ TC-012e1: IntegrationAlertBanner renders nothing when data has no integrationAlert (Vitest/jsdom)"
+    },
+    {
+      "tc_id": "TC-012f",
+      "status": "pass",
+      "notes": "✓ TC-012f: FeatureSummarySection is absent when featurePipelines is empty array (Vitest/jsdom)"
+    },
+    {
+      "tc_id": "TC-012f2",
+      "status": "pass",
+      "notes": "✓ TC-012f2: IntegrationAlertBanner is absent when alert prop is null (Vitest/jsdom)"
+    },
+    {
+      "tc_id": "TC-013h",
+      "status": "pass",
+      "notes": "✔ TC-013h: detectDrift — hasDrift=false when artifact matches stored hash"
+    },
+    {
+      "tc_id": "TC-013e1",
+      "status": "pass",
+      "notes": "✔ TC-013e1: semver regex extracts version from banner-style output"
+    },
+    {
+      "tc_id": "TC-013f",
+      "status": "pass",
+      "notes": "✔ TC-013f: detectDrift — hasDrift=true when artifact differs from stored hash"
+    },
+    {
+      "tc_id": "TC-013f2",
+      "status": "pass",
+      "notes": "✔ TC-013f2: VERSION_REGEX handles no-match gracefully"
+    },
+    {
+      "tc_id": "TC-014h",
+      "status": "pass",
+      "notes": "✔ TC-014h: writeDashboard — writes featurePipelines and aggregatedTcTotal"
+    },
+    {
+      "tc_id": "TC-014h2",
+      "status": "pass",
+      "notes": "✔ TC-014h2: writeDashboard — integrationAlert at top level"
+    },
+    {
+      "tc_id": "TC-014e1",
+      "status": "pass",
+      "notes": "✔ TC-014e1: writeDashboard — no features"
+    },
+    {
+      "tc_id": "TC-014e2",
+      "status": "pass",
+      "notes": "✔ TC-014e2: writeDashboard — existing fields unaffected by new fields"
+    },
+    {
+      "tc_id": "TC-014f",
+      "status": "pass",
+      "notes": "✔ TC-014f: writeDashboard — output is always valid JSON"
+    },
+    {
+      "tc_id": "TC-NFR010",
+      "status": "pass",
+      "notes": "✔ TC-NFR010: readFeaturePipelines — 10 features completes in 5000ms or less"
+    },
+    {
+      "tc_id": "TC-NFR011",
+      "status": "pass",
+      "notes": "✔ TC-NFR011: readFeaturePipelines — malformed feature does not affect valid ones"
+    },
+    {
+      "tc_id": "TC-NFR012",
+      "status": "pass",
+      "notes": "✓ TC-NFR012: FeatureSummarySection is collapsed by default (Vitest/jsdom)"
+    },
+    {
+      "tc_id": "TC-E2E-001",
+      "status": "pass",
+      "notes": "✔ TC-E2E-001: collectAll() embeds integrationAlert at top level; writeDashboard round-trips it correctly (node:test, tests/integration/e2e-collector-cycle.test.js)"
+    },
+    {
+      "tc_id": "TC-E2E-002",
+      "status": "pass",
+      "notes": "✔ TC-E2E-002: collectAll() aggregatedTcTotal=91 (main 30 + feat-a 61); featurePipelines[0].tcCount=61; testSummary.total remains 30 (node:test, tests/integration/e2e-collector-cycle.test.js)"
+    }
+  ],
+  "fr_coverage": [
+    {
+      "fr_id": "FR-010",
+      "tests_passing": 5,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-011",
+      "tests_passing": 9,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-012",
+      "tests_passing": 7,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-013",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-014",
+      "tests_passing": 5,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    }
+  ],
+  "summary": {
+    "total": 30,
+    "passed": 30,
+    "failed": 0,
+    "skipped": 0,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 0,
+    "manual": 0,
+    "manual_verified": 0
+  }
+}

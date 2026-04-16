@@ -9,6 +9,7 @@ import PhaseProgress from './PhaseProgress.jsx';
 import AlertBadge from './AlertBadge.jsx';
 import ProgressBar from './ProgressBar.jsx';
 import BugBadge from './BugBadge.jsx';
+import FeatureSummarySection from './FeatureSummarySection.jsx';
 
 /**
  * Format commit age in hours to human-readable string.
@@ -107,12 +108,18 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
     aitriState,
     gitMeta,
     testSummary,
+    featurePipelines,
+    aggregatedTcTotal,
     alerts,
     collectionError,
   } = project;
 
   const isStalled          = (gitMeta?.lastCommitAgeHours ?? 0) > 72;
-  const tests              = formatTests(testSummary);
+  const effectiveTcTotal   = aggregatedTcTotal ?? testSummary?.total ?? 0;
+  const effectiveTestSummary = testSummary
+    ? { ...testSummary, total: effectiveTcTotal }
+    : testSummary;
+  const tests              = formatTests(effectiveTestSummary);
   const lastEvent          = lastEventLabel(aitriState?.events);
   const timeInPhase        = phaseAge(aitriState);
   const complianceSummary  = project.complianceSummary ?? null;
@@ -220,9 +227,10 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
             </div>
             {testSummary?.available && (testSummary.total ?? 0) > 0 && (
               <div style={{ paddingLeft: '22px', paddingBottom: '2px' }}>
-                <ProgressBar value={testSummary.passed} max={testSummary.total} label="Test progress" />
+                <ProgressBar value={testSummary.passed} max={effectiveTcTotal} label="Test progress" />
               </div>
             )}
+            <FeatureSummarySection featurePipelines={featurePipelines} />
 
             {/* Last commit */}
             <div className="metric-row">

@@ -11,8 +11,10 @@
   },
   "scripts": {
     "test": "node --test tests/unit/*.test.js tests/integration/*.test.js",
+    "test:web": "npm --prefix web test",
+    "test:feature": "npm test && npm run test:web",
     "test:e2e": "npx playwright test tests/e2e/",
-    "test:all": "npm test && npm run test:e2e"
+    "test:all": "npm test && npm run test:web && npm run test:e2e"
   },
   "files": [
     "bin",
