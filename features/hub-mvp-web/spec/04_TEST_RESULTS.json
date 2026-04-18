@@ -1,0 +1,364 @@
+{
+  "executed_at": "2026-04-17T03:21:04.034Z",
+  "test_runner": "npm test",
+  "exit_code": 0,
+  "results": [
+    {
+      "tc_id": "TC-010h",
+      "status": "pass",
+      "notes": "✔ TC-010h: readAitriState — returns aitriVersion, updatedAt, createdAt when present (0.430375ms)"
+    },
+    {
+      "tc_id": "TC-010e",
+      "status": "pass",
+      "notes": "✔ TC-010e: readAitriState — returns aitriVersion=null when field is a number (0.364542ms)"
+    },
+    {
+      "tc_id": "TC-010n",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-010n\" (e.g. test_TC_010n_description) and add # @aitri-tc TC-010n above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-011h",
+      "status": "pass",
+      "notes": "✔ TC-011h: readAitriState — artifactsDir \"spec\" preserved when explicit (0.469542ms)"
+    },
+    {
+      "tc_id": "TC-011e",
+      "status": "pass",
+      "notes": "✔ TC-011e: readAitriState — projectName defaults to path.basename(projectDir) when absent (0.310958ms)"
+    },
+    {
+      "tc_id": "TC-011n",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-011n\" (e.g. test_TC_011n_description) and add # @aitri-tc TC-011n above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-011f",
+      "status": "pass",
+      "notes": "✔ TC-011f: readAitriState — artifactsDir defaults to \"\" when field absent (1.250459ms)"
+    },
+    {
+      "tc_id": "TC-011g",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-011g\" (e.g. test_TC_011g_description) and add # @aitri-tc TC-011g above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-012h",
+      "status": "pass",
+      "notes": "✔ TC-012h: detectDrift — driftPhases fast path returns hasDrift=true (0.306833ms)"
+    },
+    {
+      "tc_id": "TC-012e",
+      "status": "pass",
+      "notes": "✔ TC-012e: detectDrift — absent driftPhases (pre-v0.1.58) falls through without throwing (0.470583ms)"
+    },
+    {
+      "tc_id": "TC-012f",
+      "status": "pass",
+      "notes": "✔ TC-012f: detectDrift — empty driftPhases[] does not trigger drift (0.757416ms)"
+    },
+    {
+      "tc_id": "TC-012g",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-012g\" (e.g. test_TC_012g_description) and add # @aitri-tc TC-012g above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-013h",
+      "status": "pass",
+      "notes": "✔ TC-013h: detectDrift — hasDrift=false when artifact matches stored hash (0.798875ms)"
+    },
+    {
+      "tc_id": "TC-013e",
+      "status": "pass",
+      "notes": "✔ TC-013e: detectDrift — approved phase with no stored hash is NOT counted as drifted (0.297ms)"
+    },
+    {
+      "tc_id": "TC-013n",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-013n\" (e.g. test_TC_013n_description) and add # @aitri-tc TC-013n above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-014h",
+      "status": "pass",
+      "notes": "✔ TC-014h: writeDashboard — writes featurePipelines and aggregatedTcTotal (3.207ms)"
+    },
+    {
+      "tc_id": "TC-014e",
+      "status": "pass",
+      "notes": "✔ TC-014e: evaluateAlerts — no VERSION_MISMATCH when CLI version unavailable (null cache) (0.377041ms)"
+    },
+    {
+      "tc_id": "TC-014n",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-014n\" (e.g. test_TC_014n_description) and add # @aitri-tc TC-014n above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-015h",
+      "status": "pass",
+      "notes": "✔ TC-015h: normalizeSpecArtifacts — correct node/edge structure (2.977542ms)"
+    },
+    {
+      "tc_id": "TC-015e",
+      "status": "pass",
+      "notes": "✔ TC-015e: normalizeSpecArtifacts — edge cases (0.594917ms)"
+    },
+    {
+      "tc_id": "TC-015n",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-015n\" (e.g. test_TC_015n_description) and add # @aitri-tc TC-015n above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-016h",
+      "status": "pass",
+      "notes": "✔ TC-016h: GET /api/projects returns 200 with empty array when projects.json absent"
+    },
+    {
+      "tc_id": "TC-016e",
+      "status": "pass",
+      "notes": "✔ TC-016e: concurrent POST requests produce valid projects.json"
+    },
+    {
+      "tc_id": "TC-016n",
+      "status": "pass",
+      "notes": "✔ TC-016n: PUT /api/projects/:id with unknown id returns 404"
+    },
+    {
+      "tc_id": "TC-017h",
+      "status": "pass",
+      "notes": "✔ TC-017h: returns correct counts for each status and severity bucket (0.539375ms)"
+    },
+    {
+      "tc_id": "TC-017n",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-017n\" (e.g. test_TC_017n_description) and add # @aitri-tc TC-017n above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-018h",
+      "status": "pass",
+      "notes": "✔ TC-018h: generates one blocking alert when critical>0 || high>0 (94.097208ms)"
+    },
+    {
+      "tc_id": "TC-019h",
+      "status": "pass",
+      "notes": "✔ TC-019h: lastSession fields are preserved exactly (0.6525ms)"
+    },
+    {
+      "tc_id": "TC-019e",
+      "status": "pass",
+      "notes": "✔ TC-019e: files_touched is null (not undefined) (0.503292ms)"
+    },
+    {
+      "tc_id": "TC-NFR010h",
+      "status": "pass",
+      "notes": "✔ TC-NFR010h: POST with path traversal location ../../etc/passwd returns 400 path_traversal"
+    },
+    {
+      "tc_id": "TC-NFR010e",
+      "status": "pass",
+      "notes": "✔ TC-NFR010e: POST with ../traversal in location returns 400 path_traversal"
+    },
+    {
+      "tc_id": "TC-NFR011h",
+      "status": "pass",
+      "notes": "✔ TC-NFR011h: GET /api/projects succeeds — logging does not interfere with response"
+    },
+    {
+      "tc_id": "TC-NFR012h",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-NFR012h\" (e.g. test_TC_NFR012h_description) and add # @aitri-tc TC-NFR012h above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-app-version-h",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-app-version-h\" (e.g. test_TC_app_version_h_description) and add # @aitri-tc TC-app-version-h above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-app-version-e",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-app-version-e\" (e.g. test_TC_app_version_e_description) and add # @aitri-tc TC-app-version-e above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-app-version-n",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-app-version-n\" (e.g. test_TC_app_version_n_description) and add # @aitri-tc TC-app-version-n above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-git-unpushed-h",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-git-unpushed-h\" (e.g. test_TC_git_unpushed_h_description) and add # @aitri-tc TC-git-unpushed-h above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-git-unpushed-n",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-git-unpushed-n\" (e.g. test_TC_git_unpushed_n_description) and add # @aitri-tc TC-git-unpushed-n above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-010f",
+      "status": "pass",
+      "notes": "✔ TC-010f: readAitriState — returns null for aitriVersion, updatedAt, createdAt when absent (0.462583ms)"
+    },
+    {
+      "tc_id": "TC-013f",
+      "status": "pass",
+      "notes": "✔ TC-013f: detectDrift — hasDrift=true when artifact differs from stored hash (0.577792ms)"
+    },
+    {
+      "tc_id": "TC-014f",
+      "status": "pass",
+      "notes": "✔ TC-014f: writeDashboard — output is always valid JSON (2.002791ms)"
+    },
+    {
+      "tc_id": "TC-015f",
+      "status": "pass",
+      "notes": "✔ TC-015f: normalizeSpecArtifacts — phase-based node status (0.844625ms)"
+    },
+    {
+      "tc_id": "TC-016f",
+      "status": "pass",
+      "notes": "✔ TC-016f: POST returns 500 when hub dir is read-only (write failure)"
+    },
+    {
+      "tc_id": "TC-017f",
+      "status": "pass",
+      "notes": "✔ TC-017f: returns null without throwing (0.079875ms)"
+    },
+    {
+      "tc_id": "TC-018e",
+      "status": "pass",
+      "notes": "✔ TC-018e: generates zero bug-related alerts when bugsSummary is null (0.0755ms)"
+    },
+    {
+      "tc_id": "TC-018n",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-018n\" (e.g. test_TC_018n_description) and add # @aitri-tc TC-018n above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-018f",
+      "status": "pass",
+      "notes": "✔ TC-018f: generates one warning alert when only medium/low bugs open (0.116458ms)"
+    },
+    {
+      "tc_id": "TC-019f",
+      "status": "pass",
+      "notes": "✔ TC-019f: lastSession is null and no exception is thrown (0.428375ms)"
+    },
+    {
+      "tc_id": "TC-NFR010f",
+      "status": "pass",
+      "notes": "✔ TC-NFR010f: POST with non-existent absolute path returns 400"
+    },
+    {
+      "tc_id": "TC-NFR011f",
+      "status": "pass",
+      "notes": "✔ TC-NFR011f: POST with empty body returns 400 — error path logging does not crash server"
+    },
+    {
+      "tc_id": "TC-e2eAdminAdd",
+      "status": "pass",
+      "notes": "✔ TC-e2eAdminAdd: POST /api/projects persists entry to projects.json"
+    },
+    {
+      "tc_id": "TC-e2eAdminRemove",
+      "status": "pass",
+      "notes": "✔ TC-e2eAdminRemove: DELETE /api/projects/:id removes entry from projects.json"
+    },
+    {
+      "tc_id": "TC-NFR012f",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-NFR012f\" (e.g. test_TC_NFR012f_description) and add # @aitri-tc TC-NFR012f above it. E2E tests may also require a browser environment."
+    }
+  ],
+  "fr_coverage": [
+    {
+      "fr_id": "FR-010",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-011",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 2,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-012",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 6,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-013",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 3,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-014",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-015",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-016",
+      "tests_passing": 9,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-017",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-018",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-019",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    }
+  ],
+  "summary": {
+    "total": 53,
+    "passed": 37,
+    "failed": 0,
+    "skipped": 16,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 16,
+    "manual": 0,
+    "manual_verified": 0
+  }
+}

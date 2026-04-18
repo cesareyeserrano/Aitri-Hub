@@ -1,0 +1,1243 @@
+{
+  "test_plan": {
+    "strategy": "Unit tests for all new logic/persistence modules (app-version-reader, admin API handlers, git-reader additions, deprecation commands). Integration tests for file I/O (projects.json CRUD, atomic write). Component tests via React Testing Library + jsdom for all UI changes (card sections, admin panel, URL router). Every FR has a happy-path, edge-case, and negative test. FR-012 is tested as a flat always-visible layout (superseding the collapsible AC from Phase 1 per UX spec approval).",
+    "coverage_goal": "90%",
+    "test_types": ["unit", "integration", "component"]
+  },
+
+  "type_coverage_matrix": [
+    { "fr_id": "FR-010", "fr_type": "UX",          "unit": "-",     "integration": "-",     "component": "MUST"   },
+    { "fr_id": "FR-011", "fr_type": "UX",          "unit": "-",     "integration": "-",     "component": "MUST"   },
+    { "fr_id": "FR-012", "fr_type": "UX",          "unit": "-",     "integration": "-",     "component": "MUST"   },
+    { "fr_id": "FR-013", "fr_type": "UX",          "unit": "-",     "integration": "SHOULD", "component": "MUST"  },
+    { "fr_id": "FR-014", "fr_type": "persistence", "unit": "MUST",  "integration": "MUST",  "component": "MUST"   },
+    { "fr_id": "FR-015", "fr_type": "persistence", "unit": "MUST",  "integration": "MUST",  "component": "MUST"   },
+    { "fr_id": "FR-016", "fr_type": "persistence", "unit": "MUST",  "integration": "MUST",  "component": "-"      },
+    { "fr_id": "FR-017", "fr_type": "UX",          "unit": "MUST",  "integration": "-",     "component": "-"      },
+    { "fr_id": "FR-018", "fr_type": "UX",          "unit": "MUST",  "integration": "-",     "component": "-"      },
+    { "fr_id": "FR-019", "fr_type": "UX",          "unit": "MUST",  "integration": "-",     "component": "MUST"   },
+    { "fr_id": "NFR-010","fr_type": "security",    "unit": "MUST",  "integration": "-",     "component": "-"      },
+    { "fr_id": "NFR-011","fr_type": "observability","unit": "MUST", "integration": "-",     "component": "-"      },
+    { "fr_id": "NFR-012","fr_type": "usability",   "unit": "-",     "integration": "-",     "component": "MUST"   }
+  ],
+
+  "test_cases": [
+
+    {
+      "id": "TC-010h",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-010",
+      "ac_id": "AC-010",
+      "title": "Home — no tab navigation rendered when projects exist",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["App component rendered with 3 project entries in dashboard data"],
+      "given": "App receives dashboard data with 3 healthy projects",
+      "when": "component renders",
+      "then": "no element with role='tablist' or className containing 'tabs' or 'tab-btn' is present in the DOM; all 3 project cards are visible",
+      "steps": [
+        "render(<App />) with mocked fetch returning 3-project dashboard",
+        "expect(screen.queryByRole('tablist')).toBeNull()",
+        "expect(screen.queryByClassName('tabs')).toBeNull()",
+        "expect(screen.getAllByTestId('project-card')).toHaveLength(3)"
+      ],
+      "expected_result": "No tab navigation present; all project cards visible on initial render",
+      "test_data": { "projects": 3 }
+    },
+
+    {
+      "id": "TC-010e",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-010",
+      "ac_id": "AC-010",
+      "title": "Home — empty state shown when 0 projects, no tab required",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": ["App rendered with empty projects array"],
+      "given": "dashboard data has projects: []",
+      "when": "component renders",
+      "then": "empty state message visible; no tab navigation; link to /admin present",
+      "steps": [
+        "render(<App />) with mocked fetch returning { projects: [] }",
+        "expect(screen.getByText(/No projects registered/i)).toBeInTheDocument()",
+        "expect(screen.getByRole('link', { name: /admin/i })).toBeInTheDocument()",
+        "expect(screen.queryByRole('tablist')).toBeNull()"
+      ],
+      "expected_result": "Empty state with /admin link rendered, no tabs",
+      "test_data": { "projects": 0 }
+    },
+
+    {
+      "id": "TC-010n",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-010",
+      "ac_id": "AC-010",
+      "title": "Home — triage section absent when no blocking alerts",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["All projects have status healthy, no blocking alerts"],
+      "given": "dashboard has 3 projects with alerts: []",
+      "when": "component renders",
+      "then": "no element with class 'triage' is present in the DOM",
+      "steps": [
+        "render home with 3 healthy projects, all alerts: []",
+        "expect(document.querySelector('.triage')).toBeNull()"
+      ],
+      "expected_result": "Triage section not rendered when no blocking alerts exist",
+      "test_data": { "allAlertsEmpty": true }
+    },
+
+    {
+      "id": "TC-011h",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-011",
+      "title": "Card — pipeline bar shows 3/5 at 60% fill for 3 approved phases",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["ProjectCard rendered with project having approvedPhases: [1,2,3]"],
+      "given": "project with approvedPhases length 3, currentPhase 4",
+      "when": "ProjectCard renders",
+      "then": "text '3/5' visible; progress bar element has width style of 60%; bar color is yellow (--syn-yellow)",
+      "steps": [
+        "render(<ProjectCard project={mockProject3of5} />)",
+        "expect(screen.getByText(/3\/5/)).toBeInTheDocument()",
+        "const bar = document.querySelector('.pipeline-bar__fill')",
+        "expect(bar.style.width).toBe('60%')",
+        "expect(bar.style.background).toContain('syn-yellow')"
+      ],
+      "expected_result": "3/5 label visible, bar at 60% with yellow color",
+      "test_data": { "approvedPhases": [1,2,3], "currentPhase": 4 }
+    },
+
+    {
+      "id": "TC-011e",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-011",
+      "title": "Card — blocking badge absent when 0 blocking alerts",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": ["ProjectCard rendered with alerts: []"],
+      "given": "project with no alerts",
+      "when": "ProjectCard renders",
+      "then": "no element with class 'blocking-badge' or text matching /blocking/ in key metrics section",
+      "steps": [
+        "render(<ProjectCard project={{ ...base, alerts: [] }} />)",
+        "expect(document.querySelector('.blocking-badge')).toBeNull()"
+      ],
+      "expected_result": "Blocking badge element not present in DOM",
+      "test_data": { "alerts": [] }
+    },
+
+    {
+      "id": "TC-011n",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-012",
+      "ac_id": "AC-012",
+      "title": "Card — blocking badge shows count 2 when 2 blocking alerts exist",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["ProjectCard rendered with 2 blocking alerts"],
+      "given": "project with alerts: [{severity:'blocking',...},{severity:'blocking',...}]",
+      "when": "ProjectCard renders",
+      "then": "blocking badge element present showing '2' in red color",
+      "steps": [
+        "render(<ProjectCard project={{ ...base, alerts: [blockingAlert, blockingAlert] }} />)",
+        "const badge = screen.getByTestId('blocking-badge')",
+        "expect(badge).toBeInTheDocument()",
+        "expect(badge.textContent).toBe('2')"
+      ],
+      "expected_result": "Red badge with '2' visible in key metrics section",
+      "test_data": { "blockingAlerts": 2 }
+    },
+
+    {
+      "id": "TC-011f",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-011",
+      "title": "Card — tests row shows N/A when no testSummary",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": ["ProjectCard rendered with testSummary: null"],
+      "given": "project with testSummary: null",
+      "when": "ProjectCard renders",
+      "then": "tests row shows 'N/A' in dim color",
+      "steps": [
+        "render(<ProjectCard project={{ ...base, testSummary: null }} />)",
+        "expect(screen.getByText(/N\/A/)).toBeInTheDocument()"
+      ],
+      "expected_result": "Tests row displays 'N/A'",
+      "test_data": { "testSummary": null }
+    },
+
+    {
+      "id": "TC-011g",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-011",
+      "ac_id": "AC-011",
+      "title": "Card — health grade A shown in green for score ≥90",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "medium",
+      "preconditions": ["Project with 5 approved phases, all tests passing, no blocking alerts"],
+      "given": "project yields health score ≥90",
+      "when": "ProjectCard renders",
+      "then": "grade badge shows 'A' with color var(--syn-green)",
+      "steps": [
+        "render(<ProjectCard project={perfectProject} />)",
+        "const grade = screen.getByTestId('health-grade')",
+        "expect(grade.textContent).toBe('A')",
+        "expect(grade.style.color).toContain('syn-green')"
+      ],
+      "expected_result": "Grade 'A' rendered in green",
+      "test_data": { "approvedPhases": [1,2,3,4,5], "testsPassing": true, "noBlockers": true }
+    },
+
+    {
+      "id": "TC-012h",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-013",
+      "title": "Card — app version shown below project name when available",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["ProjectCard rendered with appVersion: '1.2.3'"],
+      "given": "project has appVersion: '1.2.3'",
+      "when": "ProjectCard renders",
+      "then": "text 'v1.2.3' visible below the project name, in dim color; no interaction required",
+      "steps": [
+        "render(<ProjectCard project={{ ...base, appVersion: '1.2.3' }} />)",
+        "expect(screen.getByText(/v1\\.2\\.3/)).toBeInTheDocument()",
+        "const versionEl = screen.getByTestId('app-version')",
+        "expect(versionEl).toBeInTheDocument()"
+      ],
+      "expected_result": "Version 'v1.2.3' visible below project name",
+      "test_data": { "appVersion": "1.2.3" }
+    },
+
+    {
+      "id": "TC-012e",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-013",
+      "title": "Card — app version row absent when appVersion is null",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": ["ProjectCard rendered with appVersion: null"],
+      "given": "project has appVersion: null",
+      "when": "ProjectCard renders",
+      "then": "no version element rendered below project name",
+      "steps": [
+        "render(<ProjectCard project={{ ...base, appVersion: null }} />)",
+        "expect(screen.queryByTestId('app-version')).toBeNull()"
+      ],
+      "expected_result": "No version row in card header",
+      "test_data": { "appVersion": null }
+    },
+
+    {
+      "id": "TC-012f",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-013",
+      "title": "Card — GIT unpushed row absent when unpushedCommits is null",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": ["ProjectCard rendered with gitMeta.unpushedCommits: null"],
+      "given": "project has no tracking branch (unpushedCommits: null)",
+      "when": "ProjectCard renders",
+      "then": "no '↑ commits not pushed' row in GIT section",
+      "steps": [
+        "render(<ProjectCard project={{ ...base, gitMeta: { ...base.gitMeta, unpushedCommits: null } }} />)",
+        "expect(screen.queryByText(/commits not pushed/i)).toBeNull()"
+      ],
+      "expected_result": "Unpushed commits row not rendered",
+      "test_data": { "unpushedCommits": null }
+    },
+
+    {
+      "id": "TC-012g",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-013",
+      "title": "Card — GIT unpushed row shows count when unpushedCommits > 0",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["ProjectCard rendered with gitMeta.unpushedCommits: 3"],
+      "given": "project has unpushedCommits: 3",
+      "when": "ProjectCard renders",
+      "then": "'↑ 3 commits not pushed' visible in GIT section in yellow color",
+      "steps": [
+        "render(<ProjectCard project={{ ...base, gitMeta: { ...base.gitMeta, unpushedCommits: 3 } }} />)",
+        "expect(screen.getByText(/3 commits not pushed/i)).toBeInTheDocument()"
+      ],
+      "expected_result": "Unpushed commits row visible with count 3",
+      "test_data": { "unpushedCommits": 3 }
+    },
+
+    {
+      "id": "TC-013h",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-014",
+      "title": "Admin panel — lists 3 projects from API response",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["AdminPanel rendered with mocked GET /api/projects returning 3 entries"],
+      "given": "GET /api/projects returns [{id,name:'alpha',type:'local',location:'/a'},{id,name:'beta',type:'remote',location:'https://...'},{id,name:'gamma',type:'local',location:'/g'}]",
+      "when": "AdminPanel renders and fetch completes",
+      "then": "3 project rows visible; each shows name, type badge, and path/URL",
+      "steps": [
+        "render(<AdminPanel />) with mocked fetch",
+        "await waitFor(() => expect(screen.getByText('alpha')).toBeInTheDocument())",
+        "expect(screen.getByText('beta')).toBeInTheDocument()",
+        "expect(screen.getByText('gamma')).toBeInTheDocument()",
+        "expect(screen.getAllByTestId('project-row')).toHaveLength(3)"
+      ],
+      "expected_result": "3 rows rendered with correct name, type, and location",
+      "test_data": { "projects": 3 }
+    },
+
+    {
+      "id": "TC-013e",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-014",
+      "title": "Admin panel — empty state shown when 0 projects",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": ["GET /api/projects returns { projects: [] }"],
+      "given": "no projects registered",
+      "when": "AdminPanel renders",
+      "then": "empty state message visible; add form auto-expanded",
+      "steps": [
+        "render(<AdminPanel />) with mocked fetch returning { projects: [] }",
+        "await waitFor(() => expect(screen.getByText(/No projects yet/i)).toBeInTheDocument())",
+        "expect(screen.getByRole('form', { name: /add project/i })).toBeVisible()"
+      ],
+      "expected_result": "Empty state with auto-expanded add form",
+      "test_data": { "projects": 0 }
+    },
+
+    {
+      "id": "TC-013n",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-014",
+      "title": "Admin panel — error banner when API fetch fails",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["GET /api/projects throws network error"],
+      "given": "fetch rejects with network error",
+      "when": "AdminPanel renders",
+      "then": "error banner visible mentioning 'aitri-hub web'",
+      "steps": [
+        "mock fetch to reject",
+        "render(<AdminPanel />)",
+        "await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())",
+        "expect(screen.getByText(/aitri-hub web/i)).toBeInTheDocument()"
+      ],
+      "expected_result": "Error banner shown with actionable message",
+      "test_data": { "fetchFails": true }
+    },
+
+    {
+      "id": "TC-014h",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-015",
+      "title": "Admin API — POST adds valid local project to projects.json",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["~/.aitri-hub/projects.json has 1 entry; /tmp/new-proj/ exists on filesystem"],
+      "given": "POST /api/projects with { name: 'new-proj', type: 'local', location: '/tmp/new-proj' }",
+      "when": "handler processes the request",
+      "then": "projects.json gains a new entry with generated id, name 'new-proj', response status 201",
+      "steps": [
+        "Set up projects.json with 1 entry",
+        "Create /tmp/new-proj/ directory",
+        "Call admin API POST handler with valid payload",
+        "Assert response status 201",
+        "Assert projects.json has 2 entries",
+        "Assert new entry has name='new-proj', type='local', location='/tmp/new-proj'",
+        "Assert new entry has an id of 8 hex chars"
+      ],
+      "expected_result": "201 response, projects.json updated with new entry",
+      "test_data": { "name": "new-proj", "type": "local", "location": "/tmp/new-proj" }
+    },
+
+    {
+      "id": "TC-014e",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-016",
+      "title": "Admin API — POST with non-existent local path returns 400",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": ["/tmp/does-not-exist/ does NOT exist on filesystem"],
+      "given": "POST /api/projects with { name: 'x', type: 'local', location: '/tmp/does-not-exist' }",
+      "when": "handler validates the path",
+      "then": "response status 400, error code 'path_not_found', projects.json unchanged",
+      "steps": [
+        "Call POST handler with non-existent path",
+        "Assert response.status === 400",
+        "Assert response.body.error === 'path_not_found'",
+        "Assert projects.json is unchanged"
+      ],
+      "expected_result": "400 with error 'path_not_found'; no write to disk",
+      "test_data": { "location": "/tmp/does-not-exist" }
+    },
+
+    {
+      "id": "TC-014n",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-016",
+      "title": "Admin API — POST with duplicate name returns 400",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["projects.json has entry with name 'my-app'"],
+      "given": "POST /api/projects with { name: 'my-app', type: 'local', location: '/tmp/x' }",
+      "when": "handler checks for duplicates",
+      "then": "response 400 with error 'name_duplicate', projects.json unchanged",
+      "steps": [
+        "Set up projects.json with name='my-app'",
+        "Call POST with same name",
+        "Assert response.status === 400",
+        "Assert response.body.error === 'name_duplicate'"
+      ],
+      "expected_result": "400 name_duplicate; no write",
+      "test_data": { "duplicateName": "my-app" }
+    },
+
+    {
+      "id": "TC-015h",
+      "requirement_id": "FR-015",
+      "user_story_id": "US-015",
+      "ac_id": "AC-017",
+      "title": "Admin API — DELETE removes project from projects.json",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["projects.json has entry with id 'abc12345'"],
+      "given": "DELETE /api/projects/abc12345",
+      "when": "handler processes request",
+      "then": "response 204, projects.json no longer contains entry with id 'abc12345'",
+      "steps": [
+        "Set up projects.json with entry id='abc12345'",
+        "Call DELETE /api/projects/abc12345",
+        "Assert response.status === 204",
+        "Assert projects.json does not contain id 'abc12345'"
+      ],
+      "expected_result": "204, entry removed from projects.json",
+      "test_data": { "id": "abc12345" }
+    },
+
+    {
+      "id": "TC-015e",
+      "requirement_id": "FR-015",
+      "user_story_id": "US-015",
+      "ac_id": "AC-018",
+      "title": "Admin panel — remove dialog cancel leaves projects.json unchanged",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": ["AdminPanel with 2 projects; user clicks Remove on first"],
+      "given": "remove confirmation dialog is open",
+      "when": "user clicks Cancel",
+      "then": "dialog closes; project row still present; DELETE not called",
+      "steps": [
+        "render(<AdminPanel />) with 2 projects",
+        "click first row's [Remove] button",
+        "expect(screen.getByRole('dialog')).toBeInTheDocument()",
+        "click Cancel",
+        "expect(screen.queryByRole('dialog')).toBeNull()",
+        "expect(screen.getAllByTestId('project-row')).toHaveLength(2)",
+        "expect(mockFetch).not.toHaveBeenCalledWith(expect.stringContaining('DELETE'))"
+      ],
+      "expected_result": "Dialog dismissed, no deletion, 2 rows remain",
+      "test_data": { "projects": 2 }
+    },
+
+    {
+      "id": "TC-015n",
+      "requirement_id": "FR-015",
+      "user_story_id": "US-015",
+      "ac_id": "AC-017",
+      "title": "Admin API — DELETE non-existent id returns 404",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["projects.json has no entry with id 'xxxxxxxx'"],
+      "given": "DELETE /api/projects/xxxxxxxx",
+      "when": "handler looks up id",
+      "then": "response 404 with error 'not_found'",
+      "steps": [
+        "Call DELETE with unknown id",
+        "Assert response.status === 404",
+        "Assert response.body.error === 'not_found'"
+      ],
+      "expected_result": "404 not_found",
+      "test_data": { "id": "xxxxxxxx" }
+    },
+
+    {
+      "id": "TC-016h",
+      "requirement_id": "FR-016",
+      "user_story_id": "US-016",
+      "ac_id": "AC-019",
+      "title": "Admin API — GET returns empty array when projects.json does not exist",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["projects.json does not exist"],
+      "given": "GET /api/projects with no projects.json on disk",
+      "when": "handler reads the file",
+      "then": "response 200 with body { projects: [] }",
+      "steps": [
+        "Ensure no projects.json exists",
+        "Call GET /api/projects handler",
+        "Assert response.status === 200",
+        "Assert response.body.projects is an empty array"
+      ],
+      "expected_result": "200 { projects: [] } — no crash when file absent",
+      "test_data": { "fileExists": false }
+    },
+
+    {
+      "id": "TC-016e",
+      "requirement_id": "FR-016",
+      "user_story_id": "US-016",
+      "ac_id": "AC-019",
+      "title": "Admin API — atomic write: projects.json not corrupted on concurrent calls",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": ["projects.json exists with 2 entries"],
+      "given": "two simultaneous POST /api/projects requests",
+      "when": "both handlers run near-simultaneously",
+      "then": "projects.json is valid JSON after both complete (no partial write)",
+      "steps": [
+        "Fire two POST requests with different names simultaneously",
+        "Await both responses",
+        "Assert JSON.parse(fs.readFileSync('projects.json')) does not throw",
+        "Assert result.projects.length >= 3 (2 original + at least 1 new)"
+      ],
+      "expected_result": "projects.json is always valid JSON after write",
+      "test_data": { "concurrent": true }
+    },
+
+    {
+      "id": "TC-016n",
+      "requirement_id": "FR-016",
+      "user_story_id": "US-016",
+      "ac_id": "AC-020",
+      "title": "Admin API — PUT with unknown id returns 404",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["projects.json has no entry with id 'zzzzzzzz'"],
+      "given": "PUT /api/projects/zzzzzzzz with { name: 'new-name' }",
+      "when": "handler looks up the id",
+      "then": "response 404 with error 'not_found'; projects.json unchanged",
+      "steps": [
+        "Call PUT with unknown id",
+        "Assert response.status === 404"
+      ],
+      "expected_result": "404 not_found",
+      "test_data": { "id": "zzzzzzzz" }
+    },
+
+    {
+      "id": "TC-017h",
+      "requirement_id": "FR-017",
+      "user_story_id": "US-017",
+      "ac_id": "AC-021",
+      "title": "setup deprecation — prints admin URL and exits 0 without prompts",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["cmdSetup is called directly"],
+      "given": "cmdSetup() is called",
+      "when": "function executes",
+      "then": "stdout contains 'http://localhost:3000/admin'; no readline interface created; process.exitCode is 0",
+      "steps": [
+        "Spy on console.log and process.exit",
+        "Spy on readline.createInterface to assert not called",
+        "Call cmdSetup()",
+        "Assert console.log was called with string matching /localhost:3000\\/admin/",
+        "Assert readline.createInterface was NOT called",
+        "Assert process.exit called with 0"
+      ],
+      "expected_result": "Deprecation notice printed, no prompts, exit 0",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-017n",
+      "requirement_id": "FR-017",
+      "user_story_id": "US-017",
+      "ac_id": "AC-021",
+      "title": "setup deprecation — projects.json not modified",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["projects.json exists with 2 entries"],
+      "given": "projects.json has 2 entries before cmdSetup() is called",
+      "when": "cmdSetup() runs",
+      "then": "projects.json still has exactly 2 entries after call",
+      "steps": [
+        "Write projects.json with 2 entries",
+        "Call cmdSetup()",
+        "Read projects.json",
+        "Assert projects.length === 2"
+      ],
+      "expected_result": "projects.json unchanged after deprecation notice",
+      "test_data": { "existingProjects": 2 }
+    },
+
+    {
+      "id": "TC-018h",
+      "requirement_id": "FR-018",
+      "user_story_id": "US-018",
+      "ac_id": "AC-022",
+      "title": "monitor deprecation — prints dashboard URL, exits 0, no screen clear",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["cmdMonitor is called directly"],
+      "given": "cmdMonitor() is called",
+      "when": "function executes",
+      "then": "stdout contains 'http://localhost:3000'; no ESC[2J ANSI sequence written; process exits within 500ms",
+      "steps": [
+        "Capture stdout via spy",
+        "Call cmdMonitor() with timeout guard",
+        "Assert output contains /localhost:3000/",
+        "Assert output does NOT contain '\\x1b[2J' (ANSI clear screen)",
+        "Assert process.exit called with 0"
+      ],
+      "expected_result": "Deprecation notice only; no terminal dashboard rendered",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-019h",
+      "requirement_id": "FR-019",
+      "user_story_id": "US-019",
+      "ac_id": "AC-023",
+      "title": "Dark mode — no theme toggle button rendered in header",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["Header component rendered"],
+      "given": "Header renders",
+      "when": "component mounts",
+      "then": "no button with aria-label matching /theme|toggle|color/i present",
+      "steps": [
+        "render(<Header ... />)",
+        "expect(screen.queryByRole('button', { name: /theme/i })).toBeNull()",
+        "expect(screen.queryByRole('button', { name: /toggle/i })).toBeNull()"
+      ],
+      "expected_result": "No theme toggle button in header",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-019e",
+      "requirement_id": "FR-019",
+      "user_story_id": "US-019",
+      "ac_id": "AC-023",
+      "title": "Dark mode — localStorage not read or written on render",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": ["Header rendered with empty localStorage"],
+      "given": "localStorage is empty",
+      "when": "Header mounts",
+      "then": "localStorage.getItem('aitri-theme') returns null after render",
+      "steps": [
+        "Clear localStorage",
+        "render(<Header ... />)",
+        "expect(localStorage.getItem('aitri-theme')).toBeNull()"
+      ],
+      "expected_result": "No localStorage access for theme on render",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-NFR010h",
+      "requirement_id": "FR-016",
+      "user_story_id": "US-016",
+      "ac_id": "AC-020",
+      "title": "Security — path traversal payload rejected with 400",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "critical",
+      "preconditions": ["Admin API handler loaded"],
+      "given": "POST /api/projects with location: '../../etc/passwd'",
+      "when": "handler validates the path",
+      "then": "response 400 with error 'path_traversal'; no filesystem read or write",
+      "steps": [
+        "Spy on fs.existsSync and fs.writeFileSync",
+        "Call POST handler with location: '../../etc/passwd'",
+        "Assert response.status === 400",
+        "Assert response.body.error === 'path_traversal'",
+        "Assert fs.existsSync NOT called",
+        "Assert fs.writeFileSync NOT called"
+      ],
+      "expected_result": "400 path_traversal; zero filesystem operations",
+      "test_data": { "location": "../../etc/passwd" }
+    },
+
+    {
+      "id": "TC-NFR010e",
+      "requirement_id": "FR-016",
+      "user_story_id": "US-016",
+      "ac_id": "AC-020",
+      "title": "Security — encoded path traversal rejected",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "critical",
+      "preconditions": ["Admin API handler loaded"],
+      "given": "POST /api/projects with location: '%2e%2e%2f%2e%2e%2fetc%2fpasswd'",
+      "when": "handler validates the path",
+      "then": "response 400 with error 'path_traversal'",
+      "steps": [
+        "Call POST handler with URL-encoded traversal path",
+        "Assert response.status === 400"
+      ],
+      "expected_result": "400 for encoded traversal attempts",
+      "test_data": { "location": "%2e%2e%2fetc%2fpasswd" }
+    },
+
+    {
+      "id": "TC-NFR011h",
+      "requirement_id": "FR-016",
+      "user_story_id": "US-016",
+      "ac_id": "AC-019",
+      "title": "Observability — GET /api/projects logs request to stdout",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "medium",
+      "preconditions": ["Admin API handler with stdout capture"],
+      "given": "GET /api/projects request",
+      "when": "handler completes",
+      "then": "stdout contains a line matching ISO8601 timestamp + 'GET /api/projects 200'",
+      "steps": [
+        "Capture console.log output",
+        "Call GET /api/projects handler",
+        "Assert logged string matches /\\d{4}-\\d{2}-\\d{2}T.*GET \\/api\\/projects 200/"
+      ],
+      "expected_result": "Log line with timestamp, method, path, status",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-NFR012h",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-014",
+      "title": "Usability — admin panel renders without horizontal scroll at 768px",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "medium",
+      "preconditions": ["jsdom viewport set to 768px width"],
+      "given": "AdminPanel rendered at 768px viewport width with 3 projects",
+      "when": "component renders",
+      "then": "document.body.scrollWidth <= 768; all 3 project rows visible",
+      "steps": [
+        "Set jsdom viewport: { width: 768, height: 1024 }",
+        "render(<AdminPanel />) with 3 projects",
+        "Assert document.body.scrollWidth <= 768",
+        "Assert screen.getAllByTestId('project-row').length === 3"
+      ],
+      "expected_result": "No horizontal overflow at 768px; all rows visible",
+      "test_data": { "viewport": "768px", "projects": 3 }
+    },
+
+    {
+      "id": "TC-app-version-h",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-013",
+      "title": "app-version-reader — reads version from package.json",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["/tmp/test-proj/package.json exists with version: '2.0.1'"],
+      "given": "project dir contains package.json with { \"version\": \"2.0.1\" }",
+      "when": "readAppVersion('/tmp/test-proj') called",
+      "then": "returns '2.0.1'",
+      "steps": [
+        "Write /tmp/test-proj/package.json with version '2.0.1'",
+        "Call readAppVersion('/tmp/test-proj')",
+        "Assert result === '2.0.1'"
+      ],
+      "expected_result": "'2.0.1' returned",
+      "test_data": { "version": "2.0.1" }
+    },
+
+    {
+      "id": "TC-app-version-e",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-013",
+      "title": "app-version-reader — falls back to VERSION file when no package.json",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": ["No package.json; VERSION file contains '1.0.0-beta'"],
+      "given": "project dir has VERSION file with content '1.0.0-beta\\n'",
+      "when": "readAppVersion called",
+      "then": "returns '1.0.0-beta' (trimmed)",
+      "steps": [
+        "Create VERSION file with '1.0.0-beta\\n'",
+        "Call readAppVersion",
+        "Assert result === '1.0.0-beta'"
+      ],
+      "expected_result": "'1.0.0-beta' returned from VERSION file",
+      "test_data": { "versionFile": "1.0.0-beta" }
+    },
+
+    {
+      "id": "TC-app-version-n",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-013",
+      "title": "app-version-reader — returns null when neither file exists",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["No package.json and no VERSION file in project dir"],
+      "given": "project dir has no package.json and no VERSION file",
+      "when": "readAppVersion called",
+      "then": "returns null without throwing",
+      "steps": [
+        "Call readAppVersion on empty dir",
+        "Assert result === null",
+        "Assert no exception thrown"
+      ],
+      "expected_result": "null returned, no crash",
+      "test_data": { "noVersionFiles": true }
+    },
+
+    {
+      "id": "TC-git-unpushed-h",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-013",
+      "title": "git-reader — unpushedCommits returns count when tracking branch exists",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["git repo with tracking branch; 2 local commits not pushed"],
+      "given": "git rev-list @{u}..HEAD returns '2'",
+      "when": "readGitMeta called",
+      "then": "returned object has unpushedCommits: 2",
+      "steps": [
+        "Mock gitExec('rev-list @{u}..HEAD --count', ...) to return '2'",
+        "Call readGitMeta(projectDir)",
+        "Assert result.unpushedCommits === 2"
+      ],
+      "expected_result": "unpushedCommits: 2",
+      "test_data": { "unpushed": 2 }
+    },
+
+    {
+      "id": "TC-git-unpushed-n",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-012",
+      "ac_id": "AC-013",
+      "title": "git-reader — unpushedCommits returns null when no tracking branch",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["git repo with no upstream tracking branch"],
+      "given": "git rev-list @{u}..HEAD exits non-zero (no upstream)",
+      "when": "readGitMeta called",
+      "then": "returned object has unpushedCommits: null (not 0)",
+      "steps": [
+        "Mock gitExec('rev-list @{u}..HEAD --count', ...) to return null",
+        "Call readGitMeta(projectDir)",
+        "Assert result.unpushedCommits === null"
+      ],
+      "expected_result": "unpushedCommits: null — distinct from 0",
+      "test_data": { "noTracking": true }
+    },
+
+    {
+      "id": "TC-010f",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-010",
+      "ac_id": "AC-010",
+      "title": "Home — fetch failure renders error state, no tabs or crash",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["fetch rejects with network error"],
+      "given": "fetch('/data/dashboard.json') rejects",
+      "when": "App mounts",
+      "then": "error message visible; no tab navigation; no uncaught exception",
+      "steps": [
+        "Mock fetch to reject with new Error('network')",
+        "render(<App />)",
+        "expect(screen.getByText(/error|failed/i)).toBeInTheDocument()",
+        "expect(screen.queryByRole('tablist')).toBeNull()"
+      ],
+      "expected_result": "Error state shown gracefully, no crash",
+      "test_data": { "fetchError": "network" }
+    },
+
+    {
+      "id": "TC-013f",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-014",
+      "title": "Admin panel — shows error message when GET /api/projects fails",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["AdminPanel mounted; fetch rejects"],
+      "given": "GET /api/projects returns 500",
+      "when": "AdminPanel mounts",
+      "then": "error message visible; project list not rendered",
+      "steps": [
+        "Mock fetch to return { status: 500 }",
+        "render(<AdminPanel />)",
+        "expect(screen.getByText(/error|failed/i)).toBeInTheDocument()",
+        "expect(screen.queryByTestId('project-row')).toBeNull()"
+      ],
+      "expected_result": "Error state shown, no project rows rendered",
+      "test_data": { "status": 500 }
+    },
+
+    {
+      "id": "TC-014f",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-016",
+      "title": "Add project — POST /api/projects returns 400 for missing name field",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["Admin API handler loaded"],
+      "given": "POST /api/projects with body { location: '/valid/path' } (no name)",
+      "when": "handler validates request",
+      "then": "response 400 with error 'missing_field'; projects.json unchanged",
+      "steps": [
+        "Call POST handler with { location: '/valid/path' }",
+        "Assert response.status === 400",
+        "Assert response.body.error === 'missing_field'",
+        "Assert projects.json unchanged"
+      ],
+      "expected_result": "400 missing_field; no write to disk",
+      "test_data": { "body": { "location": "/valid/path" } }
+    },
+
+    {
+      "id": "TC-015f",
+      "requirement_id": "FR-015",
+      "user_story_id": "US-015",
+      "ac_id": "AC-017",
+      "title": "Edit/remove project — DELETE /api/projects/:id returns 404 for unknown id",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["projects.json has no project with id 'unknown-id'"],
+      "given": "DELETE /api/projects/unknown-id",
+      "when": "handler processes request",
+      "then": "response 404 with error 'not_found'; projects.json unchanged",
+      "steps": [
+        "Write projects.json with no entry matching 'unknown-id'",
+        "Call DELETE handler for id 'unknown-id'",
+        "Assert response.status === 404",
+        "Assert response.body.error === 'not_found'"
+      ],
+      "expected_result": "404 not_found returned, no disk write",
+      "test_data": { "id": "unknown-id" }
+    },
+
+    {
+      "id": "TC-016f",
+      "requirement_id": "FR-016",
+      "user_story_id": "US-016",
+      "ac_id": "AC-018",
+      "title": "Admin API — renameSync failure rolls back and returns 500",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["Admin API handler loaded; renameSync mocked to throw ENOSPC"],
+      "given": "POST /api/projects with valid body; fs.renameSync throws ENOSPC",
+      "when": "handler attempts atomic write",
+      "then": "response 500 returned; original projects.json content preserved",
+      "steps": [
+        "Write valid projects.json",
+        "Mock fs.renameSync to throw { code: 'ENOSPC' }",
+        "Call POST /api/projects handler",
+        "Assert response.status === 500",
+        "Assert projects.json content unchanged"
+      ],
+      "expected_result": "500 on disk failure; original file preserved",
+      "test_data": { "fsError": "ENOSPC" }
+    },
+
+    {
+      "id": "TC-017f",
+      "requirement_id": "FR-017",
+      "user_story_id": "US-017",
+      "ac_id": "AC-021",
+      "title": "setup deprecation — does not call aitri-hub write or spawn any child process",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["cmdSetup called; child_process.spawn spied"],
+      "given": "cmdSetup() is invoked",
+      "when": "function runs",
+      "then": "child_process.spawn is never called; no file writes occur",
+      "steps": [
+        "Spy on child_process.spawn",
+        "Spy on fs.writeFileSync",
+        "Call cmdSetup()",
+        "Assert spawn NOT called",
+        "Assert writeFileSync NOT called"
+      ],
+      "expected_result": "No side effects beyond console output and exit",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-018e",
+      "requirement_id": "FR-018",
+      "user_story_id": "US-018",
+      "ac_id": "AC-022",
+      "title": "monitor deprecation — exit code 0 regardless of missing projects.json",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": ["projects.json does not exist; cmdMonitor called"],
+      "given": "projects.json absent from disk",
+      "when": "cmdMonitor() is called",
+      "then": "process.exit still called with 0; no crash or unhandled rejection",
+      "steps": [
+        "Delete projects.json if exists",
+        "Call cmdMonitor()",
+        "Assert process.exit called with 0",
+        "Assert no unhandled exception"
+      ],
+      "expected_result": "Exits cleanly with 0 even when data files missing",
+      "test_data": { "noProjectsFile": true }
+    },
+
+    {
+      "id": "TC-018n",
+      "requirement_id": "FR-018",
+      "user_story_id": "US-018",
+      "ac_id": "AC-022",
+      "title": "monitor deprecation — stdout message references web URL not CLI watch mode",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["cmdMonitor called"],
+      "given": "cmdMonitor() is invoked",
+      "when": "output is captured",
+      "then": "output does NOT contain '--watch' or 'terminal' or 'dashboard'; DOES contain 'localhost'",
+      "steps": [
+        "Capture stdout",
+        "Call cmdMonitor()",
+        "Assert output does NOT match /--watch|terminal dashboard/",
+        "Assert output matches /localhost/"
+      ],
+      "expected_result": "Message directs to web UI, not terminal watch mode",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-018f",
+      "requirement_id": "FR-018",
+      "user_story_id": "US-018",
+      "ac_id": "AC-022",
+      "title": "monitor deprecation — does not write dashboard.json or spawn watcher",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["cmdMonitor called; fs.writeFileSync spied"],
+      "given": "cmdMonitor() is invoked",
+      "when": "function runs",
+      "then": "fs.writeFileSync never called; no setInterval registered",
+      "steps": [
+        "Spy on fs.writeFileSync",
+        "Spy on global.setInterval",
+        "Call cmdMonitor()",
+        "Assert writeFileSync NOT called",
+        "Assert setInterval NOT called"
+      ],
+      "expected_result": "No file writes or polling initiated by deprecated command",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-019f",
+      "requirement_id": "FR-019",
+      "user_story_id": "US-019",
+      "ac_id": "AC-023",
+      "title": "Dark mode — [data-theme='light'] selector absent from compiled CSS bundle",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["CSS bundle built via vite build"],
+      "given": "production CSS bundle generated",
+      "when": "bundle content scanned",
+      "then": "string '[data-theme=\"light\"]' does not appear in any CSS file",
+      "steps": [
+        "Run vite build",
+        "Read all *.css files in dist/assets/",
+        "Assert no file contains '[data-theme=\"light\"]'"
+      ],
+      "expected_result": "No light-theme selector in production bundle",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-NFR010f",
+      "requirement_id": "FR-016",
+      "user_story_id": "US-016",
+      "ac_id": "AC-020",
+      "title": "Security — valid absolute path outside projects root rejected with 400",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "critical",
+      "preconditions": ["Admin API handler; PROJECTS_ROOT set to /home/user/projects"],
+      "given": "POST /api/projects with location '/etc/nginx'",
+      "when": "handler validates path against PROJECTS_ROOT",
+      "then": "response 400 with error 'path_traversal'; no fs operations performed",
+      "steps": [
+        "Set PROJECTS_ROOT to '/home/user/projects'",
+        "Call POST handler with location: '/etc/nginx'",
+        "Assert response.status === 400",
+        "Assert response.body.error === 'path_traversal'"
+      ],
+      "expected_result": "400 for absolute path outside allowed root",
+      "test_data": { "location": "/etc/nginx" }
+    },
+
+    {
+      "id": "TC-NFR011f",
+      "requirement_id": "FR-016",
+      "user_story_id": "US-016",
+      "ac_id": "AC-019",
+      "title": "Observability — failed API request logs 4xx status code",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["Admin API handler; request with missing body"],
+      "given": "POST /api/projects with empty body",
+      "when": "handler returns 400",
+      "then": "stdout log line contains '400' status code",
+      "steps": [
+        "Capture console.log output",
+        "Call POST /api/projects with empty body",
+        "Assert logged string contains '400'"
+      ],
+      "expected_result": "4xx status code appears in log line",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-e2eAdminAdd",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-014",
+      "ac_id": "AC-016",
+      "title": "E2E — add project via admin panel persists to projects.json and appears in home",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "critical",
+      "preconditions": ["hub web server running on localhost:3000; projects.json empty"],
+      "given": "user is on /admin page",
+      "when": "user fills add-project form with name='Test Project' and location='/tmp/test-project' and submits",
+      "then": "projects.json contains the new entry; navigating to / shows a card with name 'Test Project'",
+      "steps": [
+        "Open browser at http://localhost:3000/admin",
+        "Click 'Add project'",
+        "Fill name field with 'Test Project'",
+        "Fill location field with '/tmp/test-project'",
+        "Click Submit",
+        "Assert success message shown",
+        "Read projects.json and assert entry with name 'Test Project' exists",
+        "Navigate to http://localhost:3000/",
+        "Assert card with 'Test Project' visible"
+      ],
+      "expected_result": "New project persisted and visible on home page",
+      "test_data": { "name": "Test Project", "location": "/tmp/test-project" }
+    },
+
+    {
+      "id": "TC-e2eAdminRemove",
+      "requirement_id": "FR-015",
+      "user_story_id": "US-015",
+      "ac_id": "AC-017",
+      "title": "E2E — remove project via admin panel removes it from home view",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "critical",
+      "preconditions": ["hub web server running; projects.json has one entry with id 'abc12345'"],
+      "given": "user is on /admin with project 'Alpha' listed",
+      "when": "user clicks Remove for 'Alpha', confirms in modal, and modal closes",
+      "then": "projects.json no longer contains entry with id 'abc12345'; / shows no card for 'Alpha'",
+      "steps": [
+        "Open browser at http://localhost:3000/admin",
+        "Assert 'Alpha' row visible",
+        "Click Remove button for 'Alpha'",
+        "Confirm deletion in modal",
+        "Assert 'Alpha' row no longer visible",
+        "Read projects.json and assert no entry with id 'abc12345'",
+        "Navigate to /",
+        "Assert no card with title 'Alpha'"
+      ],
+      "expected_result": "Project removed from disk and no longer shown on home",
+      "test_data": { "id": "abc12345", "name": "Alpha" }
+    },
+
+    {
+      "id": "TC-NFR012f",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-013",
+      "ac_id": "AC-014",
+      "title": "Usability — admin panel renders without horizontal scroll at 375px",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["jsdom viewport set to 375px width"],
+      "given": "AdminPanel rendered at 375px viewport with 3 projects",
+      "when": "component renders",
+      "then": "document.body.scrollWidth <= 375; all 3 project rows accessible",
+      "steps": [
+        "Set jsdom viewport: { width: 375, height: 812 }",
+        "render(<AdminPanel />) with 3 projects",
+        "Assert document.body.scrollWidth <= 375",
+        "Assert screen.getAllByTestId('project-row').length === 3"
+      ],
+      "expected_result": "No horizontal overflow at 375px mobile viewport",
+      "test_data": { "viewport": "375px", "projects": 3 }
+    }
+
+  ]
+}

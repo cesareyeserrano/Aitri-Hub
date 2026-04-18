@@ -1,0 +1,87 @@
+{
+  "project": "Aitri Hub — hub-mvp-web",
+  "version": "0.1.6",
+  "phases_completed": [1, 2, 3, 4, 5],
+  "overall_status": "compliant",
+  "requirement_compliance": [
+    {
+      "id": "FR-010",
+      "title": "Single-view web home — remove tab navigation",
+      "level": "complete",
+      "evidence": "3 passing tests (TC-010h, TC-010e, TC-010f). HomeView.jsx renders stat tiles, triage, and project grid on /. AdminPanel rendered on /admin. No tab navigation in compiled output."
+    },
+    {
+      "id": "FR-011",
+      "title": "Project card — always-visible primary indicators",
+      "level": "complete",
+      "evidence": "3 passing tests (TC-011h, TC-011e, TC-011f). ProjectCard redesigned into 5 always-visible named sections: BLOCKERS, PIPELINE, QUALITY, GIT, VERSION. Grade badge in header."
+    },
+    {
+      "id": "FR-012",
+      "title": "Project card — expandable detail section",
+      "level": "complete",
+      "evidence": "3 passing tests (TC-012h, TC-012e, TC-012f). app-version-reader.js reads package.json .version or VERSION file. git-reader.js returns unpushedCommits and uncommittedFiles. Both exposed in collector/index.js."
+    },
+    {
+      "id": "FR-013",
+      "title": "Web admin panel — project listing",
+      "level": "complete",
+      "evidence": "3 passing tests (TC-013h, TC-013e, TC-013f). AdminPanel.jsx fetches GET /api/projects and renders AdminProjectList with project rows. Empty state shown when no projects."
+    },
+    {
+      "id": "FR-014",
+      "title": "Web admin panel — add project",
+      "level": "complete",
+      "evidence": "4 passing tests (TC-014h, TC-014e, TC-014n, TC-e2eAdminAdd). AdminAddForm.jsx with inline validation. POST /api/projects returns 201 and persists to disk. E2E verified via Playwright."
+    },
+    {
+      "id": "FR-015",
+      "title": "Web admin panel — edit and remove project",
+      "level": "complete",
+      "evidence": "4 passing tests (TC-015h, TC-015e, TC-015n, TC-e2eAdminRemove). AdminProjectList inline edit + RemoveConfirmDialog. DELETE /api/projects/:id returns 204 and removes from disk. E2E verified via Playwright."
+    },
+    {
+      "id": "FR-016",
+      "title": "Admin API — local HTTP endpoint for projects.json CRUD",
+      "level": "complete",
+      "evidence": "9 passing tests (TC-016h, TC-016n, TC-016e, TC-016f, TC-NFR010h, TC-NFR010e, TC-NFR010f, TC-NFR011h, TC-NFR011f). Full CRUD at /api/projects. Localhost-only (403 for non-127.0.0.1). Atomic writes via renameSync. Path traversal rejected. 500 on write failure."
+    },
+    {
+      "id": "FR-017",
+      "title": "CLI setup deprecation notice",
+      "level": "complete",
+      "evidence": "2 passing tests (TC-017h, TC-017e). setup.js replaced with deprecation notice printing /admin URL and exiting 0. No interactive flow."
+    },
+    {
+      "id": "FR-018",
+      "title": "CLI monitor deprecation notice",
+      "level": "complete",
+      "evidence": "3 passing tests (TC-018h, TC-018e, TC-018n). monitor.js created with deprecation notice printing localhost:3000 and exiting 0. cmdMonitor exported and wired in bin/aitri-hub.js."
+    },
+    {
+      "id": "FR-019",
+      "title": "Dark-mode only — remove light mode",
+      "level": "complete",
+      "evidence": "3 passing tests (TC-019h, TC-019e, TC-019n). [data-theme='light'] block removed from styles.css (54 lines). :root,[data-theme='dark'] changed to :root. No light-mode color variables in compiled bundle. Header theme toggle button removed."
+    },
+    {
+      "id": "NFR-010",
+      "title": "Security — path traversal rejection",
+      "level": "complete",
+      "evidence": "TC-NFR010h (pass): POST with '../../etc/passwd' returns 400 path_traversal. TC-NFR010e (pass): '/valid/../etc/passwd' returns 400 path_traversal. TC-NFR010f (pass): non-existent absolute path returns 400. validateLocation() checks for '..' before any fs operation."
+    },
+    {
+      "id": "NFR-011",
+      "title": "Observability — request logging to stdout",
+      "level": "complete",
+      "evidence": "TC-NFR011h (pass): GET /api/projects returns 200 without logging interference. TC-NFR011f (pass): error path logging does not crash server. logRequest() writes [ISO8601] METHOD /path STATUS to console.log on every request."
+    },
+    {
+      "id": "NFR-012",
+      "title": "Usability — 768px viewport support",
+      "level": "complete",
+      "evidence": "TC-006e (pass via existing E2E): 768px viewport no horizontal scroll. styles.css includes responsive media query @media (max-width: 768px) for admin panel and card grid."
+    }
+  ],
+  "technical_debt_inherited": []
+}

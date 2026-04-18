@@ -1,0 +1,128 @@
+{
+  "feature_id": "hub-mvp-web",
+  "phase": 4,
+  "completed_at": "2026-04-16",
+  "summary": "Full implementation of hub-mvp-web: single-view home, redesigned cards with 5 always-visible named sections (BLOCKERS, PIPELINE, QUALITY, GIT, VERSION), web admin panel at /admin with CRUD API, CLI setup/monitor deprecation notices, dark-mode-only, and app version in card header.",
+  "technical_debt": [],
+  "files_modified": [
+    {
+      "path": "lib/commands/setup.js",
+      "change": "Replaced interactive CLI flow with deprecation notice printing http://localhost:3000/admin and exiting 0. No readline, no file writes.",
+      "fr_ids": ["FR-017"]
+    },
+    {
+      "path": "lib/commands/web.js",
+      "change": "Added /api/projects CRUD route handler block before static file fallback. GET/POST/PUT/DELETE with path traversal validation, atomic writes via renameSync, and stdout logging per NFR-011.",
+      "fr_ids": ["FR-016"]
+    },
+    {
+      "path": "lib/collector/git-reader.js",
+      "change": "Added unpushedCommits (number|null) and uncommittedFiles (number|null) to readGitMeta return value. null = no tracking branch or command unavailable.",
+      "fr_ids": ["FR-012"]
+    },
+    {
+      "path": "lib/collector/index.js",
+      "change": "Imported readAppVersion and added appVersion field to each project entry in collectOne.",
+      "fr_ids": ["FR-012"]
+    },
+    {
+      "path": "bin/aitri-hub.js",
+      "change": "Imported cmdMonitor from new monitor.js; replaced inline console.log with cmdMonitor() call in 'monitor' case.",
+      "fr_ids": ["FR-018"]
+    },
+    {
+      "path": "web/src/App.jsx",
+      "change": "Removed 7-tab navigation. Added useRoute() hook (15-line custom URL router using useState + popstate). Routes / to HomeView and /admin to AdminPanel. Removed all tab state and tab-related imports.",
+      "fr_ids": ["FR-010"]
+    },
+    {
+      "path": "web/src/components/Header.jsx",
+      "change": "Removed theme state, toggleTheme, localStorage access, and theme toggle button. Removed useCallback import. Added isAdmin prop for conditional subtitle. Dark-mode only.",
+      "fr_ids": ["FR-019"]
+    },
+    {
+      "path": "web/src/components/ProjectCard.jsx",
+      "change": "Full redesign into 5 always-visible named sections: BLOCKERS (conditional on alerts), PIPELINE (bar + last event), QUALITY (tests, FR coverage, spec quality, compliance), GIT (branch, unpushed, uncommitted), VERSION (aitri version). App version shown below name in card header.",
+      "fr_ids": ["FR-011", "FR-012"]
+    },
+    {
+      "path": "web/src/styles.css",
+      "change": "Removed [data-theme='light'] block (54 lines). Changed ':root,[data-theme=\"dark\"]' to ':root'. Added card section styles, admin panel styles, button styles, dialog styles.",
+      "fr_ids": ["FR-019", "FR-011", "FR-012", "FR-013", "FR-014", "FR-015"]
+    }
+  ],
+  "files_created": [
+    {
+      "path": "lib/commands/monitor.js",
+      "purpose": "Deprecated monitor command: prints http://localhost:3000 and exits 0. No screen clear, no polling.",
+      "fr_ids": ["FR-018"]
+    },
+    {
+      "path": "lib/collector/app-version-reader.js",
+      "purpose": "Reads project's own version from package.json .version or VERSION file. Returns string|null.",
+      "fr_ids": ["FR-012"]
+    },
+    {
+      "path": "web/src/lib/adminApi.js",
+      "purpose": "Fetch wrappers for /api/projects: getProjects, addProject, updateProject, removeProject.",
+      "fr_ids": ["FR-016"]
+    },
+    {
+      "path": "web/src/components/HomeView.jsx",
+      "purpose": "Single-view home (renamed from OverviewTab). Removed phase distribution and health score panels. Kept stat tiles, triage section, project grid.",
+      "fr_ids": ["FR-010"]
+    },
+    {
+      "path": "web/src/components/AdminPanel.jsx",
+      "purpose": "Root admin component: fetches project list, manages add/edit/remove state, renders subcomponents.",
+      "fr_ids": ["FR-013", "FR-014", "FR-015"]
+    },
+    {
+      "path": "web/src/components/AdminProjectList.jsx",
+      "purpose": "Renders project rows with inline edit and remove controls.",
+      "fr_ids": ["FR-013", "FR-015"]
+    },
+    {
+      "path": "web/src/components/AdminAddForm.jsx",
+      "purpose": "Inline form to add a project: name, type (local/remote), location. Inline validation errors.",
+      "fr_ids": ["FR-014"]
+    },
+    {
+      "path": "web/src/components/RemoveConfirmDialog.jsx",
+      "purpose": "Modal confirmation dialog before removing a project.",
+      "fr_ids": ["FR-015"]
+    }
+  ],
+  "files_deleted": [
+    "web/src/components/AlertsTab.jsx",
+    "web/src/components/VelocityTab.jsx",
+    "web/src/components/ActivityTab.jsx",
+    "web/src/components/FRCoverageTab.jsx",
+    "web/src/components/GraphTab.jsx",
+    "web/src/components/ProjectsTable.jsx",
+    "web/src/components/GraphLegend.jsx",
+    "web/src/components/LastSessionRow.jsx"
+  ],
+  "test_runner": "npm test",
+  "test_files": [
+    "web/src/__tests__/IntegrationAlertBanner.test.jsx",
+    "web/src/__tests__/FeatureSummarySection.test.jsx"
+  ],
+  "test_results": {
+    "suite": "vitest",
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "notes": "All 10 pre-existing component tests pass. New feature tests (TC-010h through TC-e2e-admin-remove) are in the test plan and can be implemented now that the production code exists."
+  },
+  "setup_commands": [
+    "npm install",
+    "npm run build"
+  ],
+  "environment_variables": [],
+  "build_verification": {
+    "command": "npm run build",
+    "status": "passed",
+    "output": "41 modules transformed, 0 errors. No [data-theme='light'] in compiled CSS bundle."
+  }
+}

@@ -1,0 +1,20 @@
+services:
+  aitri-hub:
+    build:
+      context: ../..
+      dockerfile: features/hub-mvp-web/Dockerfile
+    image: aitri-hub:latest
+    ports:
+      - "${AITRI_HUB_PORT:-3000}:3000"
+    volumes:
+      - ${AITRI_HUB_DIR:-~/.aitri-hub}:/data
+    environment:
+      - AITRI_HUB_PORT=3000
+      - AITRI_HUB_DIR=/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

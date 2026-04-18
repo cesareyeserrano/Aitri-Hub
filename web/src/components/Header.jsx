@@ -1,19 +1,15 @@
 /**
  * Module: web/src/components/Header
- * Purpose: Page header — terminal title bar style with code comment syntax.
- * @aitri-trace FR-ID: FR-006, TC-ID: TC-006h
+ * Purpose: Page header — terminal title bar style. Dark mode only.
+ *
+ * @aitri-trace FR-ID: FR-019, US-ID: US-019, AC-ID: AC-023, TC-ID: TC-019h
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 
 /* global __APP_VERSION__ */
 const VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0';
 
-/**
- * Format a Date into HH:MM:SS clock string.
- * @param {Date|null} date
- * @returns {string}
- */
 function formatClock(date) {
   if (!date) return '--:--:--';
   return date.toLocaleTimeString('en-US', {
@@ -24,11 +20,6 @@ function formatClock(date) {
   });
 }
 
-/**
- * Format a Date object into a human-readable "X min ago" / "X h ago" string.
- * @param {Date|null} date
- * @returns {string}
- */
 function formatRelativeTime(date) {
   if (!date) return '—';
   const diffMs  = Date.now() - date.getTime();
@@ -48,6 +39,7 @@ function formatRelativeTime(date) {
  *   projects: object[],
  *   lastUpdated: Date|null,
  *   onRefresh: () => void,
+ *   isAdmin?: boolean,
  * }} props
  * @returns {JSX.Element}
  */
@@ -59,38 +51,15 @@ export default function Header({
   projects = [],
   lastUpdated,
   onRefresh,
+  isAdmin = false,
 }) {
-  const [theme, setTheme] = useState(() => {
-    try {
-      return localStorage.getItem('aitri-theme') ?? 'dark';
-    } catch {
-      return 'dark';
-    }
-  });
-
   const [clock, setClock] = useState(() => formatClock(new Date()));
 
-  // Apply theme to html element on mount + whenever theme changes
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    try {
-      localStorage.setItem('aitri-theme', theme);
-    } catch {
-      // ignore
-    }
-  }, [theme]);
-
-  const toggleTheme = useCallback(() => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
-  }, []);
-
-  // Tick clock every second
   useEffect(() => {
     const id = setInterval(() => setClock(formatClock(new Date())), 1_000);
     return () => clearInterval(id);
   }, []);
 
-  // Rerender relative timestamp every 30s
   const [, setTick] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setTick(t => t + 1), 30_000);
@@ -100,7 +69,6 @@ export default function Header({
   return (
     <header className="header">
       <div className="header__top">
-        {/* Left: // aitri-hub  v0.1.0 */}
         <div className="header__left">
           <div className="header__title">
             <span className="header__title-prefix">//</span>
@@ -108,57 +76,86 @@ export default function Header({
             <span className="header__version">v{VERSION}</span>
           </div>
 
-          {/* status: { healthy: N, warning: N, error: N } */}
-          <div className="header__subtitle">
-            <span className="header__subtitle-key">status:</span>
-            <span className="header__subtitle-brace">&nbsp;{'{'}&nbsp;</span>
-            {loading ? (
-              <span style={{ color: 'var(--syn-comment)' }}>loading…</span>
-            ) : (
-              <>
-                <span className="pill pill--healthy" data-testid="pill-healthy">
-                  ✓ healthy:&nbsp;<strong>{healthy}</strong>
-                </span>
-                <span className="header__subtitle-sep">,&nbsp;</span>
-                <span className="pill pill--warning" data-testid="pill-warning">
-                  ⚠ warning:&nbsp;<strong>{warning}</strong>
-                </span>
-                <span className="header__subtitle-sep">,&nbsp;</span>
-                <span className="pill pill--error" data-testid="pill-error">
-                  ✖ error:&nbsp;<strong>{error}</strong>
-                </span>
-              </>
-            )}
-            <span className="header__subtitle-brace">&nbsp;{'}'}</span>
-          </div>
+          {!isAdmin && (
+            <div className="header__subtitle">
+              <span className="header__subtitle-key">status:</span>
+              <span className="header__subtitle-brace">&nbsp;{'{'}&nbsp;</span>
+              {loading ? (
+                <span style={{ color: 'var(--syn-comment)' }}>loading…</span>
+              ) : (
+                <>
+                  <span className="pill pill--healthy" data-testid="pill-healthy">
+                    ✓ healthy:&nbsp;<strong>{healthy}</strong>
+                  </span>
+                  <span className="header__subtitle-sep">,&nbsp;</span>
+                  <span className="pill pill--warning" data-testid="pill-warning">
+                    ⚠ warning:&nbsp;<strong>{warning}</strong>
+                  </span>
+                  <span className="header__subtitle-sep">,&nbsp;</span>
+                  <span className="pill pill--error" data-testid="pill-error">
+                    ✖ error:&nbsp;<strong>{error}</strong>
+                  </span>
+                </>
+              )}
+              <span className="header__subtitle-brace">&nbsp;{'}'}</span>
+            </div>
+          )}
+
+          {isAdmin && (
+            <div className="header__subtitle">
+              <span style={{ color: 'var(--syn-comment)' }}>// admin panel</span>
+            </div>
+          )}
         </div>
 
-        {/* Right: timestamp + controls */}
         <div className="header__right">
           <span className="header__timestamp" aria-label="Current time">
             {clock}
           </span>
-          {lastUpdated && (
+          {lastUpdated && !isAdmin && (
             <span className="header__timestamp" aria-label="Last data refresh time">
               · {formatRelativeTime(lastUpdated)}
             </span>
           )}
-          <button
-            className="icon-btn"
-            onClick={onRefresh}
-            title="Refresh data now"
-            aria-label="Refresh dashboard data"
-          >
-            [↻]
-          </button>
-          <button
-            className="icon-btn"
-            onClick={toggleTheme}
-            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-            aria-label="Toggle color theme"
-          >
-            {theme === 'dark' ? '[◑]' : '[◐]'}
-          </button>
+          {!isAdmin && (
+            <button
+              className="icon-btn"
+              onClick={onRefresh}
+              title="Refresh data now"
+              aria-label="Refresh dashboard data"
+            >
+              [↻]
+            </button>
+          )}
+          {!isAdmin ? (
+            <a
+              href="/admin"
+              className="icon-btn"
+              title="Open admin panel"
+              aria-label="Open admin panel"
+              onClick={e => {
+                e.preventDefault();
+                window.history.pushState({}, '', '/admin');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }}
+            >
+              [⚙]
+            </a>
+          ) : (
+            <a
+              href="/"
+              className="icon-btn"
+              title="Back to dashboard"
+              aria-label="Back to dashboard"
+              onClick={e => {
+                e.preventDefault();
+                window.history.pushState({}, '', '/');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }}
+            >
+              [←]
+            </a>
+          )}
         </div>
       </div>
     </header>

@@ -1,0 +1,407 @@
+{
+  "project_name": "Aitri Hub — hub-mvp-web",
+  "project_summary": "MVP redesign of Aitri Hub: collapse the 7-tab web UI into a single-view home, move project card indicators into a clear priority hierarchy, add a web-based admin panel to replace the CLI setup workflow, and remove dead surfaces (light mode, CLI monitor, CLI setup).\n\nProduct Analysis:\n  North Star KPI: Zero-terminal configuration — a non-CLI user can register a project and see it on the dashboard entirely through the browser, with no terminal interaction.\n  JTBD: 'When I need to see the health of all my Aitri projects, show me what matters immediately and let me configure everything from the browser — no terminal required.'\n  Guardrail metric: Dashboard render time must not exceed 2s for up to 20 projects (inherited from FR-006 — must not regress).",
+
+  "no_go_zone": [
+    "No authentication or sessions — the admin panel is localhost-only; no login, no tokens, no user accounts",
+    "No removal of the collector/monitor background process — it continues to run and write dashboard.json; only the terminal-rendered CLI dashboard surface is deprecated",
+    "No aitri command execution from the admin panel — the panel manages projects.json only; it cannot trigger aitri run-phase, approve, verify, etc.",
+    "No mobile layout — minimum supported viewport is 768px; sub-768px behavior is undefined in this feature",
+    "No Graph, Coverage, Velocity, or Activity tab restoration — these views are removed; their data may appear on cards but they are not re-introduced as standalone views",
+    "No Docker or nginx changes — the admin API is served by the same Node.js process as the existing web command; nginx config is unchanged"
+  ],
+
+  "user_personas": [
+    {
+      "role": "Solo Developer",
+      "tech_level": "high",
+      "goal": "Open the browser dashboard in the morning and immediately see which projects need attention, without running any terminal commands",
+      "pain_point": "Current 7-tab layout requires clicking through multiple tabs to get a full picture; must use terminal to add new projects"
+    },
+    {
+      "role": "Team Lead",
+      "tech_level": "mid",
+      "goal": "Register all team projects from a web form and share the dashboard URL with teammates who have no CLI experience",
+      "pain_point": "CLI setup is a blocker for non-CLI teammates; no way to onboard them to Hub without giving terminal instructions"
+    },
+    {
+      "role": "Project Portfolio Manager",
+      "tech_level": "mid",
+      "goal": "See a single-screen view of all projects with the most critical health indicators visible without any interaction",
+      "pain_point": "Current card layout shows too many equal-weight metrics; critical alerts do not stand out from informational data"
+    }
+  ],
+
+  "functional_requirements": [
+    {
+      "id": "FR-010",
+      "title": "Single-view web home — remove tab navigation",
+      "description": "The web dashboard renders one view: the project card grid with header and stat summary. No tab navigation bar is present. The header retains the title, status counts (healthy/warning/error), clock, and refresh button. The stat tiles row (projects, healthy, warning, blocking, pipeline%) and the blocking triage section (shown only when blocking alerts exist) are retained above the card grid. Folder grouping is retained. The phase distribution panel and health score list panel are removed from the overview.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given the app loads at localhost:3000, then no tab navigation element (role=tablist or .tabs) is present in the DOM",
+        "Given 5 projects are registered, then all 5 project cards are visible on the home view without any tab interaction",
+        "Given the app loads with 0 projects, then the empty state message is visible without navigating to any tab",
+        "Given viewport width is 768px, then the project grid and header render without horizontal scroll",
+        "Given blocking alerts exist, then the triage section appears above the card grid",
+        "Given no blocking alerts exist, then the triage section is absent from the DOM"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-011",
+      "title": "Project card — always-visible primary indicators",
+      "description": "Each project card renders two always-visible sections. Section 1 (identity + pipeline): project name, status badge (HEALTHY/WARNING/ERROR/UNREADABLE), pipeline progress as 'X/5 phases approved' with a visual progress bar, and health score grade (A/B/C/D/F computed from pipeline progress, test pass rate, blocking alerts, and compliance). Section 2 (key metrics): test summary ('passed/total (%)' with a progress bar, or 'N/A' if absent), blocking alert count as a red badge (rendered only when count > 0), and last commit age (with a stale indicator when age > 72h).",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given a project with approvedPhases length 3, then the card shows '3/5' and a progress bar at 60% fill",
+        "Given a project with 2 blocking alerts, then a red badge displaying '2' is visible in the key metrics section",
+        "Given a project with 0 blocking alerts, then no blocking alert badge element is rendered in the DOM",
+        "Given a project with testSummary.passed=27 and testSummary.total=27, then the tests row shows '27/27 (100%)'",
+        "Given a project with no testSummary, then the tests row shows 'N/A'",
+        "Given a project whose last commit was 80 hours ago, then the commit age row shows a value ≥72h and includes a visible stale indicator",
+        "Given a project with health score ≥90, then the grade badge displays 'A' in green (var(--syn-green))",
+        "Given a project with health score <35, then the grade badge displays 'F' in red (var(--syn-red))"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-012",
+      "title": "Project card — expandable detail section",
+      "description": "Each project card has an expandable section, collapsed by default, triggered by a single click on an expand control. When expanded, it reveals: active branch, active feature sub-pipeline count (if any), last pipeline event with phase number and age, compliance badge (if available), FR requirements summary (total FRs, MUST count), commit velocity (commits/7d), open bug count (if any), and time in current phase.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given a project card in its default state, then the expandable section content is not visible (display:none or equivalent)",
+        "Given the user clicks the expand control, then the detail section becomes visible within ≤200ms",
+        "Given the user clicks the expand control again, then the section collapses within ≤200ms",
+        "Given a project with no active features, then the features row is absent from the expanded section",
+        "Given a project with no compliance data, then the compliance row is absent from the expanded section",
+        "Given a project with 0 open bugs, then the bugs row is absent from the expanded section"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-013",
+      "title": "Web admin panel — project listing",
+      "description": "The web app serves a route at /admin that renders the admin panel. The panel lists all projects currently registered in ~/.aitri-hub/projects.json, showing each project's name, type (local/remote), and path or URL.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given the user navigates to http://localhost:3000/admin, then the page renders within ≤2s",
+        "Given 3 projects are registered in projects.json, then the admin panel lists all 3 with name, type, and path/URL",
+        "Given 0 projects are registered, then the admin panel shows an empty state with a visible call-to-action to add the first project",
+        "Given the user navigates from /admin to /, then the project card grid renders without a full page reload (client-side routing)"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-014",
+      "title": "Web admin panel — add project",
+      "description": "From the admin panel, the user can add a new project by providing a display name, type (local or remote), and either a local filesystem path or a GitHub/GitLab URL. On submit, the entry is appended to ~/.aitri-hub/projects.json via the admin API.",
+      "priority": "MUST",
+      "type": "persistence",
+      "acceptance_criteria": [
+        "Given the user submits a name, type=local, and a path that exists on the filesystem, then a new entry is written to projects.json and the list updates to include it",
+        "Given the user submits a local path that does not exist on the filesystem, then an inline error message is displayed and no entry is written to projects.json",
+        "Given the user submits a name already present in projects.json, then an inline error message is displayed and no duplicate entry is written",
+        "Given the user submits a type=remote URL, then the entry is written to projects.json without filesystem validation of the URL",
+        "Given projects.json does not exist, then a successful add creates the file with the new entry as a valid JSON array"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-015",
+      "title": "Web admin panel — edit and remove project",
+      "description": "From the admin panel, the user can edit an existing project's display name and path/URL, or remove it. Removal requires an explicit confirmation step before the entry is deleted from projects.json.",
+      "priority": "MUST",
+      "type": "persistence",
+      "acceptance_criteria": [
+        "Given the user edits a project name and submits, then projects.json is updated and the list reflects the new name within ≤1s without a full page reload",
+        "Given the user clicks the remove action, then a confirmation dialog is shown before any deletion occurs",
+        "Given the user confirms removal, then the entry is deleted from projects.json and no longer appears in the admin list",
+        "Given the user dismisses the confirmation dialog, then projects.json is unchanged and the entry remains in the list",
+        "Given the user submits an edit with an empty name, then an inline error is shown and no write occurs"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-016",
+      "title": "Admin API — local HTTP endpoint for projects.json CRUD",
+      "description": "The aitri-hub web process serves a local HTTP API at /api/projects (and /api/projects/:id) that the admin panel uses to read and write ~/.aitri-hub/projects.json. The server binds exclusively to 127.0.0.1.",
+      "priority": "MUST",
+      "type": "persistence",
+      "acceptance_criteria": [
+        "GET /api/projects returns the current projects.json array as JSON with status 200; returns [] if file does not exist",
+        "POST /api/projects with a valid project payload appends the entry to projects.json and returns 201 with the created entry",
+        "PUT /api/projects/:id with a valid payload updates the matching entry in projects.json and returns 200",
+        "DELETE /api/projects/:id removes the matching entry from projects.json and returns 204",
+        "Given a local path payload containing '..' segments, the API returns 400 and performs no filesystem operation",
+        "Given a request from an origin other than localhost (127.0.0.1 or ::1), the server does not respond (bind restriction, not HTTP 403)"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-017",
+      "title": "CLI setup deprecation notice",
+      "description": "Running `aitri-hub setup` prints a single deprecation notice directing the user to the web admin panel at http://localhost:3000/admin and exits immediately. No interactive prompts are launched. projects.json is not modified.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given the user runs `aitri-hub setup`, then stdout contains the string 'http://localhost:3000/admin' and the process exits with code 0",
+        "Given the user runs `aitri-hub setup`, then no interactive readline prompt is started and no stdin is consumed",
+        "Given projects.json contains 2 entries before the command runs, then it still contains the same 2 entries after the command exits"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-018",
+      "title": "CLI monitor deprecation notice",
+      "description": "Running `aitri-hub monitor` prints a single deprecation notice directing the user to the web dashboard at http://localhost:3000 and exits immediately. No terminal dashboard is rendered and no polling loop is started.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given the user runs `aitri-hub monitor`, then stdout contains the string 'http://localhost:3000' and the process exits with code 0",
+        "Given the user runs `aitri-hub monitor`, then no ANSI screen-clear sequence is written to stdout",
+        "Given the user runs `aitri-hub monitor`, then the process terminates within ≤500ms without requiring Ctrl+C"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-019",
+      "title": "Dark-mode only — remove light mode",
+      "description": "The web dashboard renders exclusively in dark mode. The theme toggle button is removed from the header. The [data-theme='light'] CSS block is removed from the stylesheet. No theme preference is read from or written to localStorage.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given the app loads, then no element with role=button or class containing 'theme' or 'toggle' related to color mode is present in the header DOM",
+        "Given the app CSS is parsed, then no selector matching [data-theme='light'] exists in any loaded stylesheet — confirmed by searching the compiled CSS bundle for the string 'data-theme=\"light\"'",
+        "Given the app loads in a browser with no prior localStorage state, then localStorage.getItem('aitri-theme') returns null after initial render",
+        "Given the app renders, then background-color of the body element resolves to #0D1117 (--bg dark token) at all viewport widths ≥768px"
+      ],
+      "implementation_level": "functional"
+    }
+  ],
+
+  "user_stories": [
+    {
+      "id": "US-010",
+      "requirement_id": "FR-010",
+      "as_a": "portfolio manager",
+      "i_want": "to see all project cards on a single page without navigating tabs",
+      "so_that": "I can assess the health of all projects in one glance without clicking through multiple views",
+      "acceptance_criteria": [
+        {
+          "id": "AC-010",
+          "given": "the app is loaded at localhost:3000 with 8 registered projects",
+          "when": "the page finishes loading",
+          "then": "all 8 project cards are visible in the grid and no tab navigation bar is present in the DOM"
+        }
+      ]
+    },
+    {
+      "id": "US-011",
+      "requirement_id": "FR-011",
+      "as_a": "solo developer",
+      "i_want": "to see the most critical project indicators at the top of each card without expanding anything",
+      "so_that": "I can immediately spot which projects have blocking issues or failing tests",
+      "acceptance_criteria": [
+        {
+          "id": "AC-011",
+          "given": "a project card for 'my-api' with 2 blocking alerts and testSummary 15/20 passing",
+          "when": "the page renders",
+          "then": "a red badge showing '2' and a tests row showing '15/20 (75%)' are visible without any user interaction"
+        },
+        {
+          "id": "AC-012",
+          "given": "a project card for 'clean-project' with 0 blocking alerts",
+          "when": "the page renders",
+          "then": "no blocking alert badge element is present in that card's DOM"
+        }
+      ]
+    },
+    {
+      "id": "US-012",
+      "requirement_id": "FR-012",
+      "as_a": "solo developer",
+      "i_want": "to expand a card to see full detail when I need to investigate a specific project",
+      "so_that": "the home stays uncluttered by default but I can access all data without navigating away",
+      "acceptance_criteria": [
+        {
+          "id": "AC-013",
+          "given": "a project card in its default (collapsed) state",
+          "when": "the user clicks the expand control",
+          "then": "the detail section becomes visible within 200ms and shows at minimum the active branch and last pipeline event"
+        }
+      ]
+    },
+    {
+      "id": "US-013",
+      "requirement_id": "FR-013",
+      "as_a": "team lead",
+      "i_want": "to open a web page to see and manage all registered projects",
+      "so_that": "I can onboard teammates without giving them terminal instructions",
+      "acceptance_criteria": [
+        {
+          "id": "AC-014",
+          "given": "the user navigates to http://localhost:3000/admin with 3 projects in projects.json",
+          "when": "the page finishes loading",
+          "then": "3 project entries are listed, each showing name, type, and path/URL, within ≤2s"
+        }
+      ]
+    },
+    {
+      "id": "US-014",
+      "requirement_id": "FR-014",
+      "as_a": "team lead",
+      "i_want": "to add a new project from a web form without touching the terminal",
+      "so_that": "I can register projects for teammates who give me their repo paths",
+      "acceptance_criteria": [
+        {
+          "id": "AC-015",
+          "given": "the admin panel is open and projects.json has 2 entries",
+          "when": "the user submits a form with name='billing-api', type=local, path='/Users/jane/billing-api' (which exists)",
+          "then": "projects.json gains a third entry and the admin list immediately shows 'billing-api'"
+        },
+        {
+          "id": "AC-016",
+          "given": "the admin panel is open",
+          "when": "the user submits a form with path='/nonexistent/path'",
+          "then": "an inline error message is shown, projects.json is not modified, and the form remains open"
+        }
+      ]
+    },
+    {
+      "id": "US-015",
+      "requirement_id": "FR-015",
+      "as_a": "team lead",
+      "i_want": "to remove a stale project from the registry via the browser",
+      "so_that": "the dashboard stays accurate without needing to edit projects.json manually",
+      "acceptance_criteria": [
+        {
+          "id": "AC-017",
+          "given": "the admin panel lists a project named 'old-project'",
+          "when": "the user clicks remove and then confirms in the dialog",
+          "then": "'old-project' is removed from projects.json and disappears from the admin list"
+        },
+        {
+          "id": "AC-018",
+          "given": "the user clicks remove on a project",
+          "when": "the user dismisses the confirmation dialog",
+          "then": "the project remains in the list and projects.json is unchanged"
+        }
+      ]
+    },
+    {
+      "id": "US-016",
+      "requirement_id": "FR-016",
+      "as_a": "admin panel (system)",
+      "i_want": "a local API to persist project changes to projects.json",
+      "so_that": "all CRUD operations from the browser are durably saved across sessions",
+      "acceptance_criteria": [
+        {
+          "id": "AC-019",
+          "given": "the admin API receives POST /api/projects with a valid local path",
+          "when": "the request is processed",
+          "then": "projects.json contains the new entry and the response status is 201"
+        },
+        {
+          "id": "AC-020",
+          "given": "the admin API receives POST /api/projects with path='../../etc/passwd'",
+          "when": "the request is processed",
+          "then": "the response status is 400 and projects.json is not modified"
+        }
+      ]
+    },
+    {
+      "id": "US-017",
+      "requirement_id": "FR-017",
+      "as_a": "developer who ran aitri-hub setup out of habit",
+      "i_want": "to see a clear deprecation message pointing me to the web panel",
+      "so_that": "I know where to go without searching documentation",
+      "acceptance_criteria": [
+        {
+          "id": "AC-021",
+          "given": "the user runs `aitri-hub setup` in a terminal",
+          "when": "the process executes",
+          "then": "stdout contains 'http://localhost:3000/admin', the process exits with code 0, and no prompt is shown"
+        }
+      ]
+    },
+    {
+      "id": "US-018",
+      "requirement_id": "FR-018",
+      "as_a": "developer who ran aitri-hub monitor out of habit",
+      "i_want": "to see a clear deprecation message pointing me to the web dashboard",
+      "so_that": "I know the terminal dashboard is gone and where to find its replacement",
+      "acceptance_criteria": [
+        {
+          "id": "AC-022",
+          "given": "the user runs `aitri-hub monitor` in a terminal",
+          "when": "the process executes",
+          "then": "stdout contains 'http://localhost:3000', the process exits within 500ms with code 0, and no screen-clear sequence is written"
+        }
+      ]
+    },
+    {
+      "id": "US-019",
+      "requirement_id": "FR-019",
+      "as_a": "solo developer",
+      "i_want": "a consistent dark UI with no accidental light flash or theme toggle to click",
+      "so_that": "the dashboard looks intentional and professional from first load",
+      "acceptance_criteria": [
+        {
+          "id": "AC-023",
+          "given": "the app loads in a browser with no prior localStorage state",
+          "when": "the page finishes rendering",
+          "then": "the background color is var(--bg) (#0D1117) and no theme toggle button is present in the header"
+        }
+      ]
+    }
+  ],
+
+  "non_functional_requirements": [
+    {
+      "id": "NFR-010",
+      "category": "Security",
+      "requirement": "The admin API rejects any project path payload containing '..' path traversal segments before any filesystem operation is performed.",
+      "acceptance_criteria": [
+        "Given POST /api/projects with path='../../../etc/passwd', the response is 400 and no file is read or written",
+        "Given POST /api/projects with path='/valid/absolute/path' containing no '..' segments, the request proceeds normally"
+      ]
+    },
+    {
+      "id": "NFR-011",
+      "category": "Observability",
+      "requirement": "Every HTTP request to the admin API is logged to stdout in the format: [ISO8601_TIMESTAMP] METHOD /path STATUS_CODE",
+      "acceptance_criteria": [
+        "Given a GET /api/projects request completes, then stdout contains a line matching the pattern [timestamp] GET /api/projects 200",
+        "Given a failed POST /api/projects request (400), then stdout contains a line matching the pattern [timestamp] POST /api/projects 400"
+      ]
+    },
+    {
+      "id": "NFR-012",
+      "category": "Usability",
+      "requirement": "The admin panel is fully usable at 768px viewport width without horizontal scroll or overlapping elements.",
+      "acceptance_criteria": [
+        "Given viewport width set to 768px, then the admin project list, add form, and edit/remove controls are all visible and interactive with no horizontal scrollbar",
+        "Given viewport width set to 1440px, then the admin panel layout does not leave more than 60% of the viewport empty (content is not pinned to a narrow column)"
+      ]
+    }
+  ],
+
+  "constraints": [
+    "Admin API must be served by the existing aitri-hub web Node.js process — no separate server binary",
+    "Admin API binds to 127.0.0.1 only — no 0.0.0.0 bind",
+    "projects.json writes must be atomic (temp file + rename) to avoid corruption on crash",
+    "No new npm runtime dependencies for the CLI layer — admin API must use Node.js built-in http module"
+  ],
+
+  "technology_preferences": [
+    "React Router (already in project) for /admin client-side route",
+    "Node.js built-in http module for admin API server (no Express — zero new runtime deps)",
+    "Existing CSS design tokens (--syn-*, --bg, --surface, etc.) for admin panel styling — no new CSS framework"
+  ]
+}

@@ -7,6 +7,7 @@
 
 import { cmdInit } from '../lib/commands/init.js';
 import { cmdSetup } from '../lib/commands/setup.js';
+import { cmdMonitor } from '../lib/commands/monitor.js';
 import { cmdWeb } from '../lib/commands/web.js';
 
 const USAGE = `
@@ -49,8 +50,7 @@ async function main() {
       break;
     }
     case 'monitor':
-      console.log("aitri-hub monitor has been removed — run 'aitri-hub web' to open the dashboard.");
-      process.exitCode = 0;
+      cmdMonitor();
       break;
     case 'web':
       await cmdWeb();
