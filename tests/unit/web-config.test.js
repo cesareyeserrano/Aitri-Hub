@@ -163,11 +163,12 @@ describe('TC-006f: web dashboard — error and empty state components are implem
   });
 
   it('App.jsx renders empty state when no projects present', () => {
-    const content = fs.readFileSync(path.join(ROOT, 'web', 'src', 'App.jsx'), 'utf8');
-    assert.ok(
-      content.includes('empty-state') || content.includes('No projects'),
-      'App.jsx must render an empty state when projects array is empty'
-    );
+    // Empty state is delegated to HomeView in hub-mvp-web redesign.
+    const appSrc = fs.readFileSync(path.join(ROOT, 'web', 'src', 'App.jsx'), 'utf8');
+    const homeSrc = fs.readFileSync(path.join(ROOT, 'web', 'src', 'components', 'HomeView.jsx'), 'utf8');
+    const hasEmptyState = appSrc.includes('empty-state') || appSrc.includes('No projects')
+      || homeSrc.includes('empty-state') || homeSrc.includes('No projects');
+    assert.ok(hasEmptyState, 'App or HomeView must render an empty state when projects array is empty');
   });
 
   it('nginx.conf returns 404 for missing files in /data/', () => {

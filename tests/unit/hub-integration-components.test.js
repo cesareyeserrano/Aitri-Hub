@@ -89,45 +89,8 @@ describe('TC-019e: readAitriState — lastSession.files_touched absent', () => {
   });
 });
 
-// ── TC-020h: ActivityTab imports LastSessionRow ─────────────────────────────
-describe('TC-020h: ActivityTab — imports and renders LastSessionRow', () => {
-  // @aitri-tc TC-020h
-  it('TC-020h: ActivityTab.jsx imports LastSessionRow', () => {
-    // @aitri-tc TC-020h
-    const src = fs.readFileSync(path.join(ROOT, 'web/src/components/ActivityTab.jsx'), 'utf8');
-    assert.ok(src.includes("import LastSessionRow from './LastSessionRow.jsx'"),
-      'ActivityTab must import LastSessionRow');
-  });
-
-  it('TC-020h: ActivityTab.jsx conditionally renders LastSessionRow', () => {
-    // @aitri-tc TC-020h
-    const src = fs.readFileSync(path.join(ROOT, 'web/src/components/ActivityTab.jsx'), 'utf8');
-    assert.ok(src.includes('<LastSessionRow'), 'LastSessionRow must be rendered in ActivityTab');
-    assert.ok(src.includes('lastSession'), 'conditional on lastSession must be present');
-  });
-});
-
-// ── TC-020f: LastSessionRow returns null when no lastSession ─────────────────
-describe('TC-020f: LastSessionRow — null guard', () => {
-  // @aitri-tc TC-020f
-  it('TC-020f: LastSessionRow.jsx has early return null when lastSession is falsy', () => {
-    // @aitri-tc TC-020f
-    const src = fs.readFileSync(path.join(ROOT, 'web/src/components/LastSessionRow.jsx'), 'utf8');
-    assert.ok(src.includes('if (!lastSession) return null'),
-      'LastSessionRow must return null when lastSession is absent');
-  });
-});
-
-// ── TC-020e: AGENT_COLORS map includes unknown fallback ──────────────────────
-describe('TC-020e: LastSessionRow — unknown agent fallback', () => {
-  // @aitri-tc TC-020e
-  it('TC-020e: AGENT_COLORS map contains unknown entry using --syn-comment', () => {
-    // @aitri-tc TC-020e
-    const src = fs.readFileSync(path.join(ROOT, 'web/src/components/LastSessionRow.jsx'), 'utf8');
-    assert.ok(src.includes('unknown'), 'AGENT_COLORS must have unknown key');
-    assert.ok(src.includes('--syn-comment'), 'unknown must map to --syn-comment');
-  });
-});
+// TC-020h/f/e: ActivityTab and LastSessionRow removed in hub-mvp-web redesign.
+// Components deleted as dead code per 02_SYSTEM_DESIGN.md component map.
 
 // ── TC-021h: BugBadge renders blocking variant ──────────────────────────────
 describe('TC-021h: BugBadge — blocking variant', () => {
@@ -138,12 +101,13 @@ describe('TC-021h: BugBadge — blocking variant', () => {
     assert.ok(src.includes('--syn-red'), 'blocking badge must use --syn-red');
   });
 
-  it('TC-021h: ProjectCard.jsx imports and renders BugBadge', () => {
+  it('TC-021h: ProjectCard.jsx renders 5 named card sections', () => {
     // @aitri-tc TC-021h
+    // hub-mvp-web redesign: BugBadge removed; card now uses 5 named sections.
     const src = fs.readFileSync(path.join(ROOT, 'web/src/components/ProjectCard.jsx'), 'utf8');
-    assert.ok(src.includes("import BugBadge from './BugBadge.jsx'"), 'ProjectCard must import BugBadge');
-    assert.ok(src.includes('<BugBadge'), 'BugBadge must be rendered in ProjectCard');
-    assert.ok(src.includes('bugsSummary'), 'ProjectCard must reference bugsSummary');
+    assert.ok(src.includes('PIPELINE'), 'ProjectCard must include PIPELINE section');
+    assert.ok(src.includes('QUALITY'), 'ProjectCard must include QUALITY section');
+    assert.ok(src.includes('GIT'), 'ProjectCard must include GIT section');
   });
 });
 

@@ -30,6 +30,11 @@ logs/
 coverage/
 .nyc_output/
 
+# Playwright
+test-results/
+web/test-results/
+playwright-report/
+
 # macOS
 .DS_Store
 

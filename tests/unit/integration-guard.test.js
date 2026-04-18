@@ -6,6 +6,17 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { evaluateIntegrationAlert, semverGt } from '../../lib/collector/integration-guard.js';
+import { INTEGRATION_LAST_REVIEWED } from '../../lib/constants.js';
+
+/**
+ * Derive a version guaranteed greater than INTEGRATION_LAST_REVIEWED.
+ * Decouples tests from the live constant so future bumps don't break them.
+ */
+function higherThanReviewed() {
+  const [maj, min, patch] = INTEGRATION_LAST_REVIEWED.split('.').map(Number);
+  return `${maj}.${min}.${patch + 1}`;
+}
+const HIGHER = higherThanReviewed();
 
 // ── semverGt unit tests ───────────────────────────────────────────────────────
 describe('semverGt — inline semver comparison', () => {
@@ -45,47 +56,46 @@ describe('semverGt — inline semver comparison', () => {
 // ── TC-010h: alert generated when detected > reviewed ─────────────────────────
 describe('TC-010h: evaluateIntegrationAlert — warning when CLI is newer', () => {
   it('returns object with severity=warning', () => {
-    const result = evaluateIntegrationAlert('0.1.77');
+    const result = evaluateIntegrationAlert(HIGHER);
     assert.notEqual(result, null);
     assert.equal(result.severity, 'warning');
   });
 
-  it('message contains detected version 0.1.77', () => {
-    const result = evaluateIntegrationAlert('0.1.77');
-    assert.ok(result.message.includes('0.1.77'),
-      `message should include '0.1.77': ${result.message}`);
+  it('message contains the detected version', () => {
+    const result = evaluateIntegrationAlert(HIGHER);
+    assert.ok(result.message.includes(HIGHER),
+      `message should include '${HIGHER}': ${result.message}`);
   });
 
   it('message contains INTEGRATION_LAST_REVIEWED version', () => {
-    const result = evaluateIntegrationAlert('0.1.77');
-    // Should contain the reviewed version (0.1.76 as per constants)
-    assert.ok(result.message.includes('0.1.76') || result.message.match(/\d+\.\d+\.\d+/g)?.length >= 2,
-      `message should reference both versions: ${result.message}`);
+    const result = evaluateIntegrationAlert(HIGHER);
+    assert.ok(result.message.includes(INTEGRATION_LAST_REVIEWED),
+      `message should include '${INTEGRATION_LAST_REVIEWED}': ${result.message}`);
   });
 
   it('changelogUrl is a non-empty string', () => {
-    const result = evaluateIntegrationAlert('0.1.77');
+    const result = evaluateIntegrationAlert(HIGHER);
     assert.ok(typeof result.changelogUrl === 'string' && result.changelogUrl.length > 0);
   });
 });
 
 // ── TC-010e1: null when equal ─────────────────────────────────────────────────
 describe('TC-010e1: evaluateIntegrationAlert — null when CLI equals reviewed', () => {
-  it('returns null when detected version equals INTEGRATION_LAST_REVIEWED (0.1.76)', () => {
-    const result = evaluateIntegrationAlert('0.1.76');
+  it('returns null when detected version equals INTEGRATION_LAST_REVIEWED', () => {
+    const result = evaluateIntegrationAlert(INTEGRATION_LAST_REVIEWED);
     assert.equal(result, null);
   });
 });
 
 // ── TC-010e2: null when older ─────────────────────────────────────────────────
 describe('TC-010e2: evaluateIntegrationAlert — null when CLI is older', () => {
-  it('returns null when detected version is 0.1.70 (older than 0.1.76)', () => {
-    const result = evaluateIntegrationAlert('0.1.70');
+  it('returns null when detected version is older than INTEGRATION_LAST_REVIEWED', () => {
+    const result = evaluateIntegrationAlert('0.1.0');
     assert.equal(result, null);
   });
 
-  it('returns null for very old version 0.1.0', () => {
-    const result = evaluateIntegrationAlert('0.1.0');
+  it('returns null for very old version 0.0.1', () => {
+    const result = evaluateIntegrationAlert('0.0.1');
     assert.equal(result, null);
   });
 });
