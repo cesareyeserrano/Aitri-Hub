@@ -1,0 +1,60 @@
+{
+  "feature_id": "hub-folder-scan",
+  "phase": 4,
+  "completed_at": "2026-04-17",
+  "summary": "Added 'folder' project type: admin API validates that folder paths exist and are directories (new 'not_a_directory' error), collector expands folder-type entries into individual child cards via scanFolder(), each child carries a parentFolder field in dashboard.json. AdminAddForm gains the folder option and conditional helper text.",
+  "technical_debt": [],
+  "files_modified": [
+    {
+      "path": "lib/collector/index.js",
+      "change": "Imported scanFolder. In collectAll(), expanded folder-type projects into child stubs before collecting. Added parentFolder passthrough in collectOne data object.",
+      "fr_ids": ["FR-021", "FR-025"]
+    },
+    {
+      "path": "lib/commands/web.js",
+      "change": "Extended validateLocation() to check fs.statSync().isDirectory() for type='folder', returning { error: 'not_a_directory' } when path exists but is a file.",
+      "fr_ids": ["FR-023"]
+    },
+    {
+      "path": "web/src/components/AdminAddForm.jsx",
+      "change": "Added 'folder' option to type select. Added conditional helper text and 'folder path' label when type='folder'. Added 'not_a_directory' to ERROR_MESSAGES.",
+      "fr_ids": ["FR-020", "FR-024"]
+    }
+  ],
+  "files_created": [
+    {
+      "path": "lib/collector/folder-scanner.js",
+      "purpose": "Pure function scanFolder(folderPath) — reads immediate children via readdirSync, skips symlinks and files, filters by isValidProject() (package.json or .aitri present), returns array of project stubs with parentFolder field.",
+      "fr_ids": ["FR-021", "FR-022", "FR-025"]
+    },
+    {
+      "path": "tests/unit/folder-scanner.test.js",
+      "purpose": "Unit tests for folder-scanner.js: TC-021h/e/f, TC-022h/e/f/g, TC-025h/e/f, TC-NFR021h, TC-NFR022h.",
+      "fr_ids": ["FR-021", "FR-022", "FR-025"]
+    },
+    {
+      "path": "web/src/__tests__/AdminAddForm.test.jsx",
+      "purpose": "Vitest tests for AdminAddForm folder type UI: TC-020h/e/n/f, TC-024h/f/e.",
+      "fr_ids": ["FR-020", "FR-024"]
+    }
+  ],
+  "files_deleted": [],
+  "test_runner": "npm run test:with-vitest",
+  "test_files": [
+    "tests/unit/folder-scanner.test.js",
+    "tests/e2e/admin-api.test.js",
+    "web/src/__tests__/AdminAddForm.test.jsx"
+  ],
+  "test_results": {
+    "suite": "node:test + playwright + vitest",
+    "passed": 31,
+    "failed": 0,
+    "skipped": 0,
+    "notes": "12 unit tests pass in folder-scanner.test.js. 16 e2e tests pass including TC-023h/e/f (folder API validation) and TC-e2eFolderScan, TC-e2eFolderEmpty (full collector cycle). 7 Vitest tests pass in AdminAddForm.test.jsx for TC-020h/e/n/f and TC-024h/f/e."
+  },
+  "setup_commands": [
+    "npm install",
+    "cd web && npm run build"
+  ],
+  "environment_variables": []
+}

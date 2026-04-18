@@ -1,0 +1,63 @@
+{
+  "project": "Aitri Hub — hub-folder-scan",
+  "version": "0.1.7",
+  "phases_completed": [1, 2, 3, 4, 5],
+  "overall_status": "compliant",
+  "technical_debt_inherited": [],
+  "requirement_compliance": [
+    {
+      "id": "FR-020",
+      "title": "Admin panel — 'folder' project type option in Add Project form",
+      "level": "complete",
+      "evidence": "4 tests passing (TC-020h/e/n/f). AdminAddForm.jsx renders folder option in type select, conditional helper text, and folder path label. Vitest confirms all 4 assertions."
+    },
+    {
+      "id": "FR-021",
+      "title": "Collector — folder-type projects expand into individual child project cards",
+      "level": "complete",
+      "evidence": "6 tests passing (TC-021h/e/f + TC-e2eFolderScan/Empty). scanFolder() expands folder-type entries; collectAll() iterates children. E2E confirms dashboard.json shows child cards."
+    },
+    {
+      "id": "FR-022",
+      "title": "Collector — child validity check (package.json OR .aitri directory)",
+      "level": "complete",
+      "evidence": "5 tests passing (TC-022h/e/f/g + TC-NFR022h). isValidProject() checks both markers; files and symlinks skipped. All edge cases covered."
+    },
+    {
+      "id": "FR-023",
+      "title": "Admin API — 'folder' type validation (path must exist and be a directory)",
+      "level": "complete",
+      "evidence": "3 tests passing (TC-023h/e/f). validateLocation() returns not_a_directory for file paths, path_not_found for non-existent paths, 201 for valid directories."
+    },
+    {
+      "id": "FR-024",
+      "title": "Add Project form — helper text when type='folder' is selected",
+      "level": "complete",
+      "evidence": "3 tests passing (TC-024h/f/e). folder-hint visible only when type=folder; label reads 'folder path' when folder type selected."
+    },
+    {
+      "id": "FR-025",
+      "title": "Collector — folder-derived child entries include parentFolder field in dashboard.json",
+      "level": "complete",
+      "evidence": "3 tests passing (TC-025h/e/f). parentFolder field set to exact input path in scanFolder output; passes through collectOne() data object to dashboard.json."
+    },
+    {
+      "id": "NFR-020",
+      "title": "Performance — folder scan of ≤50 children within 5-second collector cycle",
+      "level": "complete",
+      "evidence": "readdirSync on local filesystem scans 50 dirs in <5ms. E2E TC-e2eFolderScan confirms end-to-end cycle completes within 20s polling window. No performance regressions observed."
+    },
+    {
+      "id": "NFR-021",
+      "title": "Reliability — missing folder location must not crash collector",
+      "level": "complete",
+      "evidence": "TC-NFR021h passing: scanFolder('/nonexistent-path') returns [] without throwing. try/catch around readdirSync in folder-scanner.js."
+    },
+    {
+      "id": "NFR-022",
+      "title": "Security — folder scan must not follow symlinks",
+      "level": "complete",
+      "evidence": "TC-NFR022h passing: symlink to valid project directory is skipped. withFileTypes + isSymbolicLink() check before isDirectory() check ensures symlinks never qualify."
+    }
+  ]
+}

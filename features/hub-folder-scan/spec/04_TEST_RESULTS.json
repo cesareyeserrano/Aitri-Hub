@@ -1,0 +1,187 @@
+{
+  "executed_at": "2026-04-17T04:08:41.530Z",
+  "test_runner": "npm run test:with-vitest",
+  "exit_code": 0,
+  "results": [
+    {
+      "tc_id": "TC-020h",
+      "status": "pass",
+      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-020h: AdminAddForm — folder option appears in type select 18ms"
+    },
+    {
+      "tc_id": "TC-020e",
+      "status": "pass",
+      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-020e: AdminAddForm — switching folder→local hides helper text and restores path label 5ms"
+    },
+    {
+      "tc_id": "TC-020n",
+      "status": "pass",
+      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-020n: AdminAddForm — submitting folder type calls onSubmit with type=folder 5ms"
+    },
+    {
+      "tc_id": "TC-020f",
+      "status": "pass",
+      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-020f: AdminAddForm — location input has required attribute when type=folder 2ms"
+    },
+    {
+      "tc_id": "TC-021h",
+      "status": "pass",
+      "notes": "✔ TC-021h: scanFolder — returns multiple valid children (0.734167ms)"
+    },
+    {
+      "tc_id": "TC-021e",
+      "status": "pass",
+      "notes": "✔ TC-021e: scanFolder — parent folder location is not in child entries (1.17075ms)"
+    },
+    {
+      "tc_id": "TC-021f",
+      "status": "pass",
+      "notes": "✔ TC-021f: scanFolder — 0 valid children returns empty array (0.215958ms)"
+    },
+    {
+      "tc_id": "TC-022h",
+      "status": "pass",
+      "notes": "✔ TC-022h: scanFolder — child with package.json is included (0.802875ms)"
+    },
+    {
+      "tc_id": "TC-022e",
+      "status": "pass",
+      "notes": "✔ TC-022e: scanFolder — child with .aitri directory is included (0.282209ms)"
+    },
+    {
+      "tc_id": "TC-022f",
+      "status": "pass",
+      "notes": "✔ TC-022f: scanFolder — child without package.json or .aitri is skipped (0.322292ms)"
+    },
+    {
+      "tc_id": "TC-022g",
+      "status": "pass",
+      "notes": "✔ TC-022g: scanFolder — files at root level are skipped (0.287625ms)"
+    },
+    {
+      "tc_id": "TC-023h",
+      "status": "pass",
+      "notes": "✔ TC-023h: POST with type=folder and valid directory returns 201"
+    },
+    {
+      "tc_id": "TC-023e",
+      "status": "pass",
+      "notes": "✔ TC-023e: POST with type=folder and non-existent path returns 400 path_not_found"
+    },
+    {
+      "tc_id": "TC-023f",
+      "status": "pass",
+      "notes": "✔ TC-023f: POST with type=folder pointing to a file returns 400 not_a_directory"
+    },
+    {
+      "tc_id": "TC-024h",
+      "status": "pass",
+      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-024h: AdminAddForm — helper text visible when type=folder is selected 2ms"
+    },
+    {
+      "tc_id": "TC-024f",
+      "status": "pass",
+      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-024f: AdminAddForm — helper text NOT visible when type=local is selected 1ms"
+    },
+    {
+      "tc_id": "TC-024e",
+      "status": "pass",
+      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-024e: AdminAddForm — location label reads \"folder path\" when type=folder 4ms"
+    },
+    {
+      "tc_id": "TC-025h",
+      "status": "pass",
+      "notes": "✔ TC-025h: scanFolder — child entries include parentFolder field (0.265458ms)"
+    },
+    {
+      "tc_id": "TC-025f",
+      "status": "pass",
+      "notes": "✔ TC-025f: isValidProject — does not add parentFolder (pure scan only) (0.279042ms)"
+    },
+    {
+      "tc_id": "TC-025e",
+      "status": "pass",
+      "notes": "✔ TC-025e: scanFolder — parentFolder uses exact input path string (0.320167ms)"
+    },
+    {
+      "tc_id": "TC-NFR021h",
+      "status": "pass",
+      "notes": "✔ TC-NFR021h: scanFolder — non-existent path returns [] without throwing (0.073333ms)"
+    },
+    {
+      "tc_id": "TC-NFR022h",
+      "status": "pass",
+      "notes": "✔ TC-NFR022h: scanFolder — symlinks are not followed (0.302458ms)"
+    },
+    {
+      "tc_id": "TC-e2eFolderScan",
+      "status": "pass",
+      "notes": "✔ TC-e2eFolderScan: register folder type; dashboard shows child cards"
+    },
+    {
+      "tc_id": "TC-e2eFolderEmpty",
+      "status": "pass",
+      "notes": "✔ TC-e2eFolderEmpty: folder with no valid children produces no cards"
+    }
+  ],
+  "fr_coverage": [
+    {
+      "fr_id": "FR-020",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-021",
+      "tests_passing": 6,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-022",
+      "tests_passing": 5,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-023",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-024",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-025",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    }
+  ],
+  "summary": {
+    "total": 24,
+    "passed": 24,
+    "failed": 0,
+    "skipped": 0,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 0,
+    "manual": 0,
+    "manual_verified": 0
+  }
+}

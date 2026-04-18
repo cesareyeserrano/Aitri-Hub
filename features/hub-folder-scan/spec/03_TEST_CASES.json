@@ -1,0 +1,541 @@
+{
+  "test_plan": {
+    "strategy": "Unit tests for folder-scanner.js validity logic and collector integration. Integration tests for admin API folder validation (HTTP). Component tests for AdminAddForm folder type option and helper text. E2E test for full flow: register folder → collector discovers children → dashboard.json contains child cards.",
+    "coverage_goal": "90%",
+    "test_types": ["unit", "integration", "e2e"]
+  },
+
+  "type_coverage_matrix": [
+    { "fr_id": "FR-020", "fr_type": "UX",          "unit": "-",    "integration": "-",    "component": "MUST"  },
+    { "fr_id": "FR-021", "fr_type": "logic",        "unit": "MUST", "integration": "MUST", "component": "-"     },
+    { "fr_id": "FR-022", "fr_type": "logic",        "unit": "MUST", "integration": "-",    "component": "-"     },
+    { "fr_id": "FR-023", "fr_type": "persistence",  "unit": "MUST", "integration": "MUST", "component": "-"     },
+    { "fr_id": "FR-024", "fr_type": "UX",           "unit": "-",    "integration": "-",    "component": "MUST"  },
+    { "fr_id": "FR-025", "fr_type": "logic",        "unit": "MUST", "integration": "-",    "component": "-"     }
+  ],
+
+  "test_cases": [
+
+    {
+      "id": "TC-020h",
+      "requirement_id": "FR-020",
+      "user_story_id": "US-020",
+      "ac_id": "AC-020",
+      "title": "AdminAddForm — 'folder' option appears in type select",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["AdminAddForm rendered in jsdom"],
+      "given": "the Add Project form is rendered",
+      "when": "the type select options are inspected",
+      "then": "options include 'local', 'remote', and 'folder'",
+      "steps": [
+        "Render AdminAddForm",
+        "Query the type select element",
+        "Assert option values include 'folder'"
+      ],
+      "expected_result": "type select has exactly 3 options: local, remote, folder"
+    },
+
+    {
+      "id": "TC-020e",
+      "requirement_id": "FR-020",
+      "user_story_id": "US-020",
+      "ac_id": "AC-021",
+      "title": "AdminAddForm — selecting folder type does not break existing local/remote options",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": ["AdminAddForm rendered"],
+      "given": "user changes type from local to folder and back to local",
+      "when": "type is set back to 'local'",
+      "then": "form state is consistent — no folder-specific helper text visible, location label reads 'Location'",
+      "steps": [
+        "Render AdminAddForm",
+        "Change type to 'folder'",
+        "Change type back to 'local'",
+        "Assert helper text is not visible",
+        "Assert location label is 'Location' (not 'Folder path')"
+      ],
+      "expected_result": "Switching away from folder type hides helper text and restores default labels"
+    },
+
+    {
+      "id": "TC-020n",
+      "requirement_id": "FR-020",
+      "user_story_id": "US-020",
+      "ac_id": "AC-021",
+      "title": "AdminAddForm — submitting folder type with valid path calls POST with type='folder'",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["AdminAddForm rendered with onAdd mock"],
+      "given": "user selects type='folder', enters a valid location, and submits",
+      "when": "onAdd is called",
+      "then": "onAdd receives payload with type='folder' and the entered location",
+      "steps": [
+        "Render AdminAddForm with onAdd spy",
+        "Set type to 'folder'",
+        "Set location to '/tmp/workspace'",
+        "Click submit",
+        "Assert onAdd called with { type: 'folder', location: '/tmp/workspace' }"
+      ],
+      "expected_result": "onAdd payload contains type='folder'"
+    },
+
+    {
+      "id": "TC-020f",
+      "requirement_id": "FR-020",
+      "user_story_id": "US-020",
+      "ac_id": "AC-021",
+      "title": "AdminAddForm — submitting folder type with empty location shows location_required error",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["AdminAddForm rendered"],
+      "given": "user selects type='folder' and submits without entering a location",
+      "when": "form submit fires",
+      "then": "onAdd is NOT called; inline error for location field is shown",
+      "steps": [
+        "Render AdminAddForm with onAdd spy",
+        "Set type to 'folder'",
+        "Leave location empty",
+        "Click submit",
+        "Assert onAdd was NOT called",
+        "Assert location error is visible"
+      ],
+      "expected_result": "Submission blocked; location error displayed"
+    },
+
+    {
+      "id": "TC-021h",
+      "requirement_id": "FR-021",
+      "user_story_id": "US-021",
+      "ac_id": "AC-022",
+      "title": "Collector — folder-type project expands into child entries in dashboard.json",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "critical",
+      "preconditions": ["tmpdir with 2 valid child directories (each has package.json)"],
+      "given": "a project registered as type='folder' pointing to a dir with 2 valid children",
+      "when": "collectOne is called with that project",
+      "then": "returns an array of 2 project entries, each with location pointing to the child directory",
+      "steps": [
+        "Create tmpdir/child-a/package.json and tmpdir/child-b/package.json",
+        "Call collectOne({ type: 'folder', location: tmpdir })",
+        "Assert result is an array of length 2",
+        "Assert result[0].location === path.join(tmpdir, 'child-a')",
+        "Assert result[1].location === path.join(tmpdir, 'child-b')"
+      ],
+      "expected_result": "Array of 2 child project entries — parent folder not in result"
+    },
+
+    {
+      "id": "TC-021e",
+      "requirement_id": "FR-021",
+      "user_story_id": "US-021",
+      "ac_id": "AC-023",
+      "title": "Collector — parent folder entry does not appear in dashboard.json output",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": ["tmpdir with 1 valid child"],
+      "given": "a folder-type project with 1 valid child",
+      "when": "collectOne runs",
+      "then": "the returned array contains only the child entry; no entry with the parent folder's name appears",
+      "steps": [
+        "Create tmpdir/child-a/package.json",
+        "Call collectOne({ type: 'folder', name: 'My Workspace', location: tmpdir })",
+        "Assert result.every(p => p.name !== 'My Workspace')",
+        "Assert result.length === 1"
+      ],
+      "expected_result": "Parent folder name absent from results; only child present"
+    },
+
+    {
+      "id": "TC-021f",
+      "requirement_id": "FR-021",
+      "user_story_id": "US-021",
+      "ac_id": "AC-024",
+      "title": "Collector — folder with 0 valid children returns empty array (no crash)",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["tmpdir with 0 valid children (no package.json, no .aitri)"],
+      "given": "a folder-type project where no children are valid projects",
+      "when": "collectOne runs",
+      "then": "returns an empty array; no error thrown",
+      "steps": [
+        "Create tmpdir/not-a-project/ (empty directory)",
+        "Call collectOne({ type: 'folder', location: tmpdir })",
+        "Assert result is []",
+        "Assert no exception thrown"
+      ],
+      "expected_result": "Empty array — no crash, no undefined"
+    },
+
+    {
+      "id": "TC-022h",
+      "requirement_id": "FR-022",
+      "user_story_id": "US-022",
+      "ac_id": "AC-025",
+      "title": "folder-scanner — child with package.json is valid",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "critical",
+      "preconditions": ["tmpdir with one subdirectory containing package.json"],
+      "given": "a child directory containing package.json",
+      "when": "scanFolder(folderPath) runs",
+      "then": "the child appears in the returned array",
+      "steps": [
+        "Create tmpdir/my-app/package.json",
+        "Call scanFolder(tmpdir)",
+        "Assert result.length === 1",
+        "Assert result[0].name === 'my-app'"
+      ],
+      "expected_result": "Child directory with package.json included in results"
+    },
+
+    {
+      "id": "TC-022e",
+      "requirement_id": "FR-022",
+      "user_story_id": "US-022",
+      "ac_id": "AC-026",
+      "title": "folder-scanner — child with .aitri directory is valid",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": ["tmpdir with one subdirectory containing .aitri/"],
+      "given": "a child directory containing a .aitri directory",
+      "when": "scanFolder(folderPath) runs",
+      "then": "the child appears in the returned array",
+      "steps": [
+        "Create tmpdir/my-aitri-project/.aitri/",
+        "Call scanFolder(tmpdir)",
+        "Assert result.length === 1",
+        "Assert result[0].name === 'my-aitri-project'"
+      ],
+      "expected_result": "Child directory with .aitri included in results"
+    },
+
+    {
+      "id": "TC-022f",
+      "requirement_id": "FR-022",
+      "user_story_id": "US-022",
+      "ac_id": "AC-027",
+      "title": "folder-scanner — child with no package.json or .aitri is skipped",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["tmpdir with one subdirectory containing only a README.md"],
+      "given": "a child directory with no package.json and no .aitri directory",
+      "when": "scanFolder(folderPath) runs",
+      "then": "the child does not appear in results",
+      "steps": [
+        "Create tmpdir/just-a-folder/README.md",
+        "Call scanFolder(tmpdir)",
+        "Assert result.length === 0"
+      ],
+      "expected_result": "Empty result — invalid child skipped"
+    },
+
+    {
+      "id": "TC-022g",
+      "requirement_id": "FR-022",
+      "user_story_id": "US-022",
+      "ac_id": "AC-028",
+      "title": "folder-scanner — files at root level are skipped (not directories)",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": ["tmpdir with a file at root level (not a subdirectory)"],
+      "given": "a file (not a directory) exists directly inside the folder",
+      "when": "scanFolder(folderPath) runs",
+      "then": "the file is skipped and not included in results",
+      "steps": [
+        "Create tmpdir/some-file.txt",
+        "Call scanFolder(tmpdir)",
+        "Assert result.length === 0"
+      ],
+      "expected_result": "File at folder root skipped; empty results"
+    },
+
+    {
+      "id": "TC-023h",
+      "requirement_id": "FR-023",
+      "user_story_id": "US-023",
+      "ac_id": "AC-031",
+      "title": "Admin API — POST with type='folder' and valid directory returns 201",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "critical",
+      "preconditions": ["hub server running; valid directory exists"],
+      "given": "POST /api/projects with type='folder' and location pointing to an existing directory",
+      "when": "request reaches handler",
+      "then": "response 201; projects.json contains entry with type='folder'",
+      "steps": [
+        "POST { name: 'workspace', type: 'folder', location: os.tmpdir() }",
+        "Assert status 201",
+        "Assert projects.json entry has type='folder'"
+      ],
+      "expected_result": "201 with folder entry persisted"
+    },
+
+    {
+      "id": "TC-023e",
+      "requirement_id": "FR-023",
+      "user_story_id": "US-023",
+      "ac_id": "AC-029",
+      "title": "Admin API — POST with type='folder' and non-existent path returns 400 path_not_found",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": ["hub server running"],
+      "given": "POST /api/projects with type='folder' and location that does not exist",
+      "when": "request reaches handler",
+      "then": "response 400 with body { error: 'path_not_found' }",
+      "steps": [
+        "POST { name: 'bad', type: 'folder', location: '/nonexistent-aitri-folder-xyz' }",
+        "Assert status 400",
+        "Assert body.error === 'path_not_found'"
+      ],
+      "expected_result": "400 path_not_found"
+    },
+
+    {
+      "id": "TC-023f",
+      "requirement_id": "FR-023",
+      "user_story_id": "US-023",
+      "ac_id": "AC-030",
+      "title": "Admin API — POST with type='folder' pointing to a file returns 400 not_a_directory",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["hub server running; a file exists at a known path"],
+      "given": "POST /api/projects with type='folder' and location pointing to a regular file",
+      "when": "request reaches handler",
+      "then": "response 400 with body { error: 'not_a_directory' }",
+      "steps": [
+        "Write a temp file at tmpdir/testfile.txt",
+        "POST { name: 'bad', type: 'folder', location: tmpdir + '/testfile.txt' }",
+        "Assert status 400",
+        "Assert body.error === 'not_a_directory'"
+      ],
+      "expected_result": "400 not_a_directory"
+    },
+
+    {
+      "id": "TC-024h",
+      "requirement_id": "FR-024",
+      "user_story_id": "US-024",
+      "ac_id": "AC-032",
+      "title": "AdminAddForm — helper text visible when type='folder' is selected",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "medium",
+      "preconditions": ["AdminAddForm rendered in jsdom"],
+      "given": "user selects type='folder'",
+      "when": "type select value changes to 'folder'",
+      "then": "helper text containing 'Scans immediate child directories' is visible in the DOM",
+      "steps": [
+        "Render AdminAddForm",
+        "Change type select to 'folder'",
+        "Assert helper text element is present and contains expected text"
+      ],
+      "expected_result": "Helper text 'Scans immediate child directories' visible"
+    },
+
+    {
+      "id": "TC-024f",
+      "requirement_id": "FR-024",
+      "user_story_id": "US-024",
+      "ac_id": "AC-032",
+      "title": "AdminAddForm — helper text NOT visible when type='local' is selected",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "low",
+      "preconditions": ["AdminAddForm rendered in jsdom"],
+      "given": "default state with type='local'",
+      "when": "form is rendered without changing type",
+      "then": "no helper text about 'Scans immediate child directories' is visible",
+      "steps": [
+        "Render AdminAddForm",
+        "Assert helper text element is absent from DOM"
+      ],
+      "expected_result": "Helper text absent for non-folder types"
+    },
+
+    {
+      "id": "TC-024e",
+      "requirement_id": "FR-024",
+      "user_story_id": "US-024",
+      "ac_id": "AC-032",
+      "title": "AdminAddForm — location label reads 'Folder path' when type='folder'",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "low",
+      "preconditions": ["AdminAddForm rendered in jsdom"],
+      "given": "user selects type='folder'",
+      "when": "form label for location is inspected",
+      "then": "label text is 'Folder path' (not 'Location')",
+      "steps": [
+        "Render AdminAddForm",
+        "Change type select to 'folder'",
+        "Assert location label text equals 'Folder path'"
+      ],
+      "expected_result": "Location label updates to 'Folder path' when type='folder'"
+    },
+
+    {
+      "id": "TC-025h",
+      "requirement_id": "FR-025",
+      "user_story_id": "US-025",
+      "ac_id": "AC-033",
+      "title": "folder-scanner — discovered children include parentFolder field",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "medium",
+      "preconditions": ["tmpdir with 1 valid child"],
+      "given": "scanFolder(folderPath) is called",
+      "when": "result entries are inspected",
+      "then": "each entry has parentFolder field equal to folderPath",
+      "steps": [
+        "Create tmpdir/my-app/package.json",
+        "Call scanFolder(tmpdir)",
+        "Assert result[0].parentFolder === tmpdir"
+      ],
+      "expected_result": "parentFolder field equals the scanned folder path"
+    },
+
+    {
+      "id": "TC-025f",
+      "requirement_id": "FR-025",
+      "user_story_id": "US-025",
+      "ac_id": "AC-034",
+      "title": "Collector — manually-registered local project has no parentFolder field",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "low",
+      "preconditions": ["project with type='local'"],
+      "given": "a project registered with type='local'",
+      "when": "collectOne returns its entry",
+      "then": "the entry does not have a parentFolder field",
+      "steps": [
+        "Call collectOne({ type: 'local', location: tmpdir })",
+        "Assert result.parentFolder === undefined"
+      ],
+      "expected_result": "No parentFolder field on local project entries"
+    },
+
+    {
+      "id": "TC-025e",
+      "requirement_id": "FR-025",
+      "user_story_id": "US-025",
+      "ac_id": "AC-033",
+      "title": "folder-scanner — parentFolder field uses exact registered path string",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "low",
+      "preconditions": ["tmpdir with trailing slash in path"],
+      "given": "scanFolder is called with a path that has a trailing slash",
+      "when": "result entries are inspected",
+      "then": "parentFolder field value matches the exact path string passed to scanFolder",
+      "steps": [
+        "Create tmpdir/child/package.json",
+        "Call scanFolder(tmpdir + '/')",
+        "Assert result[0].parentFolder === tmpdir + '/'"
+      ],
+      "expected_result": "parentFolder preserves exact input path string"
+    },
+
+    {
+      "id": "TC-NFR021h",
+      "requirement_id": "FR-021",
+      "user_story_id": "US-021",
+      "ac_id": "AC-022",
+      "title": "folder-scanner — missing folder path returns empty array (no crash)",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["folder path does not exist on disk"],
+      "given": "scanFolder is called with a path that does not exist",
+      "when": "readdirSync throws ENOENT",
+      "then": "scanFolder returns [] without throwing",
+      "steps": [
+        "Call scanFolder('/nonexistent-aitri-path-xyz')",
+        "Assert result is []",
+        "Assert no exception propagated"
+      ],
+      "expected_result": "Empty array — ENOENT handled gracefully"
+    },
+
+    {
+      "id": "TC-NFR022h",
+      "requirement_id": "FR-022",
+      "user_story_id": "US-022",
+      "ac_id": "AC-028",
+      "title": "folder-scanner — symlinks are skipped (not followed)",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["tmpdir with a symlink to a valid project outside the folder"],
+      "given": "a symlink inside the folder pointing to a directory with package.json",
+      "when": "scanFolder runs",
+      "then": "the symlink is skipped and does not appear in results",
+      "steps": [
+        "Create external-project/ with package.json",
+        "Create tmpdir/link -> external-project/ (symlink)",
+        "Call scanFolder(tmpdir)",
+        "Assert result.length === 0"
+      ],
+      "expected_result": "Symlink skipped; result is empty even though target has package.json"
+    },
+
+    {
+      "id": "TC-e2eFolderScan",
+      "requirement_id": "FR-021",
+      "user_story_id": "US-021",
+      "ac_id": "AC-022",
+      "title": "E2E — register folder type project; dashboard shows child cards",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "critical",
+      "preconditions": ["hub server running; tmpdir with 2 valid child projects"],
+      "given": "user POSTs a folder-type project via admin API",
+      "when": "the collector completes one cycle",
+      "then": "GET /data/dashboard.json contains 2 project entries with parentFolder matching the registered location",
+      "steps": [
+        "Create tmpdir/child-a/package.json and tmpdir/child-b/package.json",
+        "POST { name: 'workspace', type: 'folder', location: tmpdir } to /api/projects",
+        "Wait for collector cycle (poll /data/dashboard.json up to 10s)",
+        "Assert dashboard.projects contains 2 entries with parentFolder === tmpdir",
+        "Assert no entry with name 'workspace' in dashboard.projects"
+      ],
+      "expected_result": "2 child cards in dashboard; parent folder entry absent"
+    }
+
+    ,{
+      "id": "TC-e2eFolderEmpty",
+      "requirement_id": "FR-021",
+      "user_story_id": "US-021",
+      "ac_id": "AC-024",
+      "title": "E2E — folder with no valid children produces no cards in dashboard",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": ["hub server running; tmpdir with no valid project children"],
+      "given": "user registers a folder-type project pointing to a directory with no valid children",
+      "when": "the collector runs",
+      "then": "GET /data/dashboard.json has 0 entries with that parentFolder; no crash",
+      "steps": [
+        "Create tmpdir/empty-subdir/ (no package.json, no .aitri)",
+        "POST { name: 'empty-workspace', type: 'folder', location: tmpdir } to /api/projects",
+        "Poll /data/dashboard.json up to 10s",
+        "Assert no entry has parentFolder === tmpdir",
+        "Assert server still responds to GET /health with 200"
+      ],
+      "expected_result": "No child cards; server healthy"
+    }
+
+  ]
+}

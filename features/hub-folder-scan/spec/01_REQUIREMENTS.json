@@ -1,0 +1,171 @@
+{
+  "project_name": "Aitri Hub — hub-folder-scan",
+
+  "project_summary": {
+    "name": "Aitri Hub — hub-folder-scan",
+    "north_star_kpi": "Time to register a full workspace of N projects drops from O(N) manual steps to 1 step",
+    "jtbd": "When I have a folder of multiple projects, I want to add them all at once so I can see every project card immediately without N separate admin actions",
+    "guardrail_metric": "Existing individually-registered projects must continue to collect and display without change"
+  },
+
+  "no_go_zone": [
+    "No recursive scanning — only immediate children (depth=1) are scanned; nested workspaces are not supported",
+    "No file-system watcher — children are discovered on each collector cycle, not on inotify/FSEvents events",
+    "No remote folder types — folder scan is local filesystem only; remote URLs are not scannable",
+    "No merging of folder entries into projects.json — children are ephemeral, resolved dynamically by the collector, not persisted as individual entries",
+    "No UI for managing individual children of a folder — they cannot be edited or removed individually; only the parent folder entry is stored in projects.json",
+    "No depth-configurable scan — depth is always 1; deeper hierarchies require adding sub-folders manually"
+  ],
+
+  "user_personas": [
+    {
+      "name": "Multi-project Developer",
+      "role": "Developer with 5–30 projects under a single workspace directory",
+      "goal": "See all project cards after one admin action",
+      "pain_point": "Currently must add each project individually even when they all live under /Projects"
+    }
+  ],
+
+  "user_stories": [
+    {
+      "id": "US-020",
+      "requirement_id": "FR-020",
+      "as_a": "developer",
+      "i_want": "to select 'folder' as the project type when adding a location in the admin panel",
+      "so_that": "I can register an entire workspace directory in one step"
+    },
+    {
+      "id": "US-021",
+      "requirement_id": "FR-021",
+      "as_a": "developer",
+      "i_want": "the collector to expand folder entries into child cards",
+      "so_that": "I don't need to register each project manually"
+    },
+    {
+      "id": "US-022",
+      "requirement_id": "FR-022",
+      "as_a": "developer",
+      "i_want": "only real project directories to appear as cards",
+      "so_that": "unrelated folders don't pollute the dashboard"
+    },
+    {
+      "id": "US-023",
+      "requirement_id": "FR-023",
+      "as_a": "developer",
+      "i_want": "to get an error if the folder path I enter doesn't exist or isn't a directory",
+      "so_that": "I can fix the path before it silently produces zero cards"
+    },
+    {
+      "id": "US-024",
+      "requirement_id": "FR-024",
+      "as_a": "developer",
+      "i_want": "to see a brief explanation when I pick 'folder' type",
+      "so_that": "I understand it scans immediate children only"
+    },
+    {
+      "id": "US-025",
+      "requirement_id": "FR-025",
+      "as_a": "developer",
+      "i_want": "child project cards to carry a reference to their parent folder",
+      "so_that": "I can distinguish auto-discovered projects from manually-registered ones"
+    }
+  ],
+
+  "functional_requirements": [
+    {
+      "id": "FR-020",
+      "title": "Admin panel — 'folder' project type option in Add Project form",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given the user opens the Add Project form at /admin, when the type dropdown is expanded, then options include 'local', 'remote', and 'folder'",
+        "Given the user selects type='folder' and submits a valid absolute directory path, when POST /api/projects is called, then the server responds 201 and projects.json contains one entry with type='folder'"
+      ]
+    },
+    {
+      "id": "FR-021",
+      "title": "Collector — folder-type projects expand into individual child project cards",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a registered project has type='folder' and location='/Projects', when the collector runs, then each valid immediate child directory of /Projects appears as a separate entry in dashboard.json",
+        "Given a folder-type project is registered, when dashboard.json is written, then the parent folder entry itself does NOT appear as a project card — only its discovered children appear",
+        "Given a folder-type project has 3 valid child directories, when the collector runs, then dashboard.json contains exactly 3 project entries derived from that folder (plus any other individually-registered projects)"
+      ]
+    },
+    {
+      "id": "FR-022",
+      "title": "Collector — child validity check (package.json OR .aitri directory)",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a child directory contains a package.json file, when the validity check runs, then the child is included in collection as a valid project",
+        "Given a child directory contains a .aitri directory, when the validity check runs, then the child is included in collection as a valid project",
+        "Given a child directory contains neither package.json nor .aitri, when the validity check runs, then the child is skipped and does not appear in dashboard.json",
+        "Given a child path is a file (not a directory), when the validity check runs, then the file is skipped entirely"
+      ]
+    },
+    {
+      "id": "FR-023",
+      "title": "Admin API — 'folder' type validation (path must exist and be a directory)",
+      "priority": "MUST",
+      "type": "persistence",
+      "acceptance_criteria": [
+        "Given POST /api/projects with type='folder' and a path that does not exist on disk, when the handler validates, then the response is 400 with error 'path_not_found'",
+        "Given POST /api/projects with type='folder' and a path that exists but is a file (not a directory), when the handler validates, then the response is 400 with error 'not_a_directory'",
+        "Given POST /api/projects with type='folder' and a valid existing directory path with no path traversal, when the handler validates, then the response is 201 and the entry is persisted with type='folder'"
+      ]
+    },
+    {
+      "id": "FR-024",
+      "title": "Add Project form — helper text when type='folder' is selected",
+      "priority": "SHOULD",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given the user selects type='folder' in the Add Project form, when the selection changes, then a helper text appears reading 'Scans immediate child directories — each one with package.json or .aitri appears as its own card'"
+      ]
+    },
+    {
+      "id": "FR-025",
+      "title": "Collector — folder-derived child entries include parentFolder field in dashboard.json",
+      "priority": "SHOULD",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a child is discovered by scanning a folder-type project at location '/Projects', when the child entry is written to dashboard.json, then the entry includes a 'parentFolder' field with value '/Projects'",
+        "Given a project is manually registered with type='local', when its entry is written to dashboard.json, then no 'parentFolder' field is present on the entry"
+      ]
+    }
+  ],
+
+  "non_functional_requirements": [
+    {
+      "id": "NFR-020",
+      "category": "Performance",
+      "requirement": "Folder scan of a directory with up to 50 immediate children must complete within the 5-second collector cycle",
+      "acceptance_criteria": [
+        "Given a folder-type project with 50 child directories each containing package.json, the scan completes in ≤500ms keeping total collection within the 5-second cycle"
+      ]
+    },
+    {
+      "id": "NFR-021",
+      "category": "Reliability",
+      "requirement": "A folder-type project whose location no longer exists must not crash the collector",
+      "acceptance_criteria": [
+        "Given a folder-type project whose location has been deleted from disk, when the collector runs, the folder entry is silently skipped and all other registered projects continue to collect normally"
+      ]
+    },
+    {
+      "id": "NFR-022",
+      "category": "Security",
+      "requirement": "Folder scan must not follow symlinks that point outside the registered directory",
+      "acceptance_criteria": [
+        "Given a symlink inside the folder points to a directory outside the registered location, when the collector scans children, the symlink target is skipped and no files outside the registered location are read"
+      ]
+    }
+  ],
+
+  "constraints": [
+    "No new npm runtime dependencies — uses Node.js built-in fs module only",
+    "All persistent data written under ~/.aitri-hub/ — no writes to scanned project directories"
+  ]
+}
