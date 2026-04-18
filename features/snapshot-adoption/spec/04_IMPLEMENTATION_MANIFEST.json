@@ -1,0 +1,84 @@
+{
+  "feature_id": "snapshot-adoption",
+  "phase": 4,
+  "completed_at": "2026-04-17",
+  "summary": "Migrated Hub collector to consume Aitri Core's canonical ProjectSnapshot (aitri status --json, v0.1.77+). Snapshot-first dispatch with legacy reader fallback, structured failure logging, and ProjectCard sections (NEXT ACTION, DEPLOY HEALTH, staleness, blockers, last-session) backed by snapshot data.",
+  "files_modified": [
+    {
+      "path": "lib/collector/index.js",
+      "change": "Added snapshot-first dispatch in collectOne: preflight version check (>=0.1.77), spawn aitri status --json via readSnapshot, project to legacy shape via projectFromSnapshot. On failure, fall back to demoted readers AND set degradationReason + appendStructuredLog. Inline readAitriRaw avoids invoking demoted readAitriState in version check / lastSession population.",
+      "fr_ids": ["FR-010", "FR-011", "FR-016", "FR-017"]
+    },
+    {
+      "path": "lib/store/dashboard.js",
+      "change": "Added appendStructuredLog(obj) — writes JSON-line to ~/.aitri-hub/logs/aitri-hub.log for machine-parseable snapshot-failure telemetry.",
+      "fr_ids": ["FR-017", "NFR-010"]
+    },
+    {
+      "path": "web/src/components/ProjectCard.jsx",
+      "change": "Added DegradationRow, NextActionRow, DeployHealthSection, StalenessIndicators components. Extended BlockersSection with normalize-warning row, PipelineSection with last-session line, QualitySection with verify/audit staleness. Render order: degradation → next action → deploy health → blockers → pipeline → quality → git → version.",
+      "fr_ids": ["FR-012", "FR-013", "FR-014", "FR-015", "FR-016", "FR-017"]
+    },
+    {
+      "path": "web/src/styles.css",
+      "change": "Added severity tokens (--severity-warn #FDB022, --severity-critical #F97066, --severity-info #84CAFF) meeting WCAG 2.1 AA contrast on dark theme. Added classes: .severity-{warn,critical,info}, .next-action-row(+__badge), .deploy-health-row, .normalize-warning-row, .last-session-line, .degradation-warning-row, .next-action-skeleton. Mobile breakpoint at 480px.",
+      "fr_ids": ["FR-012", "FR-013", "FR-014", "FR-015", "FR-016", "FR-017"]
+    }
+  ],
+  "files_created": [
+    {
+      "path": "lib/collector/snapshot-reader.js",
+      "purpose": "Spawns aitri status --json with cwd=projectDir, shell=false, 1MiB stdout cap, setTimeout-based SIGKILL at timeoutMs (default 3000). Exports readSnapshot (with injectable spawnFn for tests), projectFromSnapshot (legacy-shape projection: aitriState/testSummary/bugsSummary/etc), formatRelativeTime (compact bucket boundaries: just now / Nm / Nh / Nd / absolute date), formatLastSessionLine (verbose 'N days ago' line for PIPELINE).",
+      "fr_ids": ["FR-010", "FR-011", "FR-016", "FR-017", "NFR-008", "NFR-009"]
+    },
+    {
+      "path": "tests/unit/snapshot-reader.test.js",
+      "purpose": "15 unit tests covering TC-010h (spawn args), TC-010f (spawn_failed), TC-010e1 (timeout SIGKILL), TC-011h (projectFromSnapshot equivalence), TC-016h (formatLastSessionLine verbose), TC-016e1 (formatRelativeTime bucket boundaries) + defensive normalization on partial snapshots.",
+      "fr_ids": ["FR-010", "FR-011", "FR-016"]
+    },
+    {
+      "path": "tests/integration/snapshot-fallback.test.js",
+      "purpose": "3 integration tests using POSIX shell stub on PATH + AITRI_HUB_DIR temp dir: TC-017e1 (version_too_old skips snapshot entirely), TC-017e2 (snapshot failure writes structured JSON line to log), TC-011f (snapshot success path skips demoted readers, proven by bugsSummary populated without BUGS.json on disk).",
+      "fr_ids": ["FR-011", "FR-017", "NFR-010"]
+    }
+  ],
+  "files_deleted": [],
+  "test_runner": "node --test",
+  "test_files": [
+    "tests/unit/snapshot-reader.test.js",
+    "tests/integration/snapshot-fallback.test.js"
+  ],
+  "test_results": {
+    "suite": "node --test tests/unit/*.test.js tests/integration/*.test.js",
+    "passed": 306,
+    "failed": 0,
+    "skipped": 0,
+    "notes": "18 new tests added (15 unit + 3 integration). Total Hub suite: 306 pass / 0 fail. NFR-006 (≤500ms p95 snapshot collection) and NFR-007 (≥400 LOC reduction in active path) not yet measured — both deferred to Phase 5 verification."
+  },
+  "setup_commands": [],
+  "environment_variables": [
+    "AITRI_HUB_DIR (existing, optional override of ~/.aitri-hub for testing)"
+  ],
+  "technical_debt": [
+    {
+      "fr_id": "FR-016",
+      "substitution": "Aitri Core snapshot v1 does not yet expose lastSession — worked around via inline readAitriRaw in collector/index.js that reads .aitri JSON for that single field. Remove once Aitri Core ships lastSession in snapshot."
+    },
+    {
+      "fr_id": "FR-012",
+      "substitution": "Severity tokens (--severity-warn/critical/info) only verified for dark theme contrast (WCAG 2.1 AA). Light theme palette not added — light theme is not currently supported by the Hub UI."
+    },
+    {
+      "fr_id": "FR-012",
+      "substitution": "TC-S002 skeleton row class (.next-action-skeleton) is rendered when nextActions is null, but App-level data-loading delay is not orchestrated — skeleton currently only appears on the brief render between collection cycles when snapshot fails and no fallback nextActions exist. A dedicated loading state at App.jsx is out of scope for this feature."
+    },
+    {
+      "fr_id": "NFR-007",
+      "substitution": "5 demoted readers (aitri-reader, requirements-reader, compliance-reader, test-reader, bugs-reader) intentionally retained on disk as the FR-017 fallback path. Deletion deferred to a follow-up feature once telemetry confirms snapshot success rate ≥99% (per NFR-007 scoping note)."
+    },
+    {
+      "fr_id": "NFR-010",
+      "substitution": "Snapshot-failure structured log lines do not yet rotate — log file grows unbounded. Acceptable for current deployment scale; rotate via logrotate or implement size-based rotation in dashboard.js if hub.log exceeds 10MiB."
+    }
+  ]
+}

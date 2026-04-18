@@ -1,0 +1,253 @@
+{
+  "executed_at": "2026-04-18T01:21:26.108Z",
+  "test_runner": "./run-tests.sh",
+  "exit_code": 0,
+  "results": [
+    {
+      "tc_id": "TC-010h",
+      "status": "pass",
+      "notes": "✔ TC-010h: passes cwd=projectDir, shell=false, command=aitri, args=[status,--json] (2.315292ms)"
+    },
+    {
+      "tc_id": "TC-010f",
+      "status": "pass",
+      "notes": "✔ TC-010f: returns ok:false reason=spawn_failed, detail contains stderr (0.578708ms)"
+    },
+    {
+      "tc_id": "TC-010e1",
+      "status": "pass",
+      "notes": "✔ TC-010e1: kills child once and returns reason=timeout with durationMs in [timeout, timeout+1000) (101.758625ms)"
+    },
+    {
+      "tc_id": "TC-010e2",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-010e2\" (e.g. test_TC_010e2_description) and add # @aitri-tc TC-010e2 above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-010i",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-010i\" (e.g. test_TC_010i_description) and add # @aitri-tc TC-010i above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-011h",
+      "status": "pass",
+      "notes": "✔ TC-011h: approvedPhases, currentPhase, verifyPassed, verifySummary match legacy shape (0.4305ms)"
+    },
+    {
+      "tc_id": "TC-011f",
+      "status": "pass",
+      "notes": "✔ TC-011f: does not invoke readAitriState/readTestSummary/readComplianceSummary/readRequirementsSummary/readBugsSummary on success (151.018459ms)"
+    },
+    {
+      "tc_id": "TC-011e",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-011e\" (e.g. test_TC_011e_description) and add # @aitri-tc TC-011e above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-012h",
+      "status": "pass",
+      "notes": "✔ TC-012h: NEXT ACTION row renders command + reason + warn severity at 1440px"
+    },
+    {
+      "tc_id": "TC-012f",
+      "status": "pass",
+      "notes": "✔ TC-012f: NEXT ACTION row shows idle text + neutral styling when nextActions is empty"
+    },
+    {
+      "tc_id": "TC-012e1",
+      "status": "pass",
+      "notes": "✔ TC-012e1: long command wraps without horizontal page scroll at 375px"
+    },
+    {
+      "tc_id": "TC-012e2",
+      "status": "pass",
+      "notes": "✔ TC-012e2: NEXT ACTION row sits immediately above PIPELINE section"
+    },
+    {
+      "tc_id": "TC-013h",
+      "status": "pass",
+      "notes": "✔ TC-013h: DEPLOY HEALTH renders one row per deployableReason"
+    },
+    {
+      "tc_id": "TC-013f",
+      "status": "pass",
+      "notes": "✔ TC-013f: DEPLOY HEALTH section is hidden when deployable=true"
+    },
+    {
+      "tc_id": "TC-013e",
+      "status": "pass",
+      "notes": "✔ TC-013e: fallback row renders when deployable=false and reasons[] empty"
+    },
+    {
+      "tc_id": "TC-014h",
+      "status": "pass",
+      "notes": "✔ TC-014h: verify-stale-indicator renders \"verify stale (18d)\" with warn class"
+    },
+    {
+      "tc_id": "TC-014f",
+      "status": "pass",
+      "notes": "✔ TC-014f: no staleness indicator when both verify and audit are clean"
+    },
+    {
+      "tc_id": "TC-014e1",
+      "status": "pass",
+      "notes": "✔ TC-014e1: \"audit missing\" renders when audit.exists=false"
+    },
+    {
+      "tc_id": "TC-014e2",
+      "status": "pass",
+      "notes": "✔ TC-014e2: indicator inline at 768px, wraps below at 375px"
+    },
+    {
+      "tc_id": "TC-015h",
+      "status": "pass",
+      "notes": "✔ TC-015h: plural normalize-warning row renders for uncountedFiles=3"
+    },
+    {
+      "tc_id": "TC-015f",
+      "status": "pass",
+      "notes": "✔ TC-015f: normalize-warning row absent when uncountedFiles=0"
+    },
+    {
+      "tc_id": "TC-015e1",
+      "status": "pass",
+      "notes": "✔ TC-015e1: singular normalize-warning row renders for uncountedFiles=1"
+    },
+    {
+      "tc_id": "TC-015e2",
+      "status": "pass",
+      "notes": "✔ TC-015e2: normalize-warning row absent when uncountedFiles=null"
+    },
+    {
+      "tc_id": "TC-016h",
+      "status": "pass",
+      "notes": "✔ TC-016h: returns 'last: phase 3 approved by claude · 2 days ago' for delta=2d (0.158583ms)"
+    },
+    {
+      "tc_id": "TC-016f",
+      "status": "pass",
+      "notes": "✔ TC-016f: no last-session line renders when lastSession is undefined"
+    },
+    {
+      "tc_id": "TC-016e1",
+      "status": "pass",
+      "notes": "✔ TC-016e1: delta=59000ms → 'just now' (0.862208ms)"
+    },
+    {
+      "tc_id": "TC-017h",
+      "status": "pass",
+      "notes": "✔ TC-017h: degradation warning row + legacy data both render"
+    },
+    {
+      "tc_id": "TC-017f",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-017f\" (e.g. test_TC_017f_description) and add # @aitri-tc TC-017f above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-017e1",
+      "status": "pass",
+      "notes": "✔ TC-017e1: sets degradationReason=version_too_old and aitriState is non-null from legacy path (184.140667ms)"
+    },
+    {
+      "tc_id": "TC-017e2",
+      "status": "pass",
+      "notes": "✔ TC-017e2: appends a JSON-parseable line with project, reason, durationMs (149.617458ms)"
+    },
+    {
+      "tc_id": "TC-S001",
+      "status": "pass",
+      "notes": "✔ TC-S001: NEXT ACTION row idle state shows guidance text (not blank)"
+    },
+    {
+      "tc_id": "TC-S002",
+      "status": "pass",
+      "notes": "✔ TC-S002: skeleton replaced by next-action-row after dashboard.json resolves"
+    },
+    {
+      "tc_id": "TC-S003",
+      "status": "pass",
+      "notes": "✔ TC-S003: DEPLOY HEALTH section absent for deployable project (no all-clear badge)"
+    },
+    {
+      "tc_id": "TC-DT001",
+      "status": "pass",
+      "notes": "✔ TC-DT001: severity-warn token contrast ratio against card background ≥4.5:1"
+    }
+  ],
+  "fr_coverage": [
+    {
+      "fr_id": "FR-010",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 2,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-011",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-012",
+      "tests_passing": 7,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-013",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-014",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-015",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-016",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-017",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    }
+  ],
+  "summary": {
+    "total": 34,
+    "passed": 30,
+    "failed": 0,
+    "skipped": 4,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 4,
+    "manual": 0,
+    "manual_verified": 0
+  }
+}

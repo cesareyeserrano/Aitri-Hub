@@ -1,0 +1,329 @@
+{
+  "project_name": "snapshot-adoption",
+  "project_summary": {
+    "name": "snapshot-adoption",
+    "scope": "Feature within Aitri Hub",
+    "description": "Migrate Hub's per-project data collection from 5 parallel artifact-parsing collectors to consume Aitri Core's canonical ProjectSnapshot via `aitri status --json` (v0.1.77+), and surface previously-hidden snapshot fields (next action, deploy reasons, staleness, off-pipeline change detection, last session) on the ProjectCard.",
+    "north_star_kpi": "Median number of seconds a Hub user spends to identify the next concrete action for a flagged project — target: ≤5s (currently ~30s+ because card shows generic 'blockers' count without the action).",
+    "jtbd": "When I open the Hub dashboard and see a project flagged as not-deployable or stale, I want to know the exact reason and the exact next command to run, so I can act without leaving the dashboard to run `aitri status` in the project folder.",
+    "guardrail_metric": "Hub collection-cycle wall time per project must not regress by more than 30% versus the legacy collector path (measured against a project at v0.1.79+ with full artifact set)."
+  },
+
+  "no_go_zone": [
+    "No rewrite of git-reader, app-version-reader, spec-quality-reader, external-signals-reader, or feature-reader — their data is not in the snapshot.",
+    "No drill-down panels for individual FRs, TCs, or bugs — even though the snapshot exposes the lists, rendering them as interactive panels is a separate feature.",
+    "No visual redesign of ProjectCard beyond the new sections (NEXT ACTION, DEPLOY HEALTH) and the inline staleness/normalize indicators — existing 5-section layout (BLOCKERS, PIPELINE, QUALITY, GIT, VERSION) stays.",
+    "No backwards compatibility with Aitri Core older than v0.1.77 — older projects degrade with a one-line warning, not a partial render.",
+    "No Hub server re-architecture — only data ingest and rendering change. Collector cycle, store, and alerts engine keep their current shape.",
+    "No support for remote (GitHub-URL) projects in this feature — `aitri status --json` requires the CLI on PATH and a local project directory; remote projects continue using the legacy raw-file path."
+  ],
+
+  "user_personas": [
+    {
+      "role": "Hub user — Solo Developer",
+      "tech_level": "high",
+      "goal": "Open the Hub dashboard and immediately see, per project, what to do next without running aitri status in the project folder",
+      "pain_point": "Today the card shows '3 blockers' but not which blockers, and 'phase 4' but not whether verify is overdue or whether code drifted off-pipeline"
+    },
+    {
+      "role": "Hub user — Team Lead",
+      "tech_level": "high",
+      "goal": "Spot at a glance which team-member's project has off-pipeline changes or stale verify so they can be flagged in standup",
+      "pain_point": "Has to ask each developer to run aitri audit/aitri status manually because the dashboard doesn't surface staleness"
+    }
+  ],
+
+  "functional_requirements": [
+    {
+      "id": "FR-010",
+      "title": "Invoke `aitri status --json` per project per collection cycle",
+      "description": "On every collection cycle, for each registered local project at Aitri Core v0.1.77+, the system spawns `aitri status --json` in the project directory and parses the resulting ProjectSnapshot JSON.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a registered local project at Aitri v0.1.77+, when the collector cycle runs, then `aitri status --json` is spawned exactly once with cwd set to the project location",
+        "Given the spawn succeeds with exit code 0, when the stdout is parsed, then the resulting object has snapshotVersion >= 1 and the snapshot is stored on the project's in-memory record for the rendering layer",
+        "Given the spawn succeeds, when collection completes, then the legacy aitri-reader, requirements-reader, compliance-reader, test-reader, and bugs-reader are NOT invoked for that project",
+        "Given multiple registered projects, when the collector cycle runs, then snapshot collection runs in parallel across projects (not sequentially)",
+        "Snapshot collection per project must complete within ≤500ms p95 on a project with ≤10 features and a populated artifacts directory"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-011",
+      "title": "Snapshot-derived projection replaces 5 legacy collectors",
+      "description": "A single new module `lib/collector/snapshot-reader.js` projects the parsed ProjectSnapshot into the field shape the renderer already expects, replacing the five collectors that re-parse `.aitri` and artifact files: aitri-reader, requirements-reader, compliance-reader, test-reader, bugs-reader.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "After this feature ships, lib/collector/aitri-reader.js, requirements-reader.js, compliance-reader.js, test-reader.js, and bugs-reader.js are demoted to fallback-only paths invoked exclusively by the FR-017 degradation branch (NOT deleted — FR-017 requires them as the snapshot-failure fallback)",
+        "Reduction of ≥400 lines is measured in the snapshot-active code path of lib/collector/ (i.e. the call sites and aggregation logic in collector/index.js that previously invoked the 5 demoted readers); the demoted reader files themselves are excluded from the line-count delta because they are retained as fallback. Measured by `git diff --stat` between pre- and post-feature commits, excluding the 5 reader files.",
+        "git-reader, app-version-reader, spec-quality-reader, external-signals-reader, and feature-reader are unchanged in behavior and still invoked by the collector cycle",
+        "Given a project where the snapshot reports phases[3].status === 'approved', when the renderer asks for 'phases approved count', then it returns the same value that the legacy aitri-reader would have returned"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-012",
+      "title": "Render NEXT ACTION section on ProjectCard",
+      "description": "Each ProjectCard renders a new 'NEXT ACTION' section showing `nextActions[0].command` and `nextActions[0].reason` from the snapshot. When `nextActions` is empty (idle project), the section renders 'No action — project idle'.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given a project whose snapshot has `nextActions[0] = { command: 'aitri verify-run', reason: 'Phase 4 approved — run verify next', severity: 'warn' }`, when the card renders, then a row labeled 'NEXT ACTION' shows '⚠ aitri verify-run — Phase 4 approved — run verify next'",
+        "Given a project with empty `nextActions`, when the card renders, then the NEXT ACTION row shows 'No action — project idle' with neutral styling",
+        "Severity 'critical' renders with red prefix/badge, 'warn' with yellow, 'info' with neutral — minimum contrast ratio 4.5:1 on the card background",
+        "The NEXT ACTION row is positioned immediately above the existing PIPELINE section",
+        "If `nextActions[0].command` is longer than the card content width, the command is shown in full on its own line and the reason wraps below it (no truncation)"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-013",
+      "title": "Render DEPLOY HEALTH section from `health.deployableReasons[]`",
+      "description": "When `health.deployable === false`, the ProjectCard renders a 'DEPLOY HEALTH' section listing each entry of `health.deployableReasons[]` as a separate row, showing the reason `type` and `message`. When `health.deployable === true`, the section is hidden.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given `health.deployable === true`, when the card renders, then no DEPLOY HEALTH section appears on the card",
+        "Given `health.deployable === false` and `health.deployableReasons` contains 3 entries, when the card renders, then exactly 3 rows are shown under DEPLOY HEALTH, each labeled with its `type` (e.g. 'verify_not_passed', 'blocking_bugs') and its `message`",
+        "Each reason `type` is rendered with a stable visual icon mapping (no_root, phases_pending, verify_not_passed, drift, normalize_pending, blocking_bugs, version_mismatch) so users can scan by shape",
+        "DEPLOY HEALTH section replaces the legacy generic 'BLOCKERS: N' counter — the previous BLOCKERS section continues to exist but is reserved for non-deploy-gating warnings (e.g. normalize uncountedFiles per FR-015)"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-014",
+      "title": "Surface verify and audit staleness in QUALITY section",
+      "description": "The QUALITY section adds two inline indicators: 'verify stale (Nd)' when the snapshot reports `health.staleVerify[]` containing the root scope, and 'audit stale (Nd)' when `audit.stalenessDays > 60`. When neither condition is met, the indicators are absent (not shown as 'fresh').",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given `health.staleVerify` contains an entry `{ scope: 'root', days: 18 }`, when the card renders, then QUALITY shows the inline text 'verify stale (18d)' with warning styling",
+        "Given `audit.stalenessDays === 73` and `audit.exists === true`, when the card renders, then QUALITY shows 'audit stale (73d)' with warning styling",
+        "Given `audit.exists === false`, when the card renders, then QUALITY shows 'audit missing' (not 'audit stale')",
+        "Given neither verify nor audit is stale, when the card renders, then no staleness indicator appears in QUALITY (clean state, no decoration)",
+        "Indicator text and number must be rendered in a single line per indicator (no wrap) at viewport widths ≥768px"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-015",
+      "title": "Surface off-pipeline source changes in BLOCKERS section",
+      "description": "When the snapshot reports `normalize.uncountedFiles > 0`, the BLOCKERS section renders a row 'N file(s) changed outside pipeline — run: aitri normalize'. When `normalize.uncountedFiles` is `null` or `0`, no row is rendered.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given `normalize.uncountedFiles === 3`, when the card renders, then BLOCKERS shows the row '3 files changed outside pipeline — run: aitri normalize' with warning styling",
+        "Given `normalize.uncountedFiles === 1`, when the card renders, then the row uses singular: '1 file changed outside pipeline — run: aitri normalize'",
+        "Given `normalize.uncountedFiles === 0`, when the card renders, then no normalize row appears (silence on no-change)",
+        "Given `normalize.uncountedFiles === null` (no baseline, mtime mode, or git failure), when the card renders, then no normalize row appears — null is treated identically to 0 for the renderer",
+        "The normalize row coexists with `health.deployableReasons` containing `normalize_pending` — both rows are shown when both conditions are present (snapshot-time detection vs persisted state are independent signals)"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-016",
+      "title": "Display last-session line under PIPELINE section",
+      "description": "When the snapshot exposes `lastSession` (agent + event + timestamp), the PIPELINE section renders one line below its existing content showing 'last: <event> by <agent> · <relative time>'. When `lastSession` is absent, the line is omitted.",
+      "priority": "SHOULD",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given the snapshot exposes `lastSession = { event: 'phase 3 approved', agent: 'claude', at: '2026-04-15T14:00:00Z' }` and the current time is 2026-04-17T14:00:00Z, when the card renders, then PIPELINE shows 'last: phase 3 approved by claude · 2 days ago'",
+        "Given `lastSession` is absent from the snapshot, when the card renders, then no last-session line appears in PIPELINE",
+        "The relative-time label uses calendar-day buckets: 'just now' (<1 min), 'Nm ago' (<1h), 'Nh ago' (<1d), 'Nd ago' (<7d), absolute date (≥7d)",
+        "If the current snapshot field for lastSession is not yet emitted by Aitri Core (snapshotVersion 1 does not include it), the renderer must safely no-op without throwing"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-017",
+      "title": "Graceful degradation when `aitri status --json` is unavailable",
+      "description": "When the snapshot path fails (CLI not installed, project at Aitri version <v0.1.77, spawn timeout, malformed JSON, or non-zero exit), the system falls back to the legacy collector path for that project and surfaces a one-line warning on the card. The dashboard never crashes and other projects continue to render normally.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given the `aitri` binary is not on PATH, when the collector runs for a registered project, then the project's card shows a single warning row 'Aitri CLI not installed — limited report' and uses the legacy reader output",
+        "Given the project's `.aitri` reports `aitriVersion: '0.1.76'`, when the collector runs, then the project's card shows the warning 'Aitri version too old for full report (need ≥0.1.77)' and uses the legacy reader output",
+        "Given `aitri status --json` exits non-zero or emits non-JSON, when the collector runs, then the failure is logged to ~/.aitri-hub/logs/aitri-hub.log with project name and reason, the project falls back to legacy readers, and the card shows 'Snapshot unavailable — using legacy reader'",
+        "Given one project's snapshot collection fails, when the cycle continues, then all other projects still receive snapshot collection and the failed project does not block or delay others by more than 100ms",
+        "Given `aitri status --json` does not return within 3 seconds, when the timeout fires, then the spawn is killed, the failure path triggers, and the card shows 'Snapshot timed out — using legacy reader'"
+      ],
+      "implementation_level": "functional"
+    }
+  ],
+
+  "user_stories": [
+    {
+      "id": "US-009",
+      "requirement_id": "FR-010",
+      "as_a": "Hub user — solo developer",
+      "i_want": "the Hub collector to use `aitri status --json` instead of re-parsing each artifact",
+      "so_that": "my dashboard reports stay aligned with whatever Aitri Core reports without Hub having to chase every Core release",
+      "acceptance_criteria": [
+        {
+          "id": "AC-015",
+          "given": "5 registered local projects all at Aitri v0.1.77+ with populated .aitri and artifact directories",
+          "when": "a collection cycle runs",
+          "then": "the snapshot reader is invoked exactly 5 times (once per project, in parallel) and the per-project snapshot data flows through to the rendered cards within the same cycle"
+        }
+      ]
+    },
+    {
+      "id": "US-010",
+      "requirement_id": "FR-011",
+      "as_a": "Hub maintainer",
+      "i_want": "the 5 redundant collectors removed in favor of one snapshot projection",
+      "so_that": "future Aitri Core schema additions land in Hub automatically and we delete ~600 lines of duplicated parsing logic",
+      "acceptance_criteria": [
+        {
+          "id": "AC-016",
+          "given": "the feature is implemented and merged",
+          "when": "git diff --stat is run between the pre- and post-feature commits on lib/collector/",
+          "then": "the net line count delta is a reduction of ≥400 lines"
+        }
+      ]
+    },
+    {
+      "id": "US-011",
+      "requirement_id": "FR-012",
+      "as_a": "Hub user — solo developer",
+      "i_want": "to see the exact next command and the reason for it on each project card",
+      "so_that": "I do not have to switch into the project folder and run aitri status to know what to do next",
+      "acceptance_criteria": [
+        {
+          "id": "AC-017",
+          "given": "a project where phase 4 is approved but verify has not run",
+          "when": "the dashboard renders",
+          "then": "the card shows a NEXT ACTION row with command 'aitri verify-run' and reason 'Phase 4 approved — run verify next'"
+        }
+      ]
+    },
+    {
+      "id": "US-012",
+      "requirement_id": "FR-013",
+      "as_a": "Hub user — team lead",
+      "i_want": "to see the specific reasons a project is not deployable, not just a count",
+      "so_that": "I can route the right project to the right person in standup without having to open each project locally",
+      "acceptance_criteria": [
+        {
+          "id": "AC-018",
+          "given": "a project where verify has not passed AND there are 2 critical bugs open",
+          "when": "the dashboard renders",
+          "then": "DEPLOY HEALTH shows two rows: one for verify_not_passed and one for blocking_bugs, each with its message text"
+        }
+      ]
+    },
+    {
+      "id": "US-013",
+      "requirement_id": "FR-014",
+      "as_a": "Hub user — solo developer",
+      "i_want": "to see at a glance whether a project's verify or audit has gone stale",
+      "so_that": "I notice rot before it becomes a deploy blocker",
+      "acceptance_criteria": [
+        {
+          "id": "AC-019",
+          "given": "a project where verify last ran 18 days ago",
+          "when": "the dashboard renders",
+          "then": "QUALITY shows the inline indicator 'verify stale (18d)'"
+        }
+      ]
+    },
+    {
+      "id": "US-014",
+      "requirement_id": "FR-015",
+      "as_a": "Hub user — team lead",
+      "i_want": "to see when a teammate has changed source files outside the Aitri pipeline",
+      "so_that": "I can prompt them to run aitri normalize before the drift compounds",
+      "acceptance_criteria": [
+        {
+          "id": "AC-020",
+          "given": "a project where 3 source files have changed off-pipeline since the last build approval",
+          "when": "the dashboard renders",
+          "then": "BLOCKERS shows the row '3 files changed outside pipeline — run: aitri normalize'"
+        }
+      ]
+    },
+    {
+      "id": "US-016",
+      "requirement_id": "FR-016",
+      "as_a": "Hub user — team lead",
+      "i_want": "to see when a project last had a pipeline event and which agent did it",
+      "so_that": "I have recency context at a glance during standup without asking who touched what",
+      "acceptance_criteria": [
+        {
+          "id": "AC-023",
+          "given": "a project whose snapshot exposes lastSession = { event: 'phase 3 approved', agent: 'claude', at: '2026-04-15T14:00:00Z' } and the current time is 2026-04-17T14:00:00Z",
+          "when": "the dashboard renders",
+          "then": "the PIPELINE section shows the line 'last: phase 3 approved by claude · 2 days ago'"
+        }
+      ]
+    },
+    {
+      "id": "US-015",
+      "requirement_id": "FR-017",
+      "as_a": "Hub user — solo developer",
+      "i_want": "the dashboard to keep working even when one project is on an old Aitri version or the CLI is missing",
+      "so_that": "a single misconfigured project does not blank out my whole dashboard",
+      "acceptance_criteria": [
+        {
+          "id": "AC-021",
+          "given": "5 registered projects where one is at Aitri v0.1.74",
+          "when": "the dashboard renders",
+          "then": "the v0.1.74 project shows a warning row 'Aitri version too old for full report (need ≥0.1.77)' and the other 4 projects render with full snapshot data"
+        },
+        {
+          "id": "AC-022",
+          "given": "the `aitri` binary is not on PATH on the host running Hub",
+          "when": "the dashboard renders",
+          "then": "every project card shows 'Aitri CLI not installed — limited report' and the legacy reader path is used; no project is blank and no crash occurs"
+        }
+      ]
+    }
+  ],
+
+  "non_functional_requirements": [
+    {
+      "id": "NFR-006",
+      "category": "Performance",
+      "requirement": "Snapshot collection per project completes within ≤500ms p95 on a project at v0.1.79+ with ≤10 features",
+      "acceptance_criteria": "Measured against a fixture project with 10 features and full artifact set, the wall time of `aitri status --json` invocation + JSON parse + projection completes in ≤500ms at the 95th percentile across 100 runs"
+    },
+    {
+      "id": "NFR-007",
+      "category": "Maintainability",
+      "requirement": "Net code reduction of ≥400 lines in the snapshot-active code path of lib/collector/ after migration. The 5 demoted reader files (aitri-reader, requirements-reader, compliance-reader, test-reader, bugs-reader) are EXCLUDED from this measurement because FR-017 requires them as the snapshot-failure fallback path. Deleting them is out of scope for this feature; a follow-up feature may delete them once telemetry confirms snapshot success rate ≥99% over a sustained window.",
+      "acceptance_criteria": "git diff --stat lib/collector/ between the pre-feature and post-feature commit, EXCLUDING the 5 demoted reader files (aitri-reader.js, requirements-reader.js, compliance-reader.js, test-reader.js, bugs-reader.js), reports a net reduction of at least 400 lines (additions minus deletions). Measurement command: git diff --stat <pre>..<post> -- 'lib/collector/*' ':(exclude)lib/collector/aitri-reader.js' ':(exclude)lib/collector/requirements-reader.js' ':(exclude)lib/collector/compliance-reader.js' ':(exclude)lib/collector/test-reader.js' ':(exclude)lib/collector/bugs-reader.js'"
+    },
+    {
+      "id": "NFR-008",
+      "category": "Reliability",
+      "requirement": "Hub must remain functional across additive Aitri Core releases without code changes for any new snapshot field",
+      "acceptance_criteria": "Given Aitri Core ships a new additive field on the snapshot (no snapshotVersion bump), the Hub renderer continues to render previously-known fields without throwing, and silently ignores the new field until explicitly handled"
+    },
+    {
+      "id": "NFR-009",
+      "category": "Reliability",
+      "requirement": "Spawn timeout protects the collector cycle from a hung CLI",
+      "acceptance_criteria": "Any `aitri status --json` invocation that exceeds 3000ms is killed and treated as a snapshot failure (FR-017 degradation branch); the collector cycle continues with no project hanging beyond the timeout"
+    },
+    {
+      "id": "NFR-010",
+      "category": "Observability",
+      "requirement": "Every snapshot failure is logged with project, reason, and timestamp",
+      "acceptance_criteria": "Each failure path in FR-017 writes a structured log line to ~/.aitri-hub/logs/aitri-hub.log containing fields: ts (ISO), project (name), reason (one of: not_installed, version_too_old, spawn_failed, parse_failed, timeout), durationMs"
+    }
+  ],
+
+  "constraints": [
+    "Aitri Core ≥v0.1.77 is required for the snapshot path; older projects degrade gracefully (FR-017).",
+    "`aitri status --json` requires the `aitri` binary on PATH on the host running Hub — remote (GitHub-URL) projects are out of scope for this feature.",
+    "snapshotVersion is read but not enforced beyond `>= 1` in this feature; future breaking bumps will be handled in a follow-up feature."
+  ],
+
+  "technology_preferences": [
+    "Spawn `aitri status --json` via Node.js child_process (consistent with Hub's existing collector pattern).",
+    "Single new module: lib/collector/snapshot-reader.js — pure projection, no I/O beyond the spawn.",
+    "Renderer changes confined to ProjectCard component (existing 5-section layout retained, 2 new sections added inline)."
+  ]
+}

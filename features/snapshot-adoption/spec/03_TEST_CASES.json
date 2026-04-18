@@ -1,0 +1,800 @@
+{
+  "test_plan": {
+    "strategy": "Unit tests cover snapshot-reader projection logic and degradation branching. Integration tests cover the collector cycle end-to-end with a real spawned `aitri status --json` against a fixture project. E2E tests (Playwright) cover the rendered ProjectCard at 375px and 1440px and the FR-017 degradation warning row. Test fixtures construct projects under os.tmpdir() — no machine-absolute paths, no shared state.",
+    "coverage_goal": "80%",
+    "test_types": ["unit", "integration", "e2e"]
+  },
+
+  "type_coverage_matrix": [
+    { "fr": "FR-010", "unit": "MUST", "integration": "MUST", "e2e": "-",    "rationale": "logic — spawn + parse is integration-critical; unit covers projection edge cases" },
+    { "fr": "FR-011", "unit": "MUST", "integration": "SHOULD", "e2e": "-",  "rationale": "logic — projection equivalence with legacy is unit-testable; integration validates real cycle" },
+    { "fr": "FR-012", "unit": "SHOULD", "integration": "-", "e2e": "MUST",  "rationale": "UX — render contract for NEXT ACTION row at multiple severities and viewports" },
+    { "fr": "FR-013", "unit": "SHOULD", "integration": "-", "e2e": "MUST",  "rationale": "UX — visibility rule + per-reason rendering must be observed in real DOM" },
+    { "fr": "FR-014", "unit": "SHOULD", "integration": "-", "e2e": "MUST",  "rationale": "UX — staleness indicators, single-line behavior at ≥768px, mobile wrap at 375px" },
+    { "fr": "FR-015", "unit": "SHOULD", "integration": "-", "e2e": "MUST",  "rationale": "UX — singular/plural and silence-on-zero behaviors must render correctly" },
+    { "fr": "FR-016", "unit": "MUST",   "integration": "-", "e2e": "MUST",  "rationale": "UX — relative-time bucket logic is unit-testable; render is e2e" },
+    { "fr": "FR-017", "unit": "MUST",   "integration": "MUST", "e2e": "MUST", "rationale": "logic — degradation branching covered by unit; integration for real failure modes; e2e for warning row" }
+  ],
+
+  "test_cases": [
+    {
+      "id": "TC-010h",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-009",
+      "ac_id": "AC-015",
+      "title": "Snapshot reader spawns aitri status --json with cwd set to projectDir and parses successful output",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "Mock child_process.spawn to return exit code 0 and stdout containing valid ProjectSnapshot JSON with snapshotVersion=1, project='demo', and a non-empty nextActions array"
+      ],
+      "given": "projectDir = os.tmpdir() + '/aitri-fixture-001' (created by setup), spawn mock returns { code: 0, stdout: JSON.stringify({ snapshotVersion: 1, project: 'demo', nextActions: [{ priority: 1, command: 'aitri verify-run', reason: 'Phase 4 approved', severity: 'warn' }], health: { deployable: false, deployableReasons: [{ type: 'verify_not_passed', message: 'verify has not run' }] }, normalize: { state: null, method: null, baseRef: null, uncountedFiles: null }, audit: { exists: true, stalenessDays: 5 }, bugs: { total: 0, open: 0, blocking: 0 } }) }",
+      "when": "await readSnapshot(projectDir) is called",
+      "then": "spawn was called once with args ['aitri', ['status', '--json'], { cwd: projectDir, shell: false, signal: AbortSignal.* }]; result === { ok: true, snapshot: { snapshotVersion: 1, project: 'demo', ...as injected }, durationMs: <number>≥0 }",
+      "steps": [
+        "import { readSnapshot } from 'lib/collector/snapshot-reader.js'",
+        "stub child_process.spawn to emit the prepared stdout and close with code 0",
+        "call await readSnapshot(projectDir)",
+        "assert spawn arguments and returned object shape"
+      ],
+      "expected_result": "result.ok === true; result.snapshot.snapshotVersion === 1; result.snapshot.project === 'demo'; spawn was called with cwd=projectDir, shell=false, command='aitri', args=['status','--json']",
+      "test_data": { "fixtureDir": "<os.tmpdir()>/aitri-fixture-001" }
+    },
+    {
+      "id": "TC-010f",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-009",
+      "ac_id": "AC-015",
+      "title": "Snapshot reader returns ok:false with reason='spawn_failed' when aitri exits non-zero",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "Mock child_process.spawn to return exit code 1 and stderr 'not an aitri project'"
+      ],
+      "given": "projectDir = os.tmpdir() + '/aitri-fixture-002' (an empty dir without .aitri), spawn mock returns { code: 1, stdout: '', stderr: 'not an aitri project' }",
+      "when": "await readSnapshot(projectDir) is called",
+      "then": "result === { ok: false, reason: 'spawn_failed', detail: 'not an aitri project', durationMs: <number>≥0 }",
+      "steps": [
+        "stub spawn to exit with code 1",
+        "call await readSnapshot(projectDir)",
+        "assert result.ok === false and result.reason === 'spawn_failed'"
+      ],
+      "expected_result": "result.ok === false; result.reason === 'spawn_failed'; result.detail contains 'not an aitri project'; no exception thrown",
+      "test_data": { "fixtureDir": "<os.tmpdir()>/aitri-fixture-002" }
+    },
+    {
+      "id": "TC-010e1",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-009",
+      "ac_id": "AC-015",
+      "title": "Snapshot reader kills spawn after 3000ms and returns reason='timeout'",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "Mock child_process.spawn to never emit close — simulating a hung CLI"
+      ],
+      "given": "projectDir = os.tmpdir() + '/aitri-fixture-003', spawn mock that never closes; opts.timeoutMs = 3000",
+      "when": "await readSnapshot(projectDir, { timeoutMs: 3000 }) is called",
+      "then": "after ~3000ms, child.kill('SIGKILL') was called exactly once; result === { ok: false, reason: 'timeout', durationMs: ≥3000 && <4000 }",
+      "steps": [
+        "use vi.useFakeTimers() (or sinon equivalent)",
+        "stub spawn to return a child whose close event never fires",
+        "advance timers by 3000ms",
+        "assert child.kill was called and result.reason === 'timeout'"
+      ],
+      "expected_result": "result.ok === false; result.reason === 'timeout'; child.kill('SIGKILL') was called exactly once; durationMs in [3000, 4000)",
+      "test_data": { "fixtureDir": "<os.tmpdir()>/aitri-fixture-003", "timeoutMs": 3000 }
+    },
+    {
+      "id": "TC-010e2",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-009",
+      "ac_id": "AC-015",
+      "title": "Snapshot collection per project completes within 500ms p95 across 100 runs on a fixture with 10 features",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "Aitri Core CLI is installed on PATH (skip with notice if not)",
+        "Build a fixture project under os.tmpdir() with .aitri at v0.1.79+, 10 features under features/, populated 01_REQUIREMENTS.json + 03_TEST_CASES.json + 04_TEST_RESULTS.json + BUGS.json"
+      ],
+      "given": "fixtureDir = await buildFixtureProject({ features: 10, populated: true })",
+      "when": "for i in 0..99: durations[i] = (await readSnapshot(fixtureDir)).durationMs",
+      "then": "p95(durations) <= 500 (durations sorted ascending; index = floor(0.95 * 100) === 95)",
+      "steps": [
+        "build fixture",
+        "warm one invocation (discard)",
+        "loop 100 invocations, capture durationMs",
+        "sort and assert durations[95] <= 500"
+      ],
+      "expected_result": "durations[95] <= 500; if Aitri CLI not installed, test is SKIPPED (manual verification required: install aitri ≥0.1.77 and re-run)",
+      "test_data": { "iterations": 100, "p95Index": 95, "thresholdMs": 500 }
+    },
+    {
+      "id": "TC-010i",
+      "requirement_id": "FR-010",
+      "user_story_id": "US-009",
+      "ac_id": "AC-015",
+      "title": "Collector cycle invokes snapshot-reader in parallel for all local projects",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "5 fixture projects under os.tmpdir(), each registered in a temp ~/.aitri-hub/projects.json",
+        "Spy on readSnapshot to record start/end timestamps"
+      ],
+      "given": "5 registered local projects, each fixture with .aitri at v0.1.79+",
+      "when": "await collectAll(registeredProjects) is called once",
+      "then": "readSnapshot was called exactly 5 times; the timestamp ranges overlap (max(start_i) < min(end_i) + 50ms — proves parallel, not serial); each call's cwd matches its project location",
+      "steps": [
+        "build 5 fixtures",
+        "register all 5",
+        "instrument readSnapshot",
+        "call collectAll",
+        "assert call count and overlap"
+      ],
+      "expected_result": "readSnapshot called exactly 5 times; max(startTimes) < min(endTimes) + 50ms (overlap proves parallelism); each invocation's cwd argument matches its registered project location exactly",
+      "test_data": { "projectCount": 5 }
+    },
+
+    {
+      "id": "TC-011h",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-010",
+      "ac_id": "AC-016",
+      "title": "projectFromSnapshot returns aitriState shape equivalent to legacy aitri-reader output for the same .aitri",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "Build a fixture .aitri with: approvedPhases=[1,2,3], currentPhase=4, verifyPassed=false, verifySummary={ passed:0, failed:0, total:0 }"
+      ],
+      "given": "fixtureDir with the .aitri described; legacyState = readAitriState(fixtureDir); snapshot = await readSnapshot(fixtureDir).snapshot",
+      "when": "projected = projectFromSnapshot(snapshot)",
+      "then": "projected.aitriState.approvedPhases deep-equals legacyState.approvedPhases (both are [1,2,3] in some order); projected.aitriState.currentPhase === legacyState.currentPhase === 4; projected.aitriState.verifyPassed === legacyState.verifyPassed === false",
+      "steps": [
+        "build fixture",
+        "read with both paths",
+        "deep-equal compare on the shared subset of fields"
+      ],
+      "expected_result": "Deep-equal on { approvedPhases, currentPhase, verifyPassed, verifySummary } between projected.aitriState and legacy aitriState",
+      "test_data": { "fixturePhases": [1,2,3], "fixtureCurrentPhase": 4 }
+    },
+    {
+      "id": "TC-011f",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-010",
+      "ac_id": "AC-016",
+      "title": "Legacy 5 readers are NOT invoked on snapshot success path",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "Spy on readAitriState, readRequirementsSummary, readComplianceSummary, readTestSummary, readBugsSummary",
+        "1 fixture project at v0.1.79+ that produces a successful snapshot"
+      ],
+      "given": "fixtureDir produces ok snapshot; all 5 spies installed",
+      "when": "await collectOne(project) is called once",
+      "then": "Each of the 5 spies was called exactly 0 times; readGitMeta, readAppVersion, readSpecQuality, readExternalSignals, readFeaturePipelines were each called exactly 1 time (unchanged readers)",
+      "steps": [
+        "install 5 spies on demoted readers",
+        "install 5 spies on unchanged readers",
+        "call collectOne(project)",
+        "assert call counts"
+      ],
+      "expected_result": "demoted readers: callCount === 0 each; unchanged readers: callCount === 1 each",
+      "test_data": { "demoted": 5, "unchanged": 5 }
+    },
+    {
+      "id": "TC-011e",
+      "requirement_id": "FR-011",
+      "user_story_id": "US-010",
+      "ac_id": "AC-016",
+      "title": "Net line reduction in snapshot-active code path of lib/collector/ is ≥400 lines (excludes 5 demoted reader files)",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "Pre-feature commit SHA stored as PRE_SHA in fixture",
+        "Post-feature commit is HEAD"
+      ],
+      "given": "PRE_SHA = the parent of the first commit on this feature branch",
+      "when": "diff = git diff --stat ${PRE_SHA}..HEAD -- 'lib/collector/*' ':(exclude)lib/collector/aitri-reader.js' ':(exclude)lib/collector/requirements-reader.js' ':(exclude)lib/collector/compliance-reader.js' ':(exclude)lib/collector/test-reader.js' ':(exclude)lib/collector/bugs-reader.js'",
+      "then": "(deletions - insertions) parsed from the final summary line of `diff` is ≥ 400",
+      "steps": [
+        "execSync the git diff command above",
+        "parse the summary line for insertions and deletions",
+        "assert deletions - insertions >= 400"
+      ],
+      "expected_result": "Parsed (deletions - insertions) >= 400 from git diff --stat output; if not met, the test fails with the exact delta and the diff output is logged for review",
+      "test_data": { "minimumReduction": 400 }
+    },
+
+    {
+      "id": "TC-012h",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-011",
+      "ac_id": "AC-017",
+      "title": "TC-012h: NEXT ACTION row renders command and reason for warn-severity action at 1440px",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "Hub web running at http://localhost:3000",
+        "Stub dashboard.json with one project whose nextActions[0] = { command: 'aitri verify-run', reason: 'Phase 4 approved — run verify next', severity: 'warn' }"
+      ],
+      "given": "viewport set to 1440x900; dashboard.json contains one project as described",
+      "when": "page.goto('http://localhost:3000') and page.waitForSelector('[data-testid=\"project-card\"]')",
+      "then": "page.locator('[data-testid=\"next-action-command\"]').textContent() === 'aitri verify-run'; page.locator('[data-testid=\"next-action-reason\"]').textContent() === 'Phase 4 approved — run verify next'; the row has class containing 'severity-warn' OR computed background-color matches token #FDB022 (dark) / #B54708 (light)",
+      "steps": [
+        "Playwright: setViewportSize 1440x900",
+        "load page",
+        "assert text content of next-action-command and next-action-reason locators",
+        "assert severity class or computed style"
+      ],
+      "expected_result": "command text exactly 'aitri verify-run'; reason text exactly 'Phase 4 approved — run verify next'; severity-warn styling applied (class match or computed token match)",
+      "test_data": { "viewport": "1440x900", "severity": "warn" }
+    },
+    {
+      "id": "TC-012f",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-011",
+      "ac_id": "AC-017",
+      "title": "TC-012f: NEXT ACTION row shows 'No action — project idle' with neutral styling when nextActions is empty",
+      "type": "e2e",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "Stub dashboard.json with one project whose nextActions = []"
+      ],
+      "given": "dashboard.json contains one project with nextActions: []",
+      "when": "page.goto and wait for project-card",
+      "then": "page.locator('[data-testid=\"next-action-row\"]').textContent() === 'No action — project idle'; the row does NOT have class 'severity-warn' or 'severity-critical'; no badge element present (locator('[data-testid=\"next-action-badge\"]').count() === 0)",
+      "steps": [
+        "load with idle stub",
+        "assert exact text and absence of severity classes/badge"
+      ],
+      "expected_result": "text === 'No action — project idle'; no severity-warn/critical class; badge element count === 0",
+      "test_data": { "nextActions": [] }
+    },
+    {
+      "id": "TC-012e1",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-011",
+      "ac_id": "AC-017",
+      "title": "TC-012e1: Long command renders on its own line with no horizontal scroll at 375px",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "Stub dashboard.json with one project whose nextActions[0].command = 'aitri feature run-phase a-very-long-feature-name-that-exceeds-card-width 4'"
+      ],
+      "given": "viewport 375x812; dashboard.json with the long command above",
+      "when": "page.goto and wait for project-card",
+      "then": "page.evaluate(() => document.documentElement.scrollWidth <= 375) === true (no horizontal page scroll); the command element wraps to its own line — its computed width <= card content width; reason text is on a separate line below the command",
+      "steps": [
+        "set viewport 375x812",
+        "load page",
+        "evaluate scrollWidth",
+        "measure computed widths of command and reason elements"
+      ],
+      "expected_result": "documentElement.scrollWidth <= 375; command element occupies its own line (its parent's flex-direction is column or it has display:block); reason element bottom > command element top + command element height",
+      "test_data": { "viewport": "375x812" }
+    },
+    {
+      "id": "TC-012e2",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-011",
+      "ac_id": "AC-017",
+      "title": "TC-012e2: NEXT ACTION row is positioned immediately above PIPELINE section in the DOM",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "Stub dashboard.json with one project with valid nextActions"
+      ],
+      "given": "rendered card with NEXT ACTION row and PIPELINE section both present",
+      "when": "page.evaluate to read getBoundingClientRect of both",
+      "then": "nextActionRow.bottom <= pipelineSection.top + 24px (allowing for one section-gap of 16px); no other section's top is between nextActionRow.bottom and pipelineSection.top",
+      "steps": [
+        "load page",
+        "page.evaluate to get rects of [data-testid='next-action-row'] and [data-testid='pipeline-section'] and all sibling sections",
+        "assert ordering"
+      ],
+      "expected_result": "next-action-row.bottom + 16px section gap === pipeline-section.top (within ±8px); no intervening section",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-013h",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-012",
+      "ac_id": "AC-018",
+      "title": "TC-013h: DEPLOY HEALTH section renders one row per deployableReason when not deployable",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "Stub dashboard.json with one project whose health = { deployable: false, deployableReasons: [{ type: 'verify_not_passed', message: 'verify has not run' }, { type: 'blocking_bugs', message: '2 critical bugs open' }, { type: 'drift', message: 'phase 3 drifted' }] }"
+      ],
+      "given": "dashboard.json with 3 deployableReasons as above",
+      "when": "page.goto and wait for project-card",
+      "then": "page.locator('[data-testid=\"deploy-health-row\"]').count() === 3; the 3 rows contain texts 'verify has not run', '2 critical bugs open', 'phase 3 drifted' in that order; each row has a data-reason-type attribute matching one of the input type values",
+      "steps": [
+        "load page",
+        "count deploy-health-row elements",
+        "assert text content of each in order"
+      ],
+      "expected_result": "exactly 3 deploy-health-row elements; texts in order; data-reason-type attributes are 'verify_not_passed', 'blocking_bugs', 'drift'",
+      "test_data": { "reasonCount": 3 }
+    },
+    {
+      "id": "TC-013f",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-012",
+      "ac_id": "AC-018",
+      "title": "TC-013f: DEPLOY HEALTH section is hidden when deployable is true",
+      "type": "e2e",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "Stub dashboard.json with one project whose health = { deployable: true, deployableReasons: [] }"
+      ],
+      "given": "dashboard.json with deployable=true",
+      "when": "page.goto and wait for project-card",
+      "then": "page.locator('[data-testid=\"deploy-health-section\"]').count() === 0",
+      "steps": [
+        "load page with deployable stub",
+        "assert deploy-health-section element does not exist"
+      ],
+      "expected_result": "deploy-health-section element count === 0; no DEPLOY HEALTH header text visible on the page",
+      "test_data": { "deployable": true }
+    },
+    {
+      "id": "TC-013e",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-012",
+      "ac_id": "AC-018",
+      "title": "TC-013e: Fallback row renders 'Project not deployable — reason unavailable' when deployable=false but reasons array is empty",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "Stub dashboard.json with one project whose health = { deployable: false, deployableReasons: [] }"
+      ],
+      "given": "dashboard.json with deployable=false and empty reasons (CLI contract violation simulation)",
+      "when": "page.goto and wait for project-card",
+      "then": "page.locator('[data-testid=\"deploy-health-row\"]').count() === 1; the row's textContent === 'Project not deployable — reason unavailable'; the row has class 'severity-warn'",
+      "steps": [
+        "load page",
+        "assert single fallback row with exact text"
+      ],
+      "expected_result": "exactly one deploy-health-row with text 'Project not deployable — reason unavailable' and severity-warn class",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-014h",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-013",
+      "ac_id": "AC-019",
+      "title": "TC-014h: QUALITY shows 'verify stale (18d)' when health.staleVerify contains root with days=18",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "Stub dashboard.json with one project whose health.staleVerify = [{ scope: 'root', days: 18 }]"
+      ],
+      "given": "viewport 1440x900; dashboard.json as described",
+      "when": "page.goto and wait for project-card",
+      "then": "page.locator('[data-testid=\"verify-stale-indicator\"]').textContent() === 'verify stale (18d)'; the element has class 'severity-warn'",
+      "steps": [
+        "load page",
+        "assert text and class"
+      ],
+      "expected_result": "text === 'verify stale (18d)'; class contains 'severity-warn'",
+      "test_data": { "days": 18 }
+    },
+    {
+      "id": "TC-014f",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-013",
+      "ac_id": "AC-019",
+      "title": "TC-014f: No staleness indicator renders when neither verify nor audit is stale",
+      "type": "e2e",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "Stub dashboard.json with one project whose health.staleVerify = [] and audit = { exists: true, stalenessDays: 5 }"
+      ],
+      "given": "dashboard.json with both clean (verify recent, audit recent)",
+      "when": "page.goto and wait for project-card",
+      "then": "page.locator('[data-testid=\"verify-stale-indicator\"]').count() === 0 AND page.locator('[data-testid=\"audit-stale-indicator\"]').count() === 0 AND page.locator('[data-testid=\"audit-missing-indicator\"]').count() === 0",
+      "steps": [
+        "load page with clean stub",
+        "assert all three indicator elements absent"
+      ],
+      "expected_result": "all three indicator element counts === 0; no text containing 'stale' appears in the QUALITY section",
+      "test_data": {}
+    },
+    {
+      "id": "TC-014e1",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-013",
+      "ac_id": "AC-019",
+      "title": "TC-014e1: 'audit missing' renders when audit.exists=false (NOT 'audit stale')",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "Stub dashboard.json with one project whose audit = { exists: false, stalenessDays: null }"
+      ],
+      "given": "dashboard.json with audit.exists=false",
+      "when": "page.goto and wait for project-card",
+      "then": "page.locator('[data-testid=\"audit-missing-indicator\"]').textContent() === 'audit missing' AND page.locator('[data-testid=\"audit-stale-indicator\"]').count() === 0",
+      "steps": [
+        "load page with audit-missing stub",
+        "assert audit-missing element present and audit-stale element absent"
+      ],
+      "expected_result": "audit-missing-indicator text === 'audit missing'; audit-stale-indicator count === 0",
+      "test_data": { "exists": false }
+    },
+    {
+      "id": "TC-014e2",
+      "requirement_id": "FR-014",
+      "user_story_id": "US-013",
+      "ac_id": "AC-019",
+      "title": "TC-014e2: At 768px viewport, indicator stays on a single line; at 375px it wraps below test-count",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "Stub dashboard.json with one project whose audit.stalenessDays = 73 and health.staleVerify = [{ scope: 'root', days: 18 }]"
+      ],
+      "given": "stub as above; the test runs the same render at two viewports",
+      "when": "(1) setViewportSize(768,1024) → page.goto → measure y-coord of [data-testid='verify-stale-indicator']; (2) setViewportSize(375,812) → page.reload → re-measure",
+      "then": "At 768px: y-coord of verify-stale-indicator equals y-coord of test-count line (±2px) — same line; At 375px: y-coord of verify-stale-indicator > y-coord of test-count line by ≥16px — wrapped",
+      "steps": [
+        "viewport 768x1024, load, measure",
+        "viewport 375x812, reload, measure",
+        "assert y-coordinate relationship"
+      ],
+      "expected_result": "At 768px: |verifyStale.y - testCount.y| <= 2; At 375px: verifyStale.y - testCount.y >= 16",
+      "test_data": { "viewports": ["768x1024", "375x812"] }
+    },
+
+    {
+      "id": "TC-015h",
+      "requirement_id": "FR-015",
+      "user_story_id": "US-014",
+      "ac_id": "AC-020",
+      "title": "TC-015h: Plural row renders when normalize.uncountedFiles=3",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "Stub dashboard.json with one project whose normalize = { state: 'resolved', method: 'git', baseRef: 'abc123', uncountedFiles: 3 }"
+      ],
+      "given": "dashboard.json with uncountedFiles=3",
+      "when": "page.goto and wait for project-card",
+      "then": "page.locator('[data-testid=\"normalize-warning-row\"]').textContent() === '3 files changed outside pipeline — run: aitri normalize'; the row has class 'severity-warn'",
+      "steps": [
+        "load page",
+        "assert exact text and class"
+      ],
+      "expected_result": "text === '3 files changed outside pipeline — run: aitri normalize'; class contains 'severity-warn'",
+      "test_data": { "uncountedFiles": 3 }
+    },
+    {
+      "id": "TC-015f",
+      "requirement_id": "FR-015",
+      "user_story_id": "US-014",
+      "ac_id": "AC-020",
+      "title": "TC-015f: Row absent when normalize.uncountedFiles=0",
+      "type": "e2e",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "Stub dashboard.json with one project whose normalize.uncountedFiles=0"
+      ],
+      "given": "dashboard.json with uncountedFiles=0",
+      "when": "page.goto and wait for project-card",
+      "then": "page.locator('[data-testid=\"normalize-warning-row\"]').count() === 0",
+      "steps": [
+        "load page",
+        "assert normalize-warning-row count === 0"
+      ],
+      "expected_result": "normalize-warning-row count === 0; no text containing 'files changed outside pipeline' anywhere on the page",
+      "test_data": { "uncountedFiles": 0 }
+    },
+    {
+      "id": "TC-015e1",
+      "requirement_id": "FR-015",
+      "user_story_id": "US-014",
+      "ac_id": "AC-020",
+      "title": "TC-015e1: Singular row renders when normalize.uncountedFiles=1",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "Stub dashboard.json with normalize.uncountedFiles=1"
+      ],
+      "given": "dashboard.json with uncountedFiles=1",
+      "when": "page.goto and wait for project-card",
+      "then": "page.locator('[data-testid=\"normalize-warning-row\"]').textContent() === '1 file changed outside pipeline — run: aitri normalize' (singular 'file', no trailing 's')",
+      "steps": [
+        "load page",
+        "assert exact singular text"
+      ],
+      "expected_result": "text === '1 file changed outside pipeline — run: aitri normalize'",
+      "test_data": { "uncountedFiles": 1 }
+    },
+    {
+      "id": "TC-015e2",
+      "requirement_id": "FR-015",
+      "user_story_id": "US-014",
+      "ac_id": "AC-020",
+      "title": "TC-015e2: Row absent when normalize.uncountedFiles=null (no baseline / mtime / git failure)",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "Stub dashboard.json with normalize = { state: null, method: null, baseRef: null, uncountedFiles: null }"
+      ],
+      "given": "dashboard.json with uncountedFiles=null",
+      "when": "page.goto and wait for project-card",
+      "then": "page.locator('[data-testid=\"normalize-warning-row\"]').count() === 0",
+      "steps": [
+        "load page with null stub",
+        "assert row absent"
+      ],
+      "expected_result": "normalize-warning-row count === 0",
+      "test_data": { "uncountedFiles": null }
+    },
+
+    {
+      "id": "TC-016h",
+      "requirement_id": "FR-016",
+      "user_story_id": "US-016",
+      "ac_id": "AC-023",
+      "title": "TC-016h: lastSession line renders 'last: phase 3 approved by claude · 2 days ago' when at is 2 days before now",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "Mock current time via the formatter's clock parameter"
+      ],
+      "given": "lastSession = { event: 'phase 3 approved', agent: 'claude', at: '2026-04-15T14:00:00Z' }; now = '2026-04-17T14:00:00Z'",
+      "when": "formatLastSessionLine(lastSession, now) is called",
+      "then": "returns the exact string 'last: phase 3 approved by claude · 2 days ago'",
+      "steps": [
+        "import { formatLastSessionLine }",
+        "call with given params",
+        "assert string equality"
+      ],
+      "expected_result": "returned string === 'last: phase 3 approved by claude · 2 days ago' (exact)",
+      "test_data": { "delta_days": 2 }
+    },
+    {
+      "id": "TC-016f",
+      "requirement_id": "FR-016",
+      "user_story_id": "US-016",
+      "ac_id": "AC-023",
+      "title": "TC-016f: No last-session line renders when lastSession is undefined",
+      "type": "e2e",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "Stub dashboard.json with one project whose lastSession field is undefined (omitted from the JSON)"
+      ],
+      "given": "dashboard.json without lastSession field",
+      "when": "page.goto and wait for project-card",
+      "then": "page.locator('[data-testid=\"last-session-line\"]').count() === 0",
+      "steps": [
+        "load page",
+        "assert last-session-line count === 0"
+      ],
+      "expected_result": "last-session-line count === 0",
+      "test_data": {}
+    },
+    {
+      "id": "TC-016e1",
+      "requirement_id": "FR-016",
+      "user_story_id": "US-016",
+      "ac_id": "AC-023",
+      "title": "TC-016e1: Relative time bucket boundaries — 59s→'just now', 60s→'1m ago', 59m→'59m ago', 60m→'1h ago', 23h→'23h ago', 24h→'1d ago', 6d→'6d ago', 7d→absolute date",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "now = '2026-04-17T14:00:00Z'; cases = [ { delta:59_000, expect:'just now' }, { delta:60_000, expect:'1m ago' }, { delta:59*60_000, expect:'59m ago' }, { delta:60*60_000, expect:'1h ago' }, { delta:23*3600_000, expect:'23h ago' }, { delta:24*3600_000, expect:'1d ago' }, { delta:6*86400_000, expect:'6d ago' }, { delta:7*86400_000, expect:'Apr 10, 2026' } ]",
+      "when": "for each case: result = formatRelativeTime(new Date(now.getTime() - delta).toISOString(), now)",
+      "then": "each result === expect",
+      "steps": [
+        "loop cases",
+        "assert exact equality per case"
+      ],
+      "expected_result": "all 8 cases pass; result strings match expected verbatim",
+      "test_data": { "caseCount": 8 }
+    },
+
+    {
+      "id": "TC-017h",
+      "requirement_id": "FR-017",
+      "user_story_id": "US-015",
+      "ac_id": "AC-022",
+      "title": "TC-017h: Card-level warning row 'Aitri CLI not installed — limited report' renders when spawn ENOENT and legacy data renders below",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "Force degradationReason='not_installed' in dashboard.json stub for one project; ensure legacy fields (aitriState, testSummary) are populated as if collected via legacy path"
+      ],
+      "given": "dashboard.json with project.degradationReason='not_installed' and populated legacy fields (aitriState.approvedPhases=[1,2], testSummary={ passed:5, failed:0, total:5 })",
+      "when": "page.goto and wait for project-card",
+      "then": "page.locator('[data-testid=\"degradation-warning-row\"]').textContent() === 'Aitri CLI not installed — limited report'; the warning row's bounding rect top is less than the next-action-row top OR less than the pipeline-section top (positioned at the very top of card body); the test-count line still renders 'Tests: 5/5'",
+      "steps": [
+        "load page",
+        "assert warning row text and position",
+        "assert legacy test-count still visible"
+      ],
+      "expected_result": "warning row text === 'Aitri CLI not installed — limited report'; warning row is the first child of card-body; test-count text contains 'Tests: 5/5'",
+      "test_data": { "degradationReason": "not_installed" }
+    },
+    {
+      "id": "TC-017f",
+      "requirement_id": "FR-017",
+      "user_story_id": "US-015",
+      "ac_id": "AC-021",
+      "title": "TC-017f: One project's snapshot failure does not block or delay other projects by more than 100ms",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "5 fixture projects: 4 succeed, 1 has spawn that returns code=1 immediately (simulating instant failure)"
+      ],
+      "given": "5 registered projects; project[2] returns ok:false reason='spawn_failed'; the other 4 return ok:true",
+      "when": "t0 = Date.now(); await collectAll(projects); totalDurationMs = Date.now() - t0",
+      "then": "totalDurationMs <= max(individualSnapshotDurations) + 100; all 5 projects are present in the result with project[2].degradationReason === 'spawn_failed' and the other 4 with degradationReason === null",
+      "steps": [
+        "build 5 fixtures with the failure injected on index 2",
+        "instrument collectAll for total duration",
+        "assert duration bound and per-project degradationReason"
+      ],
+      "expected_result": "totalDurationMs <= 100 + max(individual snapshot durations); project[2].degradationReason === 'spawn_failed'; other 4 projects.degradationReason === null",
+      "test_data": { "projectCount": 5, "failingIndex": 2 }
+    },
+    {
+      "id": "TC-017e1",
+      "requirement_id": "FR-017",
+      "user_story_id": "US-015",
+      "ac_id": "AC-021",
+      "title": "TC-017e1: Project at aitriVersion=0.1.74 takes legacy path with 'version too old' warning, never spawns aitri",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "Build a fixture .aitri with aitriVersion='0.1.74'",
+        "Spy on readSnapshot"
+      ],
+      "given": "fixture with aitriVersion='0.1.74' registered as a local project",
+      "when": "await collectOne(project)",
+      "then": "readSnapshot.callCount === 0; result.degradationReason === 'version_too_old'; result.aitriState is non-null (legacy reader populated it)",
+      "steps": [
+        "build fixture",
+        "spy on readSnapshot",
+        "call collectOne",
+        "assert no spawn occurred and degradation flag set"
+      ],
+      "expected_result": "readSnapshot.callCount === 0; degradationReason === 'version_too_old'; aitriState !== null",
+      "test_data": { "aitriVersion": "0.1.74" }
+    },
+    {
+      "id": "TC-017e2",
+      "requirement_id": "FR-017",
+      "user_story_id": "US-015",
+      "ac_id": "AC-022",
+      "title": "TC-017e2: Failure is logged to ~/.aitri-hub/logs/aitri-hub.log with project name, reason, durationMs",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "Override hubDir() to use a temp directory; fixture project that triggers parse_failed (spawn returns malformed stdout)"
+      ],
+      "given": "tempHubDir = os.tmpdir() + '/hub-fixture-XXX'; spawn mock emits non-JSON stdout",
+      "when": "await collectOne(project)",
+      "then": "the log file at tempHubDir + '/logs/aitri-hub.log' exists; its last line parsed as JSON has fields { ts: <ISO string>, project: <name>, reason: 'parse_failed', durationMs: <number> }",
+      "steps": [
+        "set tempHubDir",
+        "trigger parse_failed",
+        "read log file and assert structured line shape"
+      ],
+      "expected_result": "log file exists; last line parses as JSON with required fields; reason === 'parse_failed'",
+      "test_data": { "reason": "parse_failed" }
+    },
+
+    {
+      "id": "TC-S001",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-011",
+      "ac_id": "AC-017",
+      "title": "TC-S001: NEXT ACTION row empty state shows guidance text 'No action — project idle' (component-state requirement from UX spec §2.1)",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "dashboard.json with one project, nextActions=[]"
+      ],
+      "given": "idle project as above",
+      "when": "page.goto and wait",
+      "then": "next-action-row is visible AND its text content === 'No action — project idle' (NOT a blank area)",
+      "steps": ["load", "assert visibility and text"],
+      "expected_result": "row visible and shows guidance text 'No action — project idle'",
+      "test_data": {}
+    },
+    {
+      "id": "TC-S002",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-011",
+      "ac_id": "AC-017",
+      "title": "TC-S002: NEXT ACTION row loading state shows skeleton during initial collection cycle",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "Stub dashboard endpoint to delay first response by 500ms"
+      ],
+      "given": "Hub web with delayed dashboard.json response",
+      "when": "page.goto; immediately query for [data-testid='next-action-skeleton']",
+      "then": "skeleton element is visible at t<200ms; after dashboard.json resolves, skeleton is replaced by next-action-row",
+      "steps": ["load", "assert skeleton visible early", "wait for resolution", "assert skeleton gone and row present"],
+      "expected_result": "skeleton visible during load; replaced by row after data arrives",
+      "test_data": {}
+    },
+    {
+      "id": "TC-S003",
+      "requirement_id": "FR-013",
+      "user_story_id": "US-012",
+      "ac_id": "AC-018",
+      "title": "TC-S003: DEPLOY HEALTH section empty state — section is absent (no 'all clear' badge per minimalist principle in UX spec)",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "low",
+      "preconditions": ["dashboard.json with deployable=true"],
+      "given": "deployable project",
+      "when": "page.goto",
+      "then": "deploy-health-section count === 0; no text 'DEPLOY HEALTH' anywhere",
+      "steps": ["load", "assert section absent"],
+      "expected_result": "section count === 0",
+      "test_data": {}
+    },
+
+    {
+      "id": "TC-DT001",
+      "requirement_id": "FR-012",
+      "user_story_id": "US-011",
+      "ac_id": "AC-017",
+      "title": "TC-DT001: severity-warn token contrast ratio against card background ≥4.5:1 in both light and dark themes",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "Hub web running; toggleable theme via [data-testid='theme-toggle']"
+      ],
+      "given": "stub project with severity=warn next action; both themes available",
+      "when": "for theme in [light, dark]: setTheme(theme); load page; getComputedStyle on next-action-badge for color, on card root for background; compute WCAG contrast ratio",
+      "then": "contrast >= 4.5 in both themes",
+      "steps": [
+        "set light theme",
+        "load and compute contrast",
+        "set dark theme",
+        "reload and compute contrast"
+      ],
+      "expected_result": "contrast(light) >= 4.5 AND contrast(dark) >= 4.5 (computed via WCAG luminance formula)",
+      "test_data": { "minContrast": 4.5 }
+    }
+  ]
+}
