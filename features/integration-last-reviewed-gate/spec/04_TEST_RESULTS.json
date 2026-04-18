@@ -1,181 +1,173 @@
 {
-  "executed_at": "2026-04-16T21:36:06.644Z",
+  "executed_at": "2026-04-18T02:05:06.576Z",
   "test_runner": "npm run test:feature",
   "exit_code": 0,
   "results": [
     {
       "tc_id": "TC-010h",
       "status": "pass",
-      "notes": "✔ TC-010h: readAitriState — returns aitriVersion, updatedAt, createdAt when present"
+      "notes": "✔ TC-010h: readAitriState — returns aitriVersion, updatedAt, createdAt when present (1.214208ms)"
     },
     {
       "tc_id": "TC-010e1",
       "status": "pass",
-      "notes": "✔ TC-010e1: evaluateIntegrationAlert — null when CLI equals reviewed"
+      "notes": "✔ TC-010e1: evaluateIntegrationAlert — null when CLI equals reviewed (0.088458ms)"
     },
     {
       "tc_id": "TC-010e2",
       "status": "pass",
-      "notes": "✔ TC-010e2: evaluateIntegrationAlert — null when CLI is older"
+      "notes": "✔ TC-010e2: evaluateIntegrationAlert — null when CLI is older (1.040209ms)"
     },
     {
       "tc_id": "TC-010f",
       "status": "pass",
-      "notes": "✔ TC-010f: readAitriState — returns null for aitriVersion, updatedAt, createdAt when absent"
+      "notes": "✔ TC-010f: readAitriState — returns null for aitriVersion, updatedAt, createdAt when absent (1.552209ms)"
     },
     {
       "tc_id": "TC-011h",
       "status": "pass",
-      "notes": "✔ TC-011h: readAitriState — artifactsDir spec preserved when explicit"
+      "notes": "✔ TC-011h: readAitriState — artifactsDir \"spec\" preserved when explicit (0.4305ms)"
     },
     {
       "tc_id": "TC-011h2",
       "status": "pass",
-      "notes": "✔ TC-011h2: readFeaturePipelines — two features, correct aggregation"
+      "notes": "✔ TC-011h2: readFeaturePipelines — two features, correct aggregation (7.400834ms)"
     },
     {
       "tc_id": "TC-011e1",
       "status": "pass",
-      "notes": "✔ TC-011e1: readFeaturePipelines — absent features/ directory"
+      "notes": "✔ TC-011e1: readFeaturePipelines — absent features/ directory (0.3705ms)"
     },
     {
       "tc_id": "TC-011e2",
       "status": "pass",
-      "notes": "✔ TC-011e2: readFeaturePipelines — feature without test results"
+      "notes": "✔ TC-011e2: readFeaturePipelines — feature without test results (0.667375ms)"
     },
     {
       "tc_id": "TC-011f",
       "status": "pass",
-      "notes": "✔ TC-011f: readAitriState — artifactsDir defaults to empty string when field absent"
+      "notes": "✔ TC-011f: does not invoke readAitriState/readTestSummary/readComplianceSummary/readRequirementsSummary/readBugsSummary on success (137.784791ms)"
     },
     {
       "tc_id": "TC-011f2",
       "status": "pass",
-      "notes": "✔ TC-011f2: readFeaturePipelines — malformed .aitri skipped"
+      "notes": "✔ TC-011f2: readFeaturePipelines — malformed .aitri skipped (0.726916ms)"
     },
     {
       "tc_id": "TC-012h",
       "status": "pass",
-      "notes": "✔ TC-012h: detectDrift — driftPhases fast path returns hasDrift=true"
+      "notes": "✔ TC-012h: detectDrift — driftPhases fast path returns hasDrift=true (1.059334ms)"
     },
     {
       "tc_id": "TC-012h2",
-      "status": "pass",
-      "notes": "✓ TC-012h2: FeatureSummarySection renders toggle button and section when featurePipelines is non-empty (Vitest/jsdom)"
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-012h2\" (e.g. test_TC_012h2_description) and add # @aitri-tc TC-012h2 above it. E2E tests may also require a browser environment."
     },
     {
       "tc_id": "TC-012h3",
-      "status": "pass",
-      "notes": "✓ TC-012h3: IntegrationAlertBanner renders banner with message and link when alert is non-null (Vitest/jsdom)"
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-012h3\" (e.g. test_TC_012h3_description) and add # @aitri-tc TC-012h3 above it. E2E tests may also require a browser environment."
     },
     {
       "tc_id": "TC-012e1",
       "status": "pass",
-      "notes": "✓ TC-012e1: IntegrationAlertBanner renders nothing when data has no integrationAlert (Vitest/jsdom)"
+      "notes": "✓  20 [api] › tests/e2e/snapshot-card.test.js:104:1 › TC-012e1: long command wraps without horizontal page scroll at 375px (258ms)"
     },
     {
       "tc_id": "TC-012f",
       "status": "pass",
-      "notes": "✓ TC-012f: FeatureSummarySection is absent when featurePipelines is empty array (Vitest/jsdom)"
+      "notes": "✔ TC-012f: detectDrift — empty driftPhases[] does not trigger drift (0.915417ms)"
     },
     {
       "tc_id": "TC-012f2",
-      "status": "pass",
-      "notes": "✓ TC-012f2: IntegrationAlertBanner is absent when alert prop is null (Vitest/jsdom)"
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-012f2\" (e.g. test_TC_012f2_description) and add # @aitri-tc TC-012f2 above it. E2E tests may also require a browser environment."
     },
     {
       "tc_id": "TC-013h",
       "status": "pass",
-      "notes": "✔ TC-013h: detectDrift — hasDrift=false when artifact matches stored hash"
+      "notes": "✔ TC-013h: detectDrift — hasDrift=false when artifact matches stored hash (1.858542ms)"
     },
     {
       "tc_id": "TC-013e1",
       "status": "pass",
-      "notes": "✔ TC-013e1: semver regex extracts version from banner-style output"
+      "notes": "✔ TC-013e1: semver regex extracts version from banner-style output (1.164417ms)"
     },
     {
       "tc_id": "TC-013f",
       "status": "pass",
-      "notes": "✔ TC-013f: detectDrift — hasDrift=true when artifact differs from stored hash"
+      "notes": "✔ TC-013f: detectDrift — hasDrift=true when artifact differs from stored hash (0.746667ms)"
     },
     {
       "tc_id": "TC-013f2",
       "status": "pass",
-      "notes": "✔ TC-013f2: VERSION_REGEX handles no-match gracefully"
+      "notes": "✔ TC-013f2: VERSION_REGEX handles no-match gracefully (0.255083ms)"
     },
     {
       "tc_id": "TC-014h",
       "status": "pass",
-      "notes": "✔ TC-014h: writeDashboard — writes featurePipelines and aggregatedTcTotal"
+      "notes": "✔ TC-014h: writeDashboard — writes featurePipelines and aggregatedTcTotal (2.088666ms)"
     },
     {
       "tc_id": "TC-014h2",
       "status": "pass",
-      "notes": "✔ TC-014h2: writeDashboard — integrationAlert at top level"
+      "notes": "✔ TC-014h2: writeDashboard — integrationAlert at top level (1.391292ms)"
     },
     {
       "tc_id": "TC-014e1",
       "status": "pass",
-      "notes": "✔ TC-014e1: writeDashboard — no features"
+      "notes": "✔ TC-014e1: writeDashboard — no features (0.854583ms)"
     },
     {
       "tc_id": "TC-014e2",
       "status": "pass",
-      "notes": "✔ TC-014e2: writeDashboard — existing fields unaffected by new fields"
+      "notes": "✔ TC-014e2: writeDashboard — existing fields unaffected by new fields (0.926375ms)"
     },
     {
       "tc_id": "TC-014f",
       "status": "pass",
-      "notes": "✔ TC-014f: writeDashboard — output is always valid JSON"
+      "notes": "✔ TC-014f: writeDashboard — output is always valid JSON (0.402708ms)"
     },
     {
       "tc_id": "TC-NFR010",
       "status": "pass",
-      "notes": "✔ TC-NFR010: readFeaturePipelines — 10 features completes in 5000ms or less"
+      "notes": "✔ TC-NFR010: readFeaturePipelines — 10 features completes in ≤5000ms (5.643ms)"
     },
     {
       "tc_id": "TC-NFR011",
       "status": "pass",
-      "notes": "✔ TC-NFR011: readFeaturePipelines — malformed feature does not affect valid ones"
+      "notes": "✔ TC-NFR011: readFeaturePipelines — malformed feature does not affect valid ones (1.938ms)"
     },
     {
       "tc_id": "TC-NFR012",
-      "status": "pass",
-      "notes": "✓ TC-NFR012: FeatureSummarySection is collapsed by default (Vitest/jsdom)"
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-NFR012\" (e.g. test_TC_NFR012_description) and add # @aitri-tc TC-NFR012 above it. E2E tests may also require a browser environment."
     },
     {
       "tc_id": "TC-E2E-001",
-      "status": "pass",
-      "notes": "✔ TC-E2E-001: collectAll() embeds integrationAlert at top level; writeDashboard round-trips it correctly (node:test, tests/integration/e2e-collector-cycle.test.js)"
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-E2E-001\" (e.g. test_TC_E2E_001_description) and add # @aitri-tc TC-E2E-001 above it. E2E tests may also require a browser environment."
     },
     {
       "tc_id": "TC-E2E-002",
-      "status": "pass",
-      "notes": "✔ TC-E2E-002: collectAll() aggregatedTcTotal=91 (main 30 + feat-a 61); featurePipelines[0].tcCount=61; testSummary.total remains 30 (node:test, tests/integration/e2e-collector-cycle.test.js)"
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-E2E-002\" (e.g. test_TC_E2E_002_description) and add # @aitri-tc TC-E2E-002 above it. E2E tests may also require a browser environment."
     }
   ],
   "fr_coverage": [
     {
       "fr_id": "FR-010",
-      "tests_passing": 5,
+      "tests_passing": 4,
       "tests_failing": 0,
-      "tests_skipped": 0,
+      "tests_skipped": 1,
       "tests_manual": 0,
       "status": "covered"
     },
     {
       "fr_id": "FR-011",
-      "tests_passing": 9,
+      "tests_passing": 8,
       "tests_failing": 0,
-      "tests_skipped": 0,
-      "tests_manual": 0,
-      "status": "covered"
-    },
-    {
-      "fr_id": "FR-012",
-      "tests_passing": 7,
-      "tests_failing": 0,
-      "tests_skipped": 0,
+      "tests_skipped": 1,
       "tests_manual": 0,
       "status": "covered"
     },
@@ -183,7 +175,7 @@
       "fr_id": "FR-013",
       "tests_passing": 4,
       "tests_failing": 0,
-      "tests_skipped": 0,
+      "tests_skipped": 1,
       "tests_manual": 0,
       "status": "covered"
     },
@@ -194,15 +186,23 @@
       "tests_skipped": 0,
       "tests_manual": 0,
       "status": "covered"
+    },
+    {
+      "fr_id": "FR-012",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 3,
+      "tests_manual": 0,
+      "status": "covered"
     }
   ],
   "summary": {
     "total": 30,
-    "passed": 30,
+    "passed": 24,
     "failed": 0,
-    "skipped": 0,
-    "skipped_e2e": 0,
-    "skipped_no_marker": 0,
+    "skipped": 6,
+    "skipped_e2e": 4,
+    "skipped_no_marker": 2,
     "manual": 0,
     "manual_verified": 0
   }

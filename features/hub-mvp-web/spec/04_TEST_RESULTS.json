@@ -1,17 +1,17 @@
 {
-  "executed_at": "2026-04-17T03:21:04.034Z",
+  "executed_at": "2026-04-18T02:05:51.056Z",
   "test_runner": "npm test",
-  "exit_code": 0,
+  "exit_code": 1,
   "results": [
     {
       "tc_id": "TC-010h",
       "status": "pass",
-      "notes": "✔ TC-010h: readAitriState — returns aitriVersion, updatedAt, createdAt when present (0.430375ms)"
+      "notes": "✔ TC-010h: readAitriState — returns aitriVersion, updatedAt, createdAt when present (0.440959ms)"
     },
     {
       "tc_id": "TC-010e",
       "status": "pass",
-      "notes": "✔ TC-010e: readAitriState — returns aitriVersion=null when field is a number (0.364542ms)"
+      "notes": "✔ TC-010e: readAitriState — returns aitriVersion=null when field is a number (0.384916ms)"
     },
     {
       "tc_id": "TC-010n",
@@ -21,12 +21,12 @@
     {
       "tc_id": "TC-011h",
       "status": "pass",
-      "notes": "✔ TC-011h: readAitriState — artifactsDir \"spec\" preserved when explicit (0.469542ms)"
+      "notes": "✔ TC-011h: readAitriState — artifactsDir \"spec\" preserved when explicit (1.036625ms)"
     },
     {
       "tc_id": "TC-011e",
       "status": "pass",
-      "notes": "✔ TC-011e: readAitriState — projectName defaults to path.basename(projectDir) when absent (0.310958ms)"
+      "notes": "✔ TC-011e: readAitriState — projectName defaults to path.basename(projectDir) when absent (0.520208ms)"
     },
     {
       "tc_id": "TC-011n",
@@ -36,7 +36,7 @@
     {
       "tc_id": "TC-011f",
       "status": "pass",
-      "notes": "✔ TC-011f: readAitriState — artifactsDir defaults to \"\" when field absent (1.250459ms)"
+      "notes": "✔ TC-011f: does not invoke readAitriState/readTestSummary/readComplianceSummary/readRequirementsSummary/readBugsSummary on success (134.973917ms)"
     },
     {
       "tc_id": "TC-011g",
@@ -46,17 +46,17 @@
     {
       "tc_id": "TC-012h",
       "status": "pass",
-      "notes": "✔ TC-012h: detectDrift — driftPhases fast path returns hasDrift=true (0.306833ms)"
+      "notes": "✔ TC-012h: detectDrift — driftPhases fast path returns hasDrift=true (0.310959ms)"
     },
     {
       "tc_id": "TC-012e",
       "status": "pass",
-      "notes": "✔ TC-012e: detectDrift — absent driftPhases (pre-v0.1.58) falls through without throwing (0.470583ms)"
+      "notes": "✔ TC-012e: detectDrift — absent driftPhases (pre-v0.1.58) falls through without throwing (0.336208ms)"
     },
     {
       "tc_id": "TC-012f",
       "status": "pass",
-      "notes": "✔ TC-012f: detectDrift — empty driftPhases[] does not trigger drift (0.757416ms)"
+      "notes": "✔ TC-012f: detectDrift — empty driftPhases[] does not trigger drift (0.290917ms)"
     },
     {
       "tc_id": "TC-012g",
@@ -66,12 +66,12 @@
     {
       "tc_id": "TC-013h",
       "status": "pass",
-      "notes": "✔ TC-013h: detectDrift — hasDrift=false when artifact matches stored hash (0.798875ms)"
+      "notes": "✔ TC-013h: detectDrift — hasDrift=false when artifact matches stored hash (0.74825ms)"
     },
     {
       "tc_id": "TC-013e",
       "status": "pass",
-      "notes": "✔ TC-013e: detectDrift — approved phase with no stored hash is NOT counted as drifted (0.297ms)"
+      "notes": "✔ TC-013e: detectDrift — approved phase with no stored hash is NOT counted as drifted (0.313375ms)"
     },
     {
       "tc_id": "TC-013n",
@@ -81,12 +81,12 @@
     {
       "tc_id": "TC-014h",
       "status": "pass",
-      "notes": "✔ TC-014h: writeDashboard — writes featurePipelines and aggregatedTcTotal (3.207ms)"
+      "notes": "✔ TC-014h: writeDashboard — writes featurePipelines and aggregatedTcTotal (3.339375ms)"
     },
     {
       "tc_id": "TC-014e",
       "status": "pass",
-      "notes": "✔ TC-014e: evaluateAlerts — no VERSION_MISMATCH when CLI version unavailable (null cache) (0.377041ms)"
+      "notes": "✔ TC-014e: evaluateAlerts — no VERSION_MISMATCH when CLI version unavailable (null cache) (0.51ms)"
     },
     {
       "tc_id": "TC-014n",
@@ -96,12 +96,12 @@
     {
       "tc_id": "TC-015h",
       "status": "pass",
-      "notes": "✔ TC-015h: normalizeSpecArtifacts — correct node/edge structure (2.977542ms)"
+      "notes": "✔ TC-015h: normalizeSpecArtifacts — correct node/edge structure (3.386542ms)"
     },
     {
       "tc_id": "TC-015e",
       "status": "pass",
-      "notes": "✔ TC-015e: normalizeSpecArtifacts — edge cases (0.594917ms)"
+      "notes": "✔ TC-015e: normalizeSpecArtifacts — edge cases (0.571625ms)"
     },
     {
       "tc_id": "TC-015n",
@@ -111,22 +111,22 @@
     {
       "tc_id": "TC-016h",
       "status": "pass",
-      "notes": "✔ TC-016h: GET /api/projects returns 200 with empty array when projects.json absent"
+      "notes": "✔ TC-016h: returns 'last: phase 3 approved by claude · 2 days ago' for delta=2d (0.106084ms)"
     },
     {
       "tc_id": "TC-016e",
       "status": "pass",
-      "notes": "✔ TC-016e: concurrent POST requests produce valid projects.json"
+      "notes": "✓   7 [api] › tests/e2e/admin-api.test.js:79:1 › TC-016e: concurrent POST requests produce valid projects.json (3ms)"
     },
     {
       "tc_id": "TC-016n",
       "status": "pass",
-      "notes": "✔ TC-016n: PUT /api/projects/:id with unknown id returns 404"
+      "notes": "✓   6 [api] › tests/e2e/admin-api.test.js:67:1 › TC-016n: PUT /api/projects/:id with unknown id returns 404 (2ms)"
     },
     {
       "tc_id": "TC-017h",
       "status": "pass",
-      "notes": "✔ TC-017h: returns correct counts for each status and severity bucket (0.539375ms)"
+      "notes": "✔ TC-017h: returns correct counts for each status and severity bucket (0.899666ms)"
     },
     {
       "tc_id": "TC-017n",
@@ -136,32 +136,32 @@
     {
       "tc_id": "TC-018h",
       "status": "pass",
-      "notes": "✔ TC-018h: generates one blocking alert when critical>0 || high>0 (94.097208ms)"
+      "notes": "✔ TC-018h: generates one blocking alert when critical>0 || high>0 (47.577875ms)"
     },
     {
       "tc_id": "TC-019h",
       "status": "pass",
-      "notes": "✔ TC-019h: lastSession fields are preserved exactly (0.6525ms)"
+      "notes": "✔ TC-019h: lastSession fields are preserved exactly (0.698958ms)"
     },
     {
       "tc_id": "TC-019e",
       "status": "pass",
-      "notes": "✔ TC-019e: files_touched is null (not undefined) (0.503292ms)"
+      "notes": "✔ TC-019e: files_touched is null (not undefined) (0.301208ms)"
     },
     {
       "tc_id": "TC-NFR010h",
       "status": "pass",
-      "notes": "✔ TC-NFR010h: POST with path traversal location ../../etc/passwd returns 400 path_traversal"
+      "notes": "✓   9 [api] › tests/e2e/admin-api.test.js:119:1 › TC-NFR010h: POST with path traversal location ../../etc/passwd returns 400 path_traversal (2ms)"
     },
     {
       "tc_id": "TC-NFR010e",
       "status": "pass",
-      "notes": "✔ TC-NFR010e: POST with ../traversal in location returns 400 path_traversal"
+      "notes": "✓  10 [api] › tests/e2e/admin-api.test.js:131:1 › TC-NFR010e: POST with ../traversal in location returns 400 path_traversal (1ms)"
     },
     {
       "tc_id": "TC-NFR011h",
       "status": "pass",
-      "notes": "✔ TC-NFR011h: GET /api/projects succeeds — logging does not interfere with response"
+      "notes": "✓  12 [api] › tests/e2e/admin-api.test.js:155:1 › TC-NFR011h: GET /api/projects succeeds — logging does not interfere with response (2ms)"
     },
     {
       "tc_id": "TC-NFR012h",
@@ -196,37 +196,37 @@
     {
       "tc_id": "TC-010f",
       "status": "pass",
-      "notes": "✔ TC-010f: readAitriState — returns null for aitriVersion, updatedAt, createdAt when absent (0.462583ms)"
+      "notes": "✔ TC-010f: readAitriState — returns null for aitriVersion, updatedAt, createdAt when absent (0.467458ms)"
     },
     {
       "tc_id": "TC-013f",
       "status": "pass",
-      "notes": "✔ TC-013f: detectDrift — hasDrift=true when artifact differs from stored hash (0.577792ms)"
+      "notes": "✔ TC-013f: detectDrift — hasDrift=true when artifact differs from stored hash (0.521792ms)"
     },
     {
       "tc_id": "TC-014f",
       "status": "pass",
-      "notes": "✔ TC-014f: writeDashboard — output is always valid JSON (2.002791ms)"
+      "notes": "✔ TC-014f: writeDashboard — output is always valid JSON (0.994875ms)"
     },
     {
       "tc_id": "TC-015f",
       "status": "pass",
-      "notes": "✔ TC-015f: normalizeSpecArtifacts — phase-based node status (0.844625ms)"
+      "notes": "✔ TC-015f: normalizeSpecArtifacts — phase-based node status (0.773916ms)"
     },
     {
       "tc_id": "TC-016f",
       "status": "pass",
-      "notes": "✔ TC-016f: POST returns 500 when hub dir is read-only (write failure)"
+      "notes": "✓   8 [api] › tests/e2e/admin-api.test.js:102:1 › TC-016f: POST returns 500 when hub dir is read-only (write failure) (8ms)"
     },
     {
       "tc_id": "TC-017f",
       "status": "pass",
-      "notes": "✔ TC-017f: returns null without throwing (0.079875ms)"
+      "notes": "✔ TC-017f: returns null without throwing (0.097625ms)"
     },
     {
       "tc_id": "TC-018e",
       "status": "pass",
-      "notes": "✔ TC-018e: generates zero bug-related alerts when bugsSummary is null (0.0755ms)"
+      "notes": "✔ TC-018e: generates zero bug-related alerts when bugsSummary is null (0.158834ms)"
     },
     {
       "tc_id": "TC-018n",
@@ -236,32 +236,32 @@
     {
       "tc_id": "TC-018f",
       "status": "pass",
-      "notes": "✔ TC-018f: generates one warning alert when only medium/low bugs open (0.116458ms)"
+      "notes": "✔ TC-018f: generates one warning alert when only medium/low bugs open (0.197542ms)"
     },
     {
       "tc_id": "TC-019f",
       "status": "pass",
-      "notes": "✔ TC-019f: lastSession is null and no exception is thrown (0.428375ms)"
+      "notes": "✔ TC-019f: lastSession is null and no exception is thrown (1.174875ms)"
     },
     {
       "tc_id": "TC-NFR010f",
       "status": "pass",
-      "notes": "✔ TC-NFR010f: POST with non-existent absolute path returns 400"
+      "notes": "✓  11 [api] › tests/e2e/admin-api.test.js:143:1 › TC-NFR010f: POST with non-existent absolute path returns 400 (2ms)"
     },
     {
       "tc_id": "TC-NFR011f",
       "status": "pass",
-      "notes": "✔ TC-NFR011f: POST with empty body returns 400 — error path logging does not crash server"
+      "notes": "✓  13 [api] › tests/e2e/admin-api.test.js:165:1 › TC-NFR011f: POST with empty body returns 400 — error path logging does not crash server (3ms)"
     },
     {
       "tc_id": "TC-e2eAdminAdd",
       "status": "pass",
-      "notes": "✔ TC-e2eAdminAdd: POST /api/projects persists entry to projects.json"
+      "notes": "✓   2 [api] › tests/e2e/admin-api.test.js:30:1 › TC-e2eAdminAdd: POST /api/projects persists entry to projects.json (15ms)"
     },
     {
       "tc_id": "TC-e2eAdminRemove",
       "status": "pass",
-      "notes": "✔ TC-e2eAdminRemove: DELETE /api/projects/:id removes entry from projects.json"
+      "notes": "✓  14 [api] › tests/e2e/admin-api.test.js:178:1 › TC-e2eAdminRemove: DELETE /api/projects/:id removes entry from projects.json (5ms)"
     },
     {
       "tc_id": "TC-NFR012f",
