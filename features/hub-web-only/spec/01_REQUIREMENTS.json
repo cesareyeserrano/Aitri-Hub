@@ -1,0 +1,291 @@
+{
+  "project_name": "Aitri Hub — Feature: hub-web-only",
+  "project_summary": "Collapse Aitri Hub to a single web-only surface. The `aitri-hub` binary retains only `web`, `integration review`, `help`, and `--version`; the `init`, `setup`, and `monitor` subcommands (and their deprecation stubs in `lib/commands/monitor.js` and `lib/commands/setup.js`) are removed entirely. Project registration, folder scans, and project edits move exclusively to the existing localhost admin UI at `/admin`, which is already backed by `/api/projects` CRUD inside `lib/commands/web.js`. The React empty-state in `OverviewTab.jsx`, the README, the DEPLOYMENT guide, and the parent `IDEA.md` are rewritten to describe Hub as a single-command, browser-first, localhost-only tool — Docker is demoted from 'primary deployment' to 'optional alternative'. This feature supersedes parent FR-001 (CLI setup) and FR-005 (CLI monitor) and narrows parent FR-006 (web dashboard via Docker) to 'web dashboard via embedded Node HTTP server'.\n\nProduct Analysis:\n  North Star KPI: Time-to-dashboard — on a fresh clone with no prior Hub state, a developer runs `npm install && aitri-hub web`, clicks 'Add project' in the browser, and sees their first project card rendered in ≤60 seconds total, without consulting external documentation.\n  JTBD: 'When I install Hub, let me open one process and be productive in the browser — without reading docs to learn a CLI wizard that duplicates what the web UI already does.'\n  Guardrail metric: Collection-cycle performance and admin API behavior must not regress — parent NFR-001 (≤5s for 20 projects) and FR-006 per-project card rendering must still pass after the CLI surface is removed.",
+  "no_go_zone": [
+    "No migration of `aitri-hub integration review <version>` to the web UI — the command stays as a CLI subcommand in this feature; a web-based review flow is a separate, future feature",
+    "No removal of Docker assets (`Dockerfile`, `docker-compose.yml`, `docker/nginx.conf`) from the repository — they remain as an optional deployment path; only the documentation is rewritten to demote them from primary to optional",
+    "No authentication, no multi-user support, and no exposure of the web dashboard beyond `127.0.0.1` — the localhost-only security posture of parent NFR-005 is preserved unchanged",
+    "No changes to the on-disk format of `~/.aitri-hub/projects.json` or `~/.aitri-hub/dashboard.json` — existing registrations must keep working without any migration step",
+    "No changes to collector logic (`lib/collector/*`), alerts engine (`lib/alerts/engine.js`), or the `/api/projects` CRUD endpoints — the admin API is the canonical path and is treated as already-correct",
+    "No rename of `docker/web-dist/` → `web/dist/` in this feature — purely cosmetic refactor, deferred",
+    "No new CLI subcommands are introduced — this feature only removes; it does not add new verbs"
+  ],
+  "user_personas": [
+    {
+      "role": "First-time Hub User",
+      "tech_level": "mid",
+      "goal": "Get a working dashboard showing at least one project visible in the browser within one minute of installing the package, using only the commands printed by `aitri-hub help`",
+      "pain_point": "Today the user must read the README, run `aitri-hub setup` in a terminal, answer ≥5 interactive prompts, then separately run a different command to view the dashboard — the extra hop is a dropout point and contradicts the fact that the browser UI already has an 'Add project' panel"
+    },
+    {
+      "role": "Existing Hub User (Upgrading)",
+      "tech_level": "high",
+      "goal": "Upgrade to the new version without losing their registered projects and without re-learning the CLI surface",
+      "pain_point": "The existing user's muscle memory is `aitri-hub monitor`; if that command silently keeps working as a stub, the user never discovers the web UI. If it disappears abruptly with no guidance, the user thinks Hub is broken"
+    },
+    {
+      "role": "Documentation Reader",
+      "tech_level": "mid",
+      "goal": "Read README.md or DEPLOYMENT.md and leave with an accurate mental model of how Hub runs today",
+      "pain_point": "Today the docs describe a dual-surface CLI-or-web tool backed by Docker + nginx; this disagrees with the actual product (single Node server, embedded admin UI), leaving the reader confused about which instructions are current"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "title": "Single CLI surface — only `web`, `integration review`, `help`, `--version`",
+      "description": "The `aitri-hub` binary exposes exactly four recognised inputs: `web` (start the server), `integration review <version>` (existing CHANGELOG attestation, unchanged), `help` / `--help` / `-h` (usage), and `version` / `--version` (package version). No other subcommands are routed. The `USAGE` help text lists only these four. Any other argument exits with a non-zero status and a message of the form `Unknown command: '<name>'. Run 'aitri-hub help' for usage.`",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Running `aitri-hub help` prints a usage block that contains the literal tokens `web`, `integration review`, `help`, `--version` and contains none of the literal tokens `init`, `setup`, `monitor`",
+        "Running `aitri-hub web` starts the HTTP server on 127.0.0.1 and the process exits 0 on SIGINT (unchanged from today)",
+        "Running `aitri-hub integration review 0.1.80` still records the manifest with exit code 0 — behavior is preserved byte-for-byte from the current implementation",
+        "Running `aitri-hub monitor`, `aitri-hub setup`, or `aitri-hub init` each exit with a non-zero status code and stderr containing the substring `Unknown command`"
+      ],
+      "implementation_level": "production_ready"
+    },
+    {
+      "id": "FR-002",
+      "title": "Remove `init`, `setup`, `monitor` command modules and their tests",
+      "description": "The files `lib/commands/init.js`, `lib/commands/setup.js`, and `lib/commands/monitor.js` are deleted. The dispatcher in `bin/aitri-hub.js` no longer imports or references `cmdInit`, `cmdSetup`, or `cmdMonitor`. The unit test `tests/unit/monitor-stub.test.js` and the integration test `tests/integration/setup.test.js` are deleted, along with any other test case whose sole purpose is to exercise the removed commands. No deprecation stubs remain in the codebase.",
+      "priority": "MUST",
+      "type": "persistence",
+      "acceptance_criteria": [
+        "`git ls-files` returns no entry for `lib/commands/init.js`, `lib/commands/setup.js`, or `lib/commands/monitor.js`",
+        "`grep -r cmdInit\\|cmdSetup\\|cmdMonitor lib bin tests` returns zero matches",
+        "`npm test` passes after the deletion — no test file references a removed command or deprecated stub",
+        "`bin/aitri-hub.js` imports exactly one command module per recognised subcommand (web, integration-review) — no dead imports remain"
+      ],
+      "implementation_level": "production_ready"
+    },
+    {
+      "id": "FR-003",
+      "title": "Browser-first empty state replaces the terminal wizard",
+      "description": "When `aitri-hub web` is started with no entries in `~/.aitri-hub/projects.json` (or the file absent), the server still starts normally and the browser, when opened, shows an empty-state panel in `OverviewTab.jsx` whose primary CTA is a link to `/admin`. The current empty-state text that instructs users to run `aitri-hub setup` and `aitri-hub monitor` is removed. No terminal prompts block the server from starting.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given `~/.aitri-hub/projects.json` is absent and `aitri-hub web` is run in a detached shell (no stdin), when the server starts, then it binds on 127.0.0.1:3000 and emits the existing `✓ Dashboard running` log line within 5 seconds — the process does not block waiting for input",
+        "Given the empty-state condition, when `/` is fetched in a browser, then the rendered HTML contains a link or button whose target is `/admin` and does NOT contain the literal strings `aitri-hub setup` or `aitri-hub monitor`",
+        "Given a user clicks the empty-state CTA, when `/admin` loads, then the existing admin UI renders the 'Add project' form — no new admin UI surface is introduced by this feature",
+        "The empty-state panel is visible without horizontal scroll at a 768px viewport width (continuity with parent FR-006 AC)"
+      ],
+      "implementation_level": "production_ready"
+    },
+    {
+      "id": "FR-004",
+      "title": "Documentation reflects web-only, Docker-optional posture",
+      "description": "`README.md`, `DEPLOYMENT.md`, and the parent `IDEA.md` are rewritten so that: (a) the primary Quick Start is `npm install && aitri-hub web`; (b) the Features / Business Rules / Success Criteria sections no longer describe a CLI dashboard mode or reference `aitri-hub monitor` / `aitri-hub setup`; (c) Docker is presented as an optional alternative deployment, not the primary web path; (d) the architecture diagram in README reflects the embedded Node server (no separate CLI-Monitor → Docker-nginx flow); (e) env-var tables rename `AITRI_HUB_REFRESH_MS` from 'CLI monitor refresh' to 'collector refresh interval'.",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "`grep -nE 'aitri-hub (monitor|setup|init)' README.md DEPLOYMENT.md IDEA.md` returns zero matches",
+        "README.md contains a Quick Start section whose commands are exactly `npm install` and `aitri-hub web` (in that order) and no other setup step is presented as required",
+        "DEPLOYMENT.md contains a section explicitly marked 'Optional: Docker deployment' (or equivalent wording containing the token 'optional') wrapping all Docker / nginx instructions",
+        "The parent `IDEA.md` Business Rules section no longer contains the phrase 'CLI terminal dashboard' and the Success Criteria no longer reference `aitri-hub monitor`",
+        "The architecture diagram in README.md (ASCII or prose) shows a single Node.js process that both serves the UI and runs the collector — not two separate components"
+      ],
+      "implementation_level": "production_ready"
+    },
+    {
+      "id": "FR-005",
+      "title": "Zero-migration upgrade path for existing users",
+      "description": "A user who previously registered projects via the removed `aitri-hub setup` command (producing a `~/.aitri-hub/projects.json` with schema version 1) must be able to upgrade to this version and run `aitri-hub web` with no extra step — their existing project entries must continue to appear in the dashboard. The `projects.json` read path in `lib/store/projects.js` is not altered by this feature; the `defaultInterface` field written by the old `init.js` wizard is ignored if present and is not required.",
+      "priority": "MUST",
+      "type": "persistence",
+      "acceptance_criteria": [
+        "Given a `~/.aitri-hub/projects.json` file produced by the current `init.js` wizard (containing `version`, `defaultInterface`, and `projects[]`), when `aitri-hub web` is run post-upgrade, then all entries in `projects[]` appear in the dashboard — count matches and each entry's `name` and `location` render unchanged",
+        "Given the upgraded `aitri-hub web` is running, when the user adds a project via `/admin`, then the written `projects.json` remains valid JSON and round-trips through a subsequent server restart",
+        "The `projects.json` schema on disk after an upgrade+add cycle contains at minimum the fields `{ projects: [{ id, name, type, location, addedAt }] }` — no required field is dropped",
+        "No CHANGELOG entry or release note instructs the user to run a migration script — the upgrade is purely a `npm install` replacement"
+      ],
+      "implementation_level": "production_ready"
+    },
+    {
+      "id": "FR-006",
+      "title": "Admin UI is the only registration surface — and it is already complete",
+      "description": "All project registration, edit, scan, and removal flows happen exclusively through the existing `/admin` route, which is already backed by `GET|POST|PUT|DELETE /api/projects` in `lib/commands/web.js`. This feature does not add or modify any admin API endpoint; it asserts that the existing endpoints cover every use case previously served by `aitri-hub setup` and `aitri-hub setup --scan`. If a gap is found during implementation, it is recorded as technical debt and handled in a separate feature — it does NOT justify keeping the CLI surface alive.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "The existing `/api/projects` endpoints support POST (create), PUT (edit), DELETE (remove), and a scan path — verified by running the current test suite against them with no code changes from this feature",
+        "The `/admin` UI surfaces all four operations (add, edit, delete, scan folder) with no feature work required in `hub-web-only`",
+        "A gap discovered during implementation is filed as a new feature or backlog item — it does NOT re-introduce `lib/commands/setup.js` or any other CLI command",
+        "The `/api/projects` localhost-only guard (127.0.0.1 / ::1 check) is preserved — non-localhost requests still receive 403"
+      ],
+      "implementation_level": "production_ready"
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US-001",
+      "requirement_id": "FR-001",
+      "as_a": "first-time Hub user",
+      "i_want": "to run `aitri-hub help` and see exactly the commands that exist today",
+      "so_that": "I do not waste time trying commands the README once documented but that no longer work",
+      "acceptance_criteria": [
+        {
+          "id": "AC-001",
+          "given": "a fresh install of aitri-hub at the post-feature version",
+          "when": "the user runs `aitri-hub help`",
+          "then": "stdout contains a line mentioning `web` and a line mentioning `integration review`, and contains no line mentioning `init`, `setup`, or `monitor`"
+        },
+        {
+          "id": "AC-002",
+          "given": "the same post-feature install",
+          "when": "the user runs `aitri-hub monitor`",
+          "then": "the process exits with status code ≠ 0 and stderr contains the substring `Unknown command`"
+        }
+      ]
+    },
+    {
+      "id": "US-002",
+      "requirement_id": "FR-002",
+      "as_a": "Hub maintainer",
+      "i_want": "the `init`, `setup`, and `monitor` modules fully deleted (not just stubs)",
+      "so_that": "dead code does not rot in the repo and confuse future contributors reading `lib/commands/`",
+      "acceptance_criteria": [
+        {
+          "id": "AC-003",
+          "given": "the post-feature commit",
+          "when": "`git ls-files lib/commands/ tests/unit/ tests/integration/` is run",
+          "then": "the output contains no path matching `init.js`, `setup.js`, `monitor.js`, `monitor-stub.test.js`, or `setup.test.js`"
+        },
+        {
+          "id": "AC-004",
+          "given": "the post-feature tree",
+          "when": "`npm test` runs",
+          "then": "the test suite exits with code 0 and no skipped/pending test references the removed commands"
+        }
+      ]
+    },
+    {
+      "id": "US-003",
+      "requirement_id": "FR-003",
+      "as_a": "first-time Hub user with an empty registry",
+      "i_want": "the browser itself to show me how to add my first project",
+      "so_that": "I do not have to leave the browser and guess a CLI incantation to get started",
+      "acceptance_criteria": [
+        {
+          "id": "AC-005",
+          "given": "no `~/.aitri-hub/projects.json` exists and `aitri-hub web` has just started",
+          "when": "the user opens `http://localhost:3000`",
+          "then": "the page renders a non-error empty state whose primary CTA navigates to `/admin`"
+        },
+        {
+          "id": "AC-006",
+          "given": "the same empty-state page",
+          "when": "the rendered HTML body is inspected",
+          "then": "it contains no occurrence of the strings `aitri-hub setup` or `aitri-hub monitor`"
+        }
+      ]
+    },
+    {
+      "id": "US-004",
+      "requirement_id": "FR-004",
+      "as_a": "documentation reader",
+      "i_want": "the README, DEPLOYMENT, and IDEA documents to describe the product that actually runs",
+      "so_that": "I can trust the docs as a reference instead of treating them as historical fiction",
+      "acceptance_criteria": [
+        {
+          "id": "AC-007",
+          "given": "the post-feature README.md",
+          "when": "its Quick Start section is read",
+          "then": "the only commands presented as required are `npm install` and `aitri-hub web`"
+        },
+        {
+          "id": "AC-008",
+          "given": "the post-feature DEPLOYMENT.md",
+          "when": "the Docker instructions are read",
+          "then": "they appear under a section whose heading contains the token `optional` (case-insensitive)"
+        }
+      ]
+    },
+    {
+      "id": "US-005",
+      "requirement_id": "FR-005",
+      "as_a": "existing Hub user upgrading",
+      "i_want": "my existing `~/.aitri-hub/projects.json` to keep working without any migration step",
+      "so_that": "the upgrade is a one-command replacement and my registered projects survive",
+      "acceptance_criteria": [
+        {
+          "id": "AC-009",
+          "given": "a `~/.aitri-hub/projects.json` written by the old `init.js` wizard containing 3 project entries",
+          "when": "the upgraded `aitri-hub web` starts",
+          "then": "all 3 projects appear in the dashboard with their original `name` and `location`"
+        },
+        {
+          "id": "AC-010",
+          "given": "the upgraded server is running against the legacy-format projects.json",
+          "when": "the user adds a 4th project via `/admin`",
+          "then": "the file is rewritten as valid JSON, survives a server restart, and all 4 projects render"
+        }
+      ]
+    },
+    {
+      "id": "US-006",
+      "requirement_id": "FR-006",
+      "as_a": "Hub maintainer",
+      "i_want": "to confirm that the admin UI and `/api/projects` already cover every CLI flow being removed",
+      "so_that": "deleting the CLI commands does not lose functionality",
+      "acceptance_criteria": [
+        {
+          "id": "AC-011",
+          "given": "the current `lib/commands/web.js` admin API",
+          "when": "its routes are enumerated",
+          "then": "GET/POST/PUT/DELETE on `/api/projects` are all present and the folder-scan flow has a corresponding frontend surface — verified by the existing test suite passing with no change"
+        },
+        {
+          "id": "AC-012",
+          "given": "a non-localhost HTTP client",
+          "when": "it hits `/api/projects`",
+          "then": "the server still responds 403 (the localhost guard from FR-016 is preserved)"
+        }
+      ]
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "category": "Usability",
+      "requirement": "A developer with no prior Hub knowledge reaches a working dashboard with at least one project visible in ≤60 seconds from running `npm install`, using only what `aitri-hub help` and the browser UI tell them",
+      "acceptance_criteria": "Timed run on a fresh clone: `npm install && aitri-hub web` → browser opens → user clicks 'Add project' in `/admin` and enters a valid local path → dashboard shows the project card. Total elapsed wall-clock time ≤60s on a machine meeting parent NFR-004"
+    },
+    {
+      "id": "NFR-002",
+      "category": "Reliability",
+      "requirement": "Running `aitri-hub web` in a non-interactive shell (e.g. nohup, systemd, CI runner) must not block waiting for stdin at any point — removal of the wizard must not introduce any hidden prompt",
+      "acceptance_criteria": "`aitri-hub web </dev/null >/tmp/web.log 2>&1 &` on a machine with no existing `~/.aitri-hub/projects.json` prints the `Dashboard running` log line within 5 seconds and the process remains alive until SIGINT"
+    },
+    {
+      "id": "NFR-003",
+      "category": "Performance",
+      "requirement": "Collection-cycle time must not regress — parent NFR-001 (≤5s for 20 projects) continues to hold after the CLI surface is removed",
+      "acceptance_criteria": "Benchmark against the same 20-project fixture used by the existing collector integration test: post-feature mean cycle time is within ±10% of the pre-feature mean"
+    },
+    {
+      "id": "NFR-004",
+      "category": "Observability",
+      "requirement": "The HTTP server continues to log every request in the existing format `[ISO8601] METHOD /path STATUS` — this feature removes surfaces but does not reduce logging",
+      "acceptance_criteria": "After running the post-feature `aitri-hub web` and hitting `/api/projects` with GET and POST, stdout contains at least two log lines matching the regex `^\\[[0-9T:.Z-]+\\] (GET|POST) /api/projects [0-9]{3}$`"
+    },
+    {
+      "id": "NFR-005",
+      "category": "Security",
+      "requirement": "Localhost-only admin API guard is preserved — non-127.0.0.1 / non-::1 requests to `/api/projects` still receive 403",
+      "acceptance_criteria": "A request to `/api/projects` from a simulated non-localhost peer (e.g. via a test that patches `req.socket.remoteAddress`) receives HTTP 403 with body `{\"error\":\"forbidden\"}`"
+    }
+  ],
+  "constraints": [
+    "Zero npm runtime dependencies — the CLI shrinks, but the zero-deps invariant of the parent project is preserved",
+    "Node.js ≥18.0.0 — no change to the runtime requirement",
+    "All persistent data continues to live under `~/.aitri-hub/` — no new directories, no new config files",
+    "No breaking changes to `/api/projects` contracts — web/ frontend is source-compatible without edits beyond the empty-state text"
+  ],
+  "technology_preferences": [
+    "No new dependencies introduced by this feature",
+    "Deletions preferred over deprecation stubs — the repository is small enough that a clean removal is safer than a long stub tail",
+    "Documentation rewrites are in-place edits of the existing files, not parallel new files"
+  ]
+}

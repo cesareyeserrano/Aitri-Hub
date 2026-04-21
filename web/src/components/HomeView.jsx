@@ -103,18 +103,30 @@ export default function HomeView({ projects, loading }) {
 
   if (projects.length === 0) {
     return (
-      <div className="empty-state">
-        <p>No projects registered.</p>
-        <p>
-          <a href="/admin" className="admin-nav-link" onClick={e => {
+      <div className="empty-state empty-state--onboarding">
+        <h2 className="empty-state__title">No projects yet</h2>
+        <p className="empty-state__body">
+          Add your first project to start monitoring its pipeline, Git activity, and test health.
+        </p>
+        <a
+          className="empty-state__cta"
+          href="/admin"
+          onClick={e => {
             e.preventDefault();
             window.history.pushState({}, '', '/admin');
             window.dispatchEvent(new PopStateEvent('popstate'));
-          }}>
-            Open admin panel
-          </a>
-          {' '}to add your first project.
-        </p>
+          }}
+        >
+          Add your first project
+        </a>
+        <details className="empty-state__disclosure">
+          <summary>What counts as a project?</summary>
+          <p>
+            Any local folder that contains an <code>.aitri/</code> directory (managed by Aitri Core)
+            or an Aitri-generated project snapshot. Hub reads those files read-only from{' '}
+            <code>~/.aitri-hub/</code>; it never writes to the project folder itself.
+          </p>
+        </details>
       </div>
     );
   }

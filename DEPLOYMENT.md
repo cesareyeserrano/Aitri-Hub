@@ -4,10 +4,10 @@
 
 | Requirement | Version | Notes |
 |---|---|---|
-| Node.js | ≥ 18.0.0 | CLI only |
-| Docker | ≥ 24.0 | Web dashboard |
-| Docker Compose | ≥ 2.20 | Web dashboard |
+| Node.js | ≥ 18.0.0 | Required |
 | Git | ≥ 2.30 | Remote project sync |
+| Docker | ≥ 24.0 | Optional — packaged deployment only |
+| Docker Compose | ≥ 2.20 | Optional — packaged deployment only |
 
 ## Environment Variables
 
@@ -16,8 +16,8 @@ All variables are optional — defaults shown below.
 | Variable | Type | Required | Default | Description |
 |---|---|---|---|---|
 | `AITRI_HUB_DIR` | string | optional | `~/.aitri-hub` | State, cache, and log directory |
-| `AITRI_HUB_PORT` | number | optional | `3000` | Web dashboard port |
-| `AITRI_HUB_REFRESH_MS` | number | optional | `5000` | CLI monitor refresh interval (ms) |
+| `AITRI_HUB_PORT` | number | optional | `3000` | Dashboard port (bound to 127.0.0.1) |
+| `AITRI_HUB_REFRESH_MS` | number | optional | `5000` | Collector refresh interval (ms) |
 | `AITRI_HUB_GIT_TIMEOUT_MS` | number | optional | `5000` | Git exec timeout (ms) |
 | `AITRI_HUB_MAX_PROJECTS` | number | optional | `50` | Maximum registered projects |
 | `AITRI_HUB_STALE_HOURS` | number | optional | `72` | Stale commit threshold (hours) |
@@ -27,106 +27,103 @@ Copy `.env.example` to `.env` and set values as needed.
 ## Development Setup
 
 ```bash
-# 1. Install CLI dependencies
 npm install
-
-# 2. Register your projects
-node bin/aitri-hub.js setup
-
-# 3. Run the CLI monitor
-node bin/aitri-hub.js monitor
+aitri-hub web
 ```
 
-## Web Dashboard — First Run (Docker)
+Open [http://localhost:3000](http://localhost:3000). Register projects from the `/admin` page — no terminal wizard is required.
 
-> **Note:** First build takes 2–3 minutes (npm ci + vite build inside Docker). Subsequent runs use cached layers and start in under 30 seconds.
+## Production Deploy (Node.js)
 
 ```bash
-# 1. Build and start the web dashboard
-docker compose up --build -d
-
-# 2. Verify the container is healthy
-docker compose ps
-
-# 3. Open the dashboard
-open http://localhost:3000
+npm install -g aitri-hub@<version>
+aitri-hub web
 ```
 
-## Web Dashboard — Subsequent Runs
+The single process serves the UI and runs the collector. Use a supervisor (systemd, launchd, pm2) to keep it running:
 
-```bash
-# Start (uses cached image)
-docker compose up -d
-
-# Stop
-docker compose down
-
-# View logs
-docker compose logs -f web
-```
-
-## Production Deploy
-
-```bash
-# Build image with explicit tag
-docker build -t aitri-hub-web:1.0.0 .
-
-# Run with explicit image tag
-docker compose up -d
+```ini
+# /etc/systemd/system/aitri-hub.service
+[Service]
+ExecStart=/usr/local/bin/aitri-hub web
+Restart=on-failure
+Environment=AITRI_HUB_PORT=3000
+User=aitri
 ```
 
 ## Health Check Endpoint
 
-The nginx server exposes a health check at:
+The server exposes:
 
 ```
 GET http://localhost:3000/health
 → 200 OK  "ok\n"
 ```
 
-Docker Compose polls this endpoint every 10 seconds. The container is marked `healthy` after 3 consecutive successes.
-
 ## Rollback Procedure
 
-### CLI rollback
 ```bash
-# Install a previous version
 npm install -g aitri-hub@<previous-version>
-
-# Verify
 aitri-hub --version
 ```
 
-### Web dashboard rollback
-```bash
-# Stop current container
-docker compose down
-
-# Pull or build the previous image
-docker build -t aitri-hub-web:previous .
-
-# Edit docker-compose.yml to use aitri-hub-web:previous
-# Then restart
-docker compose up -d
-```
-
-The `~/.aitri-hub/` data directory is never modified by Docker — rollback is safe and data is preserved.
+The `~/.aitri-hub/` data directory is never touched by an install — rollback is safe and data is preserved.
 
 ## Data Persistence
 
 | Path | Purpose | Modified by |
 |---|---|---|
-| `~/.aitri-hub/projects.json` | Registered project list | `aitri-hub setup` (CLI) |
-| `~/.aitri-hub/dashboard.json` | Latest collected metrics | `aitri-hub monitor` (CLI) |
-| `~/.aitri-hub/cache/` | Cloned remote project repos | `aitri-hub monitor` (CLI) |
-| `~/.aitri-hub/logs/aitri-hub.log` | Error log | `aitri-hub monitor` (CLI) |
-
-The Docker container mounts `~/.aitri-hub/` as **read-only** (`/data:ro`). No container process can modify your data.
+| `~/.aitri-hub/projects.json` | Registered project list | `/api/projects` (admin UI) |
+| `~/.aitri-hub/dashboard.json` | Latest collected metrics | `aitri-hub web` (collector) |
+| `~/.aitri-hub/cache/` | Cloned remote project repos | `aitri-hub web` (collector) |
+| `~/.aitri-hub/logs/aitri-hub.log` | Error log | `aitri-hub web` (collector) |
 
 ## Security Notes
 
-- The Docker container runs as the non-root `nginx` user.
+- The HTTP server binds to `127.0.0.1` only — it is not reachable from other hosts.
+- `/api/*` routes enforce a loopback-peer check (`127.0.0.1` or `::1`); any other peer receives `403`.
+- No authentication is implemented — the dashboard is intended for local use only. Do not expose port 3000 to untrusted networks via tunnels, reverse proxies, or VPNs without adding your own auth layer.
 - No data is transmitted outside the local machine (except `git pull` for remote-registered projects).
-- The web dashboard enforces `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, and a strict `Content-Security-Policy`.
 - `dashboard.json` is served with `Cache-Control: no-store` to prevent stale reads.
-- No authentication is implemented — the web dashboard is intended for local use only. Do not expose port 3000 to untrusted networks.
+
+---
+
+## Optional: Docker deployment
+
+Docker is **not** the recommended deployment path — it exists for users who prefer container-packaged workloads. The Node.js process is self-sufficient and does not require Docker or nginx.
+
+> **Note:** First build takes 2–3 minutes (npm ci + vite build inside Docker). Subsequent runs use cached layers.
+
+### First run
+
+```bash
+docker compose up --build -d
+docker compose ps
+open http://localhost:3000
+```
+
+### Subsequent runs
+
+```bash
+docker compose up -d
+docker compose down
+docker compose logs -f web
+```
+
+### Production image
+
+```bash
+docker build -t aitri-hub-web:1.0.0 .
+docker compose up -d
+```
+
+### Docker rollback
+
+```bash
+docker compose down
+docker build -t aitri-hub-web:previous .
+# Edit docker-compose.yml to use aitri-hub-web:previous
+docker compose up -d
+```
+
+The Docker container mounts `~/.aitri-hub/` as **read-only** (`/data:ro`). It serves the pre-built SPA via nginx and relies on a separate Node process (or a sidecar) to run the collector that writes `dashboard.json`. Most users should prefer the plain `aitri-hub web` path above.

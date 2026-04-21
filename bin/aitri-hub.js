@@ -2,25 +2,24 @@
 /**
  * Module: bin/aitri-hub
  * Purpose: CLI entry point — parse subcommand and dispatch to command handlers.
- * Dependencies: lib/commands/*
+ * Dependencies: lib/commands/web.js, lib/commands/integration-review.js
+ *
+ * @aitri-trace FR-ID: FR-001, US-ID: US-001, AC-ID: AC-001, TC-ID: TC-001h
  */
 
-import { cmdInit } from '../lib/commands/init.js';
-import { cmdSetup } from '../lib/commands/setup.js';
-import { cmdMonitor } from '../lib/commands/monitor.js';
 import { cmdWeb } from '../lib/commands/web.js';
+import { cmdIntegrationReview } from '../lib/commands/integration-review.js';
 
 const USAGE = `
-Aitri Hub — Centralized monitoring dashboard for Aitri projects.
+Aitri Hub — Local web dashboard for Aitri-managed projects.
 
 Usage:
-  aitri-hub init      First-time setup wizard
-  aitri-hub setup     Add or update registered projects
-  aitri-hub web       Start the web dashboard at localhost:3000
-  aitri-hub help      Show this message
+  aitri-hub web                               Start the dashboard at http://localhost:3000
+  aitri-hub integration review <version>      Record an Aitri CHANGELOG review
+  aitri-hub help                              Show this message
+  aitri-hub --version                         Print version and exit
 
-Options:
-  --version   Print version and exit
+Data lives in ~/.aitri-hub/. See README.md for details.
 `;
 
 async function main() {
@@ -40,21 +39,23 @@ async function main() {
   }
 
   switch (subcommand) {
-    case 'init':
-      await cmdInit();
-      break;
-    case 'setup': {
-      const scanIdx = rest.indexOf('--scan');
-      const scanDir = scanIdx !== -1 ? rest[scanIdx + 1] : undefined;
-      await cmdSetup({ scanDir });
-      break;
-    }
-    case 'monitor':
-      cmdMonitor();
-      break;
     case 'web':
       await cmdWeb();
       break;
+    case 'integration': {
+      const [action, ...actionArgs] = rest;
+      if (action === 'review') {
+        const code = await cmdIntegrationReview(actionArgs);
+        process.exitCode = code;
+      } else {
+        console.error(
+          `Unknown 'integration' action: '${action ?? ''}'. Expected: review.\n` +
+          `Usage: aitri-hub integration review <version> [--changelog <path>] [--note <str>]`,
+        );
+        process.exitCode = 1;
+      }
+      break;
+    }
     default:
       console.error(`Unknown command: '${subcommand}'. Run 'aitri-hub help' for usage.`);
       process.exitCode = 1;

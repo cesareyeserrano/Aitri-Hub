@@ -3,6 +3,11 @@
 > Open items only. Closed items go in CHANGELOG.md.
 > Priority: P1 (critical) / P2 (important) / P3 (nice to have)
 
+> **Posture note (feature `hub-web-only`, 2026-04-21):** Aitri Hub is a **web-only** tool.
+> The `init`, `setup`, and `monitor` CLI commands have been removed. All project registration
+> happens in the browser at `/admin`. Historical backlog entries below may mention those
+> removed commands — read them as history, not as current interfaces.
+
 ---
 
 ## Open
@@ -93,6 +98,70 @@
   - Push an `aitri approve 1` commit to the repo
   - Within 2 poll cycles (≤2 min), Hub's monitor reflects the updated phase state
   - GitHub 429 response: Hub shows a warning but does not crash or remove the project
+
+- [ ] P2 — **CLI upstream version check (`cliUpdateAlert`)** — Hub currently has no way to tell a user that their installed Aitri CLI is behind the latest published version. Only the author notices new releases; every other user silently stays on whatever version they first installed.
+
+  Problem: Hub's existing `VERSION_MISMATCH` rule ([lib/alerts/engine.js:175-191](lib/alerts/engine.js#L175-L191)) compares `project.aitriVersion` (baked into `.aitri` at init) vs the locally installed `aitri --version`. It answers "was this project initialized with an older CLI than I have installed?" — a per-project question. It does NOT answer "is my installed CLI itself outdated compared to the latest published Aitri?". A user can have all projects "in sync with my CLI" while their CLI is N versions behind `main`.
+
+  The existing `integrationAlert` ([lib/collector/integration-guard.js](lib/collector/integration-guard.js)) is a different axis: it warns Hub developers when the installed Aitri exceeds what Hub has reviewed. It does not cover "user's CLI is stale".
+
+  Design (validated with the author 2026-04-21):
+
+  - Add a **dashboard-level** alert (not per-project) alongside `integrationAlert`.
+  - Compare `detectAitriVersion()` (already computed once per cycle in `collectAll`) against the `version` field of `package.json` fetched from the Aitri repo on GitHub.
+  - Emit `cliUpdateAlert` only when `detected < upstream`. Never when equal or ahead.
+  - Failure-silent on any fetch error (offline, 404, 429, timeout) — missing the alert is acceptable; crashing is not.
+
+  Files:
+  - `lib/collector/upstream-version-reader.js` *(new)* — fetches `package.json` from configurable upstream URL, parses `.version`, TTL-caches in memory. Reuses `httpsGet` pattern from [lib/collector/github-poller.js](lib/collector/github-poller.js).
+  - `lib/collector/upstream-guard.js` *(new)* — pure function `evaluateUpstreamAlert(detectedVersion, upstreamVersion) → alert | null`. Reuses `semverGt`-style compare.
+  - `lib/collector/index.js` — in `collectAll`, invoke reader + guard, embed result as `cliUpdateAlert` at dashboard level (next to `integrationAlert`); add `meta.latestAitriVersion` alongside `meta.detectedAitriVersion`.
+  - `lib/constants.js` — add:
+    - `UPSTREAM_URL_DEFAULT = 'https://raw.githubusercontent.com/cesareyeserrano/Aitri/main/package.json'`
+    - `UPSTREAM_URL_FALLBACK = 'https://raw.githubusercontent.com/cesareyeserrano/Aitri/master/package.json'`
+    - `UPSTREAM_REFRESH_MS = parseInt(process.env.AITRI_HUB_UPSTREAM_REFRESH_MS ?? '21600000', 10)` *(6 hours)*
+    - Env override `AITRI_HUB_UPSTREAM_URL` respected by the reader.
+    - New alert type in `ALERT_TYPE`: `CLI_OUTDATED: 'cli-outdated'` *(reserved; may also live only in the dashboard payload without an engine-side entry — decide in Phase 2)*.
+  - `tests/unit/upstream-guard.test.js` *(new)* — pure cases: detected < upstream → alert; detected ≥ upstream → null; either null → null.
+  - `tests/unit/upstream-version-reader.test.js` *(new)* — stub `https.get`: success, 404, 429, timeout, invalid JSON, missing `version` field. Verify TTL cache prevents re-fetch inside window.
+  - `tests/unit/collector-index.test.js` *(update if exists)* — assert `meta.latestAitriVersion` and `cliUpdateAlert` fields appear in dashboard payload.
+  - `README.md` — document `AITRI_HUB_UPSTREAM_URL` and `AITRI_HUB_UPSTREAM_REFRESH_MS` env vars.
+  - `STYLE_GUIDE.md` — specify rendering of dashboard-level alert banner if not already covered by `integrationAlert` rendering.
+
+  Behavior:
+  - Dashboard refresh cycle: reader consults its TTL cache; only hits the network if `Date.now() - lastFetch > UPSTREAM_REFRESH_MS` (default 6h). Poll cycle is unaffected (~5s for local, ~60s for remote).
+  - Fetch attempt order: `UPSTREAM_URL_DEFAULT` → on 404 only, fall back to `UPSTREAM_URL_FALLBACK`. On any other failure (timeout, 429, network), set cache to `null` for the full TTL — do NOT retry per cycle.
+  - Env override: if `AITRI_HUB_UPSTREAM_URL` is set, it REPLACES the default and disables the fallback (user-controlled URL assumed correct).
+  - Severity: `info` if only patch behind; `warning` if minor or major behind. Reasoning: patch-level lag shouldn't nag; minor+ lag indicates material drift worth surfacing.
+  - Message shape: `Aitri v<upstream> available (installed: v<detected>)` — action: `git pull && npm i -g .` from the Aitri repo.
+  - When `detectAitriVersion()` returns null (CLI not installed): skip the check entirely — existing `integrationAlert` already handles that case.
+
+  Decisions:
+  - **Upstream source = raw `package.json` on `main`.** Not GitHub Releases API (60/hr unauth rate limit, requires disciplined release tagging). Not npm (Aitri is not published there). Not a custom domain (overkill).
+  - **TTL 6h** balances freshness vs rate limit concern — the poll cycle runs every 5s, so without a TTL this would be thousands of requests/day.
+  - **Failure-silent.** Dropping the feature on fetch error returns Hub to the current state — no regression, no crash.
+  - **Additive to dashboard schema.** `SCHEMA_VERSION` does NOT bump. New fields are optional; existing consumers ignore them.
+  - **Does not replace `VERSION_MISMATCH` per-project rule** — both coexist; they answer different questions (see Problem section).
+  - **No changes to Aitri Core.** This is 100% Hub-internal — Aitri's `.aitri` schema, artifact contracts, and `docs/integrations/` are untouched. Confirmed against Aitri's integration maintenance rule: no artifact schema change, no `.aitri` schema change, no new surface from Aitri.
+  - **Optional follow-up (NOT in scope of this feature):** add a convention rule #7 to Aitri `docs/integrations/README.md` recommending this pattern for all subproducts (Graph, future tools). Defer until Hub's implementation is proven.
+
+  Risks & mitigations:
+  - GitHub URL may change (owner rename, repo rename, branch rename). Mitigated by: (a) constant + env override, (b) main→master fallback chain, (c) failure-silent mode returns Hub to pre-feature state. Publishing to npm or owning a domain is out of scope — the failure mode is non-destructive.
+  - Pre-release tags (`0.1.85-beta.1`) not handled by the numeric semver compare. Same limitation as existing `integration-guard.js::semverGt`. Accept as known debt — consistent with existing code.
+
+  Acceptance:
+  - Installed Aitri v0.1.70, upstream `main/package.json` reports 0.1.84 → dashboard shows `cliUpdateAlert` with severity `warning`, message references both versions.
+  - Installed Aitri v0.1.84, upstream reports 0.1.84 → no alert, `meta.latestAitriVersion = "0.1.84"`.
+  - Installed Aitri v0.1.85, upstream reports 0.1.84 → no alert (ahead of upstream is fine).
+  - Hub offline → no alert, no crash, dashboard renders normally.
+  - Upstream returns 429 → no alert for full TTL window, no retry storm.
+  - Env `AITRI_HUB_UPSTREAM_URL` set to a custom URL → reader hits that URL exclusively, skips fallback.
+  - `detectAitriVersion()` returns null → no `cliUpdateAlert` emitted.
+
+  Implementation notes:
+  - Follow Hub's AGENTS.md: run `aitri feature init cli-upstream-check` in the Hub repo and drive Phases 1-5 through the pipeline.
+  - Do NOT modify this backlog entry during implementation — use the feature's own artifacts. Mark as `[x] *(implemented)*` only after Phase 5 approval and move content to CHANGELOG.md.
+  - Author verification (2026-04-21): no changes required to Aitri Core repo at `/Users/cesareyeserrano/Documents/PROJECTS/AITRI`.
 
 ---
 
