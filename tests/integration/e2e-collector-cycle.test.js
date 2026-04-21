@@ -4,7 +4,7 @@
  *
  * Note on TC-E2E-001 version stubbing: node:test (Node 18+) does not support
  * mock.module() for ESM. Instead, TC-E2E-001 verifies the full data flow by
- * driving evaluateIntegrationAlert('0.1.99') directly (guaranteed to produce
+ * driving evaluateIntegrationAlert('0.1.99', '0.1.80') directly (guaranteed to produce
  * a warning) and confirming that writeDashboard + collectAll correctly embed
  * and persist the integrationAlert at the top level of dashboard.json.
  */
@@ -74,7 +74,7 @@ describe('TC-E2E-001: full collector cycle — integrationAlert in dashboard.jso
 
   it('TC-E2E-001: evaluateIntegrationAlert returns warning for version > INTEGRATION_LAST_REVIEWED', async () => {
     const { evaluateIntegrationAlert } = await import('../../lib/collector/integration-guard.js');
-    const alert = evaluateIntegrationAlert('0.1.99');
+    const alert = evaluateIntegrationAlert('0.1.99', '0.1.80');
     assert.ok(alert !== null, 'alert should be non-null when CLI > reviewed version');
     assert.equal(alert.severity, 'warning');
     assert.ok(alert.message.includes('0.1.99'), 'message should contain detected version');
@@ -85,7 +85,7 @@ describe('TC-E2E-001: full collector cycle — integrationAlert in dashboard.jso
     const { evaluateIntegrationAlert } = await import('../../lib/collector/integration-guard.js');
     const { writeDashboard, dashboardFilePath } = await import('../../lib/store/dashboard.js');
 
-    const integrationAlert = evaluateIntegrationAlert('0.1.99');
+    const integrationAlert = evaluateIntegrationAlert('0.1.99', '0.1.80');
     assert.ok(integrationAlert !== null);
 
     const payload = {

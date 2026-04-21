@@ -412,21 +412,39 @@ function GitSection({ gitMeta }) {
 // ── VERSION section (unchanged) ───────────────────────────────────────────────
 
 function VersionSection({ project }) {
-  const { appVersion, aitriState } = project;
+  const { appVersion, aitriState, alerts } = project;
   const aitriVer = aitriState?.aitriVersion ?? null;
   if (!appVersion && !aitriVer) return null;
+
+  const mismatch = (alerts ?? []).find(a => a.type === 'version-mismatch');
+  const cliVer = mismatch
+    ? (mismatch.message.match(/CLI\s+(\d+\.\d+\.\d+)/) ?? [])[1] ?? null
+    : null;
+
   return (
     <>
       <hr className="card__divider" />
       <SectionLabel label="VERSION" />
       <div className="card-section">
         {aitriVer && (
-          <div className="card-section__row">
+          <div className="card-section__row" data-testid="version-row">
             <span className="card-section__icon" style={{ color: 'var(--syn-comment)' }}>⊙</span>
             <span className="card-section__key">aitri</span>
-            <span className="card-section__val" style={{ color: 'var(--syn-teal)' }}>
+            <span
+              className="card-section__val"
+              style={{ color: mismatch ? 'var(--syn-yellow)' : 'var(--syn-teal)' }}
+            >
               v{aitriVer}
             </span>
+            {mismatch && (
+              <span
+                className="card-section__val"
+                data-testid="version-mismatch-hint"
+                style={{ color: 'var(--syn-yellow)', fontSize: '11px', marginLeft: '6px' }}
+              >
+                ⚠ CLI {cliVer ? `v${cliVer}` : 'newer'} · {mismatch.command ?? 'aitri adopt --upgrade'}
+              </span>
+            )}
           </div>
         )}
       </div>

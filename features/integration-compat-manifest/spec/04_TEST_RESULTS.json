@@ -1,0 +1,245 @@
+{
+  "executed_at": "2026-04-21T03:05:49.235Z",
+  "test_runner": "node --test",
+  "exit_code": 1,
+  "results": [
+    {
+      "tc_id": "TC-030h",
+      "status": "pass",
+      "notes": "✔ TC-030h: valid manifest round-trips and is consumed by readManifest (1.608458ms)"
+    },
+    {
+      "tc_id": "TC-030e",
+      "status": "pass",
+      "notes": "✔ TC-030e: missing file → status=absent without creating the dir (0.225375ms)"
+    },
+    {
+      "tc_id": "TC-030f",
+      "status": "pass",
+      "notes": "✔ TC-030f: malformed JSON in manifest file → status=absent (no throw) (0.842625ms)"
+    },
+    {
+      "tc_id": "TC-030e2",
+      "status": "pass",
+      "notes": "✔ TC-030e2: invalid reviewedUpTo format rejected, not silently accepted (0.334375ms)"
+    },
+    {
+      "tc_id": "TC-031h",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-031h\" (e.g. test_TC_031h_description) and add # @aitri-tc TC-031h above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-031f",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-031f\" (e.g. test_TC_031f_description) and add # @aitri-tc TC-031f above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-031e",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-031e\" (e.g. test_TC_031e_description) and add # @aitri-tc TC-031e above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-031f2",
+      "status": "pass",
+      "notes": "✔ TC-031f2: missing version argument → non-zero exit, stderr mentions \"version\" and usage (66.946834ms)"
+    },
+    {
+      "tc_id": "TC-031e2",
+      "status": "pass",
+      "notes": "✔ TC-031e2: --note \"ops-approved\" round-trips verbatim into manifest (135.058625ms)"
+    },
+    {
+      "tc_id": "TC-032h",
+      "status": "pass",
+      "notes": "✔ TC-032h: extracts body between `## 0.1.82` and next `## ` heading (0.467958ms)"
+    },
+    {
+      "tc_id": "TC-032h2",
+      "status": "pass",
+      "notes": "✔ TC-032h2: same body hashed twice yields identical 64-hex digest (0.292333ms)"
+    },
+    {
+      "tc_id": "TC-032e",
+      "status": "pass",
+      "notes": "✔ TC-032e: trailing whitespace trimmed before hash (cosmetic edits ignored) (0.048959ms)"
+    },
+    {
+      "tc_id": "TC-032f",
+      "status": "pass",
+      "notes": "✔ TC-032f: missing version throws SectionNotFound with version in message (0.100125ms)"
+    },
+    {
+      "tc_id": "TC-032e2",
+      "status": "pass",
+      "notes": "✔ TC-032e2: single-character change flips the digest (0.055292ms)"
+    },
+    {
+      "tc_id": "TC-033h",
+      "status": "pass",
+      "notes": "✔ TC-033h: reviewedUpTo argument controls alert without module reload (0.037833ms)"
+    },
+    {
+      "tc_id": "TC-033e",
+      "status": "pass",
+      "notes": "✔ TC-033e: deleting manifest mid-session falls back to baseline (no throw) (0.02425ms)"
+    },
+    {
+      "tc_id": "TC-033f",
+      "status": "pass",
+      "notes": "✔ TC-033f: no top-level reviewedUpTo const and no import of INTEGRATION_LAST_REVIEWED (0.205541ms)"
+    },
+    {
+      "tc_id": "TC-033e2",
+      "status": "pass",
+      "notes": "✔ TC-033e2: overwriting reviewedUpTo between cycles changes the alert (0.761625ms)"
+    },
+    {
+      "tc_id": "TC-034h",
+      "status": "pass",
+      "notes": "✔ TC-034h: detected > FALLBACK_BASELINE without manifest → warning mentioning fallback (0.03225ms)"
+    },
+    {
+      "tc_id": "TC-034e",
+      "status": "pass",
+      "notes": "✔ TC-034e: manifest value takes precedence over fallback (no alert when matched) (0.024417ms)"
+    },
+    {
+      "tc_id": "TC-034f",
+      "status": "pass",
+      "notes": "✔ TC-034f: exactly one FALLBACK_BASELINE assignment under lib/ and bin/ (1.520917ms)"
+    },
+    {
+      "tc_id": "TC-035h",
+      "status": "pass",
+      "notes": "✔ TC-035h: reviewedAt + changelogHash echoed verbatim when provided (0.109125ms)"
+    },
+    {
+      "tc_id": "TC-035e",
+      "status": "pass",
+      "notes": "✔ TC-035e: reviewedAt + changelogHash both present as keys with null value when no manifest (0.032416ms)"
+    },
+    {
+      "tc_id": "TC-035f",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-035f\" (e.g. test_TC_035f_description) and add # @aitri-tc TC-035f above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-035e2",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-035e2\" (e.g. test_TC_035e2_description) and add # @aitri-tc TC-035e2 above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-035f2",
+      "status": "pass",
+      "notes": "✔ TC-035f2: null alert when versions match (no stray provenance fields) (0.021ms)"
+    },
+    {
+      "tc_id": "TC-036h",
+      "status": "pass",
+      "notes": "✔ TC-036h: stored hash matches live hash → no drift alert (0.122084ms)"
+    },
+    {
+      "tc_id": "TC-036f",
+      "status": "pass",
+      "notes": "✔ TC-036f: stored hash differs from live → \"changelog modified since review\" warning (0.061708ms)"
+    },
+    {
+      "tc_id": "TC-036e",
+      "status": "pass",
+      "notes": "✔ TC-036e: changelogHash=null in manifest skips drift check (version-only compare) (0.048666ms)"
+    },
+    {
+      "tc_id": "TC-036e2",
+      "status": "pass",
+      "notes": "✔ TC-036e2: currentChangelogHash=null (CHANGELOG missing) skips drift, version compare proceeds (0.054125ms)"
+    },
+    {
+      "tc_id": "TC-032-SEC-1",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-032-SEC-1\" (e.g. test_TC_032_SEC_1_description) and add # @aitri-tc TC-032-SEC-1 above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-032-SEC-2",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-032-SEC-2\" (e.g. test_TC_032_SEC_2_description) and add # @aitri-tc TC-032-SEC-2 above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-032-SEC-3",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-032-SEC-3\" (e.g. test_TC_032_SEC_3_description) and add # @aitri-tc TC-032-SEC-3 above it. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-NFR-030-PERF",
+      "status": "skip",
+      "notes": "Not detected in test runner output — rename the test function to include \"TC-NFR-030-PERF\" (e.g. test_TC_NFR_030_PERF_description) and add # @aitri-tc TC-NFR-030-PERF above it. E2E tests may also require a browser environment."
+    }
+  ],
+  "fr_coverage": [
+    {
+      "fr_id": "FR-030",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-031",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 4,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-032",
+      "tests_passing": 5,
+      "tests_failing": 0,
+      "tests_skipped": 2,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-033",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-034",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-035",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 2,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-036",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    }
+  ],
+  "summary": {
+    "total": 34,
+    "passed": 25,
+    "failed": 0,
+    "skipped": 9,
+    "skipped_e2e": 3,
+    "skipped_no_marker": 6,
+    "manual": 0,
+    "manual_verified": 0
+  }
+}

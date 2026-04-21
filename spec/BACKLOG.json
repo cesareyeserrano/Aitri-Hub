@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "1",
+  "items": [
+    {
+      "id": "BL-001",
+      "title": "Replace INTEGRATION_LAST_REVIEWED hardcoded constant with compat manifest gate",
+      "priority": "P2",
+      "problem": "Today the integration gate compares semver: if (aitri.version !== INTEGRATION_LAST_REVIEWED) → warn. AITRI bumps minor each release (mostly additive), so the gate fires false positives every release and requires manual constant bump + process restart. Root-cause fix: AITRI publishes docs/integrations/compat.json (machine-readable list of versions with breaking:bool flag). Hub reads it from node_modules/aitri/, walks from last-reviewed+1 to installed version, warns only if any.breaking=true with specific version + reason. Removes hardcoded constant entirely. Re-evaluates per collection cycle (5s) so no process restart needed when AITRI updates. Requires coordinated change in AITRI (publish manifest from CHANGELOG) + HUB (consume + new gate logic). Should be routed via aitri feature init in HUB. Suggested feature name: compat-manifest-gate.",
+      "status": "closed",
+      "createdAt": "2026-04-18T02:26:26.394Z",
+      "closedAt": "2026-04-21T03:08:42.364Z"
+    },
+    {
+      "id": "BL-002",
+      "title": "Remove redundant CLI gestiones — Hub should be 100% web-managed",
+      "priority": "P2",
+      "problem": "Hub mission: dashboard 100% web. Current CLI surface in bin/aitri-hub.js exposes: init (bootstrap), setup (add/edit projects), web (start server), monitor (stub). The setup command duplicates the admin panel added by hub-mvp-web feature (AdminAddForm/AdminProjectList → POST/DELETE /api/projects). The monitor command is a deprecation stub that should be removed entirely (not just print a notice). Action: (1) Remove monitor case from bin/aitri-hub.js + delete lib/commands/monitor.js + remove from USAGE help text; (2) Decide on setup — either remove (forcing all project mgmt via web admin panel) or keep as parity (CLI users can still use it). User intent suggests removal. Need to verify no tests/docs depend on these commands. Keep init (first-run wizard for hub dir layout) and web (bootstrap). Should route via aitri feature init when implementing — affects user-facing surface.",
+      "status": "open",
+      "createdAt": "2026-04-18T02:26:34.778Z"
+    },
+    {
+      "id": "BL-003",
+      "title": "Limit dashboard to max 3 project cards per row",
+      "priority": "P3",
+      "problem": "Current grid layout in HomeView/ProjectCard adapts to viewport width and can show 4+ cards per row on wide screens, making each card narrow and harder to scan. Cap the layout at 3 columns max so cards keep enough width for all sections (BLOCKERS, PIPELINE, QUALITY, GIT, VERSION) to render without crowding. Files: web/src/components/HomeView.jsx and/or web/src/styles.css (grid-template-columns or max-width on the grid container).",
+      "status": "open",
+      "createdAt": "2026-04-18T02:28:58.647Z"
+    },
+    {
+      "id": "BL-004",
+      "title": "Quitar el reloj del header (no aporta valor)",
+      "priority": "P3",
+      "problem": "El reloj actual en el header del dashboard no aporta valor funcional. El usuario ya tiene el reloj del sistema operativo. Ocupa espacio visual sin justificación.",
+      "status": "open",
+      "createdAt": "2026-04-18T02:30:23.686Z"
+    },
+    {
+      "id": "BL-005",
+      "title": "Menu lateral colapsable para acciones",
+      "priority": "P3",
+      "problem": "Las acciones del dashboard (admin, settings, etc.) están dispersas o no tienen un lugar dedicado. Necesitamos un menú lateral colapsable que agrupe todas las acciones de gestión, manteniendo el área principal limpia para visualización de proyectos.",
+      "status": "open",
+      "createdAt": "2026-04-18T02:30:27.056Z"
+    },
+    {
+      "id": "BL-006",
+      "title": "Página de ayuda/guía de uso de Aitri HUB",
+      "priority": "P3",
+      "problem": "No existe documentación in-app que explique cómo usar Aitri HUB, qué significa cada métrica/alerta del dashboard, cómo interpretar los estados de los proyectos, y cómo actuar sobre la información mostrada. Los usuarios nuevos no tienen referencia.",
+      "status": "open",
+      "createdAt": "2026-04-18T02:30:32.105Z"
+    },
+    {
+      "id": "BL-007",
+      "title": "resolve realpath before /data path-traversal check",
+      "priority": "P2",
+      "problem": "startsWith guard on joined path does not catch symlink escapes from ~/.aitri-hub/",
+      "status": "open",
+      "createdAt": "2026-04-20T19:15:49.347Z"
+    },
+    {
+      "id": "BL-008",
+      "title": "validate numeric env vars at boot",
+      "priority": "P2",
+      "problem": "parseInt silently produces NaN for invalid input, breaking setInterval/timeouts; add Number.isFinite guards with fallback to defaults",
+      "status": "open",
+      "createdAt": "2026-04-20T19:15:53.948Z"
+    },
+    {
+      "id": "BL-009",
+      "title": "add ESLint + Prettier with lint gate in CI",
+      "priority": "P3",
+      "problem": "no root .eslintrc/.prettierrc; CI runs tests only; style drift not detected",
+      "status": "open",
+      "createdAt": "2026-04-20T19:16:00.089Z"
+    },
+    {
+      "id": "BL-010",
+      "title": "extract alerts engine to rule-registry pattern",
+      "priority": "P3",
+      "problem": "evaluateAlerts aggregates many rules in one function; rule-array refactor would isolate changes and enable per-rule metrics",
+      "status": "open",
+      "createdAt": "2026-04-20T19:16:04.586Z"
+    }
+  ]
+}

@@ -1,0 +1,837 @@
+{
+  "test_plan": {
+    "strategy": "Three-level pyramid: unit tests pin the pure-logic modules (changelog parsing, hashing, manifest schema validation) where mistakes are cheap to diagnose; integration tests exercise the collector + manifest on the real filesystem (with os.tmpdir() + AITRI_HUB_DIR override) because FR-030/FR-034 are persistence FRs and in-memory tests cannot prove disk round-trips; two e2e tests drive the shipping user journey — clearing a live banner via the CLI and rendering provenance in the React IntegrationAlertBanner at 375px viewport. Security tests (symlink, path traversal, oversize note) live at the integration level because the attacks only land when fs.realpathSync and the user-data root are both real. All file paths use os.tmpdir() + uuid — zero machine-specific absolute paths.",
+    "coverage_goal": "80%",
+    "test_types": ["unit", "integration", "e2e"]
+  },
+  "type_coverage_matrix": {
+    "FR-030": { "unit": "SHOULD", "integration": "MUST", "e2e": "-" },
+    "FR-031": { "unit": "SHOULD", "integration": "MUST", "e2e": "MUST" },
+    "FR-032": { "unit": "MUST", "integration": "SHOULD", "e2e": "-" },
+    "FR-033": { "unit": "MUST", "integration": "MUST", "e2e": "MUST" },
+    "FR-034": { "unit": "SHOULD", "integration": "MUST", "e2e": "-" },
+    "FR-035": { "unit": "SHOULD", "integration": "MUST", "e2e": "MUST" },
+    "FR-036": { "unit": "MUST", "integration": "MUST", "e2e": "-" }
+  },
+  "test_cases": [
+    {
+      "id": "TC-030h",
+      "requirement_id": "FR-030",
+      "user_story_id": "US-033",
+      "ac_id": "AC-035",
+      "title": "Manifest — well-formed file with reviewedUpTo 0.1.82 is consumed by collector",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid> exported for the test process",
+        "Directory AITRI_HUB_DIR exists and is empty"
+      ],
+      "given": "AITRI_HUB_DIR/integration-compat.json exists with content {\"schemaVersion\":\"1\",\"reviewedUpTo\":\"0.1.82\",\"reviewedAt\":\"2026-04-20T12:30:00.000Z\",\"changelogHash\":\"a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2\",\"reviewerNote\":null} and detectedVersion is '0.1.82'",
+      "when": "collectAll() runs one cycle and writes AITRI_HUB_DIR/dashboard.json",
+      "then": "dashboard.json parsed as JSON has integrationAlert === null (exact equality) because detected '0.1.82' equals manifest.reviewedUpTo '0.1.82'",
+      "steps": [
+        "Write manifest JSON string to AITRI_HUB_DIR/integration-compat.json",
+        "Invoke collectAll() with detectedVersion='0.1.82'",
+        "JSON.parse the resulting dashboard.json",
+        "Assert result.integrationAlert === null"
+      ],
+      "expected_result": "dashboard.json.integrationAlert === null after collector reads the manifest with reviewedUpTo='0.1.82'",
+      "test_data": {
+        "manifest": { "schemaVersion": "1", "reviewedUpTo": "0.1.82", "reviewedAt": "2026-04-20T12:30:00.000Z", "changelogHash": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2", "reviewerNote": null },
+        "detectedVersion": "0.1.82"
+      }
+    },
+    {
+      "id": "TC-030e",
+      "requirement_id": "FR-030",
+      "user_story_id": "US-033",
+      "ac_id": "AC-034",
+      "title": "Manifest — absent file on fresh install does not create directory and returns 'absent'",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid> exported, directory does NOT exist yet"
+      ],
+      "given": "AITRI_HUB_DIR is not a directory on disk (fs.existsSync returns false)",
+      "when": "readManifest() from lib/store/compat-manifest.js is invoked",
+      "then": "return value is { status: 'absent', data: null }, fs.existsSync(AITRI_HUB_DIR) still returns false (no directory was created by the read)",
+      "steps": [
+        "Assert fs.existsSync(AITRI_HUB_DIR) === false",
+        "Call readManifest()",
+        "Assert result.status === 'absent' and result.data === null",
+        "Assert fs.existsSync(AITRI_HUB_DIR) === false again"
+      ],
+      "expected_result": "readManifest() returns { status: 'absent', data: null } AND AITRI_HUB_DIR is not created as a side effect",
+      "test_data": {}
+    },
+    {
+      "id": "TC-030f",
+      "requirement_id": "FR-030",
+      "user_story_id": "US-033",
+      "ac_id": "AC-034",
+      "title": "Manifest — malformed JSON is treated as absent, WARN logged, no exception",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid> exists",
+        "AITRI_HUB_DIR/logs/ directory exists"
+      ],
+      "given": "AITRI_HUB_DIR/integration-compat.json contains the literal string '{ this is not: valid json' (truncated, unquoted)",
+      "when": "readManifest() is invoked followed by collectAll() one cycle",
+      "then": "readManifest returns { status: 'absent', data: null }, no exception is thrown to the caller, AITRI_HUB_DIR/logs/aitri-hub.log contains a line matching /WARN.*integration-compat\\.json.*malformed/, and dashboard.json is written using the fallback baseline",
+      "steps": [
+        "Write '{ this is not: valid json' to AITRI_HUB_DIR/integration-compat.json",
+        "Call readManifest() inside a try/catch — assert no throw",
+        "Assert result.status === 'absent'",
+        "Run collectAll() with detectedVersion='0.1.82'",
+        "Grep AITRI_HUB_DIR/logs/aitri-hub.log for /WARN.*integration-compat\\.json.*malformed/",
+        "Assert dashboard.json.integrationAlert.severity === 'warning'"
+      ],
+      "expected_result": "readManifest returns 'absent', no exception thrown, WARN line with substring 'integration-compat.json' and 'malformed' present in log, collector continues with fallback",
+      "test_data": { "fileContent": "{ this is not: valid json" }
+    },
+    {
+      "id": "TC-030e2",
+      "requirement_id": "FR-030",
+      "user_story_id": "US-033",
+      "ac_id": "AC-034",
+      "title": "Manifest — invalid reviewedUpTo format '0.1' rejected with WARN, not silently accepted",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": ["AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid> exists"],
+      "given": "manifest contains {\"schemaVersion\":\"1\",\"reviewedUpTo\":\"0.1\",\"reviewedAt\":\"2026-04-20T12:30:00.000Z\",\"changelogHash\":\"a\".repeat(64),\"reviewerNote\":null}",
+      "when": "readManifest() is called",
+      "then": "result.status === 'absent' (not 'valid'), log contains /WARN.*reviewedUpTo.*invalid/, no value '0.1' is propagated to integration-guard",
+      "steps": [
+        "Write manifest with reviewedUpTo='0.1' to disk",
+        "Call readManifest()",
+        "Assert result.status === 'absent'",
+        "Grep log for WARN line mentioning reviewedUpTo and invalid"
+      ],
+      "expected_result": "readManifest rejects '0.1' as invalid reviewedUpTo (regex ^\\d+\\.\\d+\\.\\d+$ fails), returns status='absent', WARN logged",
+      "test_data": { "invalidValue": "0.1" }
+    },
+    {
+      "id": "TC-031h",
+      "requirement_id": "FR-031",
+      "user_story_id": "US-030",
+      "ac_id": "AC-030",
+      "title": "Review CLI — happy path writes manifest with hash and exits 0",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>",
+        "Fixture CHANGELOG at <os.tmpdir()>/cl-<uuid>/CHANGELOG.md with a '## 0.1.82' heading followed by 3 paragraphs",
+        "aitri-hub web running in background serving AITRI_HUB_DIR"
+      ],
+      "given": "CHANGELOG fixture exists with heading '## 0.1.82 — 2026-04-20' and three paragraph body; running web process shows integrationAlert.severity='warning' with message containing 'not reviewed past'",
+      "when": "spawn `node bin/aitri-hub.js integration review 0.1.82 --changelog <CHANGELOG path>` and wait 6000ms",
+      "then": "CLI exit code is 0, AITRI_HUB_DIR/integration-compat.json exists and parsed has reviewedUpTo==='0.1.82', reviewedAt matches /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$/, changelogHash matches /^[0-9a-f]{64}$/, and dashboard.json.integrationAlert === null",
+      "steps": [
+        "Create CHANGELOG fixture",
+        "Start aitri-hub web in background; wait for first dashboard.json",
+        "Assert dashboard.json.integrationAlert.severity === 'warning'",
+        "spawnSync('node', ['bin/aitri-hub.js','integration','review','0.1.82','--changelog',CHANGELOG_PATH])",
+        "Assert status === 0",
+        "Read AITRI_HUB_DIR/integration-compat.json; assert fields as above",
+        "Wait 6000ms (REFRESH_MS=5000)",
+        "Re-read dashboard.json; assert integrationAlert === null",
+        "Kill background web process"
+      ],
+      "expected_result": "Exit 0, manifest file has reviewedUpTo='0.1.82', reviewedAt ISO-8601 UTC, changelogHash 64 lowercase hex; dashboard.json.integrationAlert transitions from warning object to null within one REFRESH_MS tick",
+      "test_data": {
+        "changelogContent": "# Aitri Integration CHANGELOG\n\n## 0.1.82 — 2026-04-20\n\nParagraph one body.\n\nParagraph two body.\n\nParagraph three body.\n\n## 0.1.80 — 2026-04-18\n\nOlder section.\n"
+      }
+    },
+    {
+      "id": "TC-031f",
+      "requirement_id": "FR-031",
+      "user_story_id": "US-030",
+      "ac_id": "AC-031",
+      "title": "Review CLI — version not in CHANGELOG exits non-zero with 'changelog entry not found'",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>",
+        "CHANGELOG fixture contains '## 0.1.82' but not '## 99.99.99'"
+      ],
+      "given": "CHANGELOG at <tmpdir>/cl/CHANGELOG.md has sections '## 0.1.82' and '## 0.1.80' only",
+      "when": "spawnSync('node', ['bin/aitri-hub.js','integration','review','99.99.99','--changelog', changelogPath])",
+      "then": "exit code !== 0, stderr string contains the substring 'changelog entry not found', AITRI_HUB_DIR/integration-compat.json does not exist (fs.existsSync returns false)",
+      "steps": [
+        "Assert AITRI_HUB_DIR/integration-compat.json does not exist before run",
+        "spawnSync the review command for 99.99.99",
+        "Assert result.status !== 0",
+        "Assert result.stderr.toString().includes('changelog entry not found')",
+        "Assert fs.existsSync(AITRI_HUB_DIR/integration-compat.json) === false"
+      ],
+      "expected_result": "non-zero exit code, stderr contains 'changelog entry not found', no manifest file written",
+      "test_data": { "requestedVersion": "99.99.99" }
+    },
+    {
+      "id": "TC-031e",
+      "requirement_id": "FR-031",
+      "user_story_id": "US-030",
+      "ac_id": "AC-030",
+      "title": "Review CLI — idempotent re-run refreshes reviewedAt but preserves changelogHash",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>",
+        "CHANGELOG fixture with unchanged '## 0.1.82' body"
+      ],
+      "given": "First run of `integration review 0.1.82 --changelog <path>` completed successfully, resulting manifest has reviewedAt=T1 and changelogHash=H1",
+      "when": "wait 50ms and run `integration review 0.1.82 --changelog <path>` again with the SAME CHANGELOG file contents",
+      "then": "exit code is 0, new manifest.changelogHash === H1 (byte-identical), new manifest.reviewedAt !== T1 (refreshed to a later timestamp), only one manifest file exists (no .bak files)",
+      "steps": [
+        "Run review command — capture result1.manifest.changelogHash as H1 and result1.reviewedAt as T1",
+        "Wait 50ms",
+        "Run review command with identical CHANGELOG",
+        "Parse new manifest; assert changelogHash === H1",
+        "Assert reviewedAt !== T1 and Date.parse(new.reviewedAt) > Date.parse(T1)",
+        "Assert fs.readdirSync(AITRI_HUB_DIR).filter(f => f.startsWith('integration-compat')) has length 1"
+      ],
+      "expected_result": "Exit 0; changelogHash unchanged (byte-identical to prior); reviewedAt is a newer ISO timestamp; exactly one manifest file on disk",
+      "test_data": {}
+    },
+    {
+      "id": "TC-031f2",
+      "requirement_id": "FR-031",
+      "user_story_id": "US-030",
+      "ac_id": "AC-031",
+      "title": "Review CLI — missing version argument prints usage to stderr with 'version' keyword",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": [],
+      "given": "argv is ['node','bin/aitri-hub.js','integration','review'] (no version token)",
+      "when": "spawnSync('node', ['bin/aitri-hub.js','integration','review'])",
+      "then": "result.status !== 0, result.stderr.toString() contains the substring 'version', result.stderr includes 'usage' or 'example'",
+      "steps": [
+        "Invoke CLI with no version argument",
+        "Assert non-zero exit",
+        "Assert stderr.includes('version')",
+        "Assert /usage|example/i.test(stderr)"
+      ],
+      "expected_result": "Non-zero exit, stderr contains 'version' and a usage/example line",
+      "test_data": {}
+    },
+    {
+      "id": "TC-031e2",
+      "requirement_id": "FR-031",
+      "user_story_id": "US-030",
+      "ac_id": "AC-030",
+      "title": "Review CLI — --note 'ops-approved' round-trips verbatim through manifest",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": ["AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>"],
+      "given": "CHANGELOG fixture has '## 0.1.82' section",
+      "when": "spawnSync('node', ['bin/aitri-hub.js','integration','review','0.1.82','--changelog',p,'--note','ops-approved'])",
+      "then": "exit 0, manifest.reviewerNote === 'ops-approved' (exact string equality, no whitespace trimming or transformation)",
+      "steps": [
+        "Run review with --note 'ops-approved'",
+        "Assert exit 0",
+        "Parse manifest",
+        "Assert manifest.reviewerNote === 'ops-approved'"
+      ],
+      "expected_result": "manifest.reviewerNote === 'ops-approved' byte-for-byte",
+      "test_data": { "note": "ops-approved" }
+    },
+    {
+      "id": "TC-032h",
+      "requirement_id": "FR-032",
+      "user_story_id": "US-034",
+      "ac_id": "AC-036",
+      "title": "Changelog — extract section by heading returns body between '## 0.1.82' and next '## '",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "changelog string = '# Title\\n\\n## 0.1.82 — 2026-04-20\\n\\nParagraph A.\\n\\nParagraph B.\\n\\n## 0.1.80 — older\\n\\nOld body.'",
+      "when": "extractSection(changelog, '0.1.82') is called",
+      "then": "returns { body: 'Paragraph A.\\n\\nParagraph B.' } — trimmed, starts after the heading line, ends before '## 0.1.80' heading, no trailing blank line",
+      "steps": [
+        "Import extractSection from lib/collector/changelog.js",
+        "Call with fixture string and version '0.1.82'",
+        "Assert result.body === 'Paragraph A.\\n\\nParagraph B.'"
+      ],
+      "expected_result": "result.body === 'Paragraph A.\\n\\nParagraph B.' (exact string match, no trailing \\n)",
+      "test_data": {
+        "changelog": "# Title\n\n## 0.1.82 — 2026-04-20\n\nParagraph A.\n\nParagraph B.\n\n## 0.1.80 — older\n\nOld body.",
+        "version": "0.1.82"
+      }
+    },
+    {
+      "id": "TC-032h2",
+      "requirement_id": "FR-032",
+      "user_story_id": "US-034",
+      "ac_id": "AC-037",
+      "title": "Changelog — sha256 of identical section body computed twice yields byte-identical digest",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "body1 = 'Paragraph A.\\n\\nParagraph B.' and body2 = 'Paragraph A.\\n\\nParagraph B.' (identical)",
+      "when": "hashSection(body1) and hashSection(body2) are computed",
+      "then": "both return 'f1c42878348b9dab6ffe88d1fc6e36b3b86a03f0a75dfae7fce2e6a7a5d6c3c5' (the exact SHA-256 of the trimmed body), and h1 === h2",
+      "steps": [
+        "h1 = hashSection('Paragraph A.\\n\\nParagraph B.')",
+        "h2 = hashSection('Paragraph A.\\n\\nParagraph B.')",
+        "Assert h1 === h2",
+        "Assert h1.length === 64",
+        "Assert /^[0-9a-f]{64}$/.test(h1)"
+      ],
+      "expected_result": "h1 === h2, both are 64-char lowercase hex strings matching /^[0-9a-f]{64}$/",
+      "test_data": { "body": "Paragraph A.\n\nParagraph B." }
+    },
+    {
+      "id": "TC-032e",
+      "requirement_id": "FR-032",
+      "user_story_id": "US-034",
+      "ac_id": "AC-036",
+      "title": "Changelog — trailing blank lines trimmed before hash so cosmetic edits don't change digest",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "body1 = 'Paragraph A.' and body2 = 'Paragraph A.\\n\\n' (same content + two trailing newlines)",
+      "when": "hashSection(body1) and hashSection(body2) are computed",
+      "then": "hashSection(body1) === hashSection(body2) (both trimmed before hashing, so trailing whitespace does not change the digest)",
+      "steps": [
+        "h1 = hashSection('Paragraph A.')",
+        "h2 = hashSection('Paragraph A.\\n\\n')",
+        "Assert h1 === h2"
+      ],
+      "expected_result": "h1 === h2 because hashSection trims trailing whitespace before computing SHA-256",
+      "test_data": {}
+    },
+    {
+      "id": "TC-032f",
+      "requirement_id": "FR-032",
+      "user_story_id": "US-034",
+      "ac_id": "AC-036",
+      "title": "Changelog — version not present as heading throws SectionNotFound with version in message",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "changelog string has sections '## 0.1.82' and '## 0.1.80' but NOT '## 0.1.99'",
+      "when": "extractSection(changelog, '0.1.99') is called inside try/catch",
+      "then": "function throws an Error where err.code === 'SectionNotFound' and err.message contains the substring '0.1.99'; no return value",
+      "steps": [
+        "Call extractSection(changelog, '0.1.99') inside try/catch",
+        "Assert catch block executed",
+        "Assert err.code === 'SectionNotFound'",
+        "Assert err.message.includes('0.1.99')"
+      ],
+      "expected_result": "Throws Error with code='SectionNotFound' and message containing '0.1.99'",
+      "test_data": {}
+    },
+    {
+      "id": "TC-032e2",
+      "requirement_id": "FR-032",
+      "user_story_id": "US-034",
+      "ac_id": "AC-036",
+      "title": "Changelog — inserting one character into section body changes the hash",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "body1 = 'Paragraph A.' and body2 = 'Paragraph A!.' (one character '!' inserted)",
+      "when": "hashSection(body1) and hashSection(body2) are computed",
+      "then": "hashSection(body1) !== hashSection(body2) (different characters → different digest)",
+      "steps": [
+        "h1 = hashSection('Paragraph A.')",
+        "h2 = hashSection('Paragraph A!.')",
+        "Assert h1 !== h2",
+        "Assert h1.length === 64 && h2.length === 64"
+      ],
+      "expected_result": "h1 !== h2; confirms SHA-256 is sensitive to single-character mutation",
+      "test_data": {}
+    },
+    {
+      "id": "TC-033h",
+      "requirement_id": "FR-033",
+      "user_story_id": "US-035",
+      "ac_id": "AC-038",
+      "title": "Collector — running web process picks up new manifest within one REFRESH_MS tick",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>",
+        "REFRESH_MS=2000 set via env var for faster test",
+        "aitri-hub web started in background with detectedVersion=0.1.82 and no manifest"
+      ],
+      "given": "background `aitri-hub web` has been running for 3000ms with no manifest; dashboard.json.integrationAlert.severity === 'warning' with message containing 'not reviewed past'",
+      "when": "a manifest with reviewedUpTo='0.1.82' is written externally to AITRI_HUB_DIR/integration-compat.json using fs.writeFileSync (NOT via the CLI), then wait 2500ms",
+      "then": "dashboard.json is re-read and dashboard.json.integrationAlert === null — proving collector re-read the manifest without restart",
+      "steps": [
+        "Start aitri-hub web in background (REFRESH_MS=2000, detectedVersion fixture='0.1.82')",
+        "Wait 3000ms",
+        "Assert dashboard.json.integrationAlert.severity === 'warning'",
+        "fs.writeFileSync(AITRI_HUB_DIR/integration-compat.json, validManifestJson)",
+        "Wait 2500ms",
+        "Re-read dashboard.json",
+        "Assert integrationAlert === null",
+        "Kill background process"
+      ],
+      "expected_result": "integrationAlert transitions from {severity:'warning',...} to null within ≤2500ms of the external manifest write, without restarting the web process",
+      "test_data": {}
+    },
+    {
+      "id": "TC-033e",
+      "requirement_id": "FR-033",
+      "user_story_id": "US-035",
+      "ac_id": "AC-038",
+      "title": "Collector — manifest deleted between cycles causes fall-back without exception",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": ["AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>"],
+      "given": "Manifest with reviewedUpTo='0.1.82' was read by cycle 1; detectedVersion='0.1.82'",
+      "when": "manifest file is deleted via fs.unlinkSync, then collectAll() runs cycle 2",
+      "then": "cycle 2 completes without throwing, dashboard.json.integrationAlert.severity === 'warning' and message contains 'not reviewed past' (fallback baseline now in effect, no stale reference to deleted manifest)",
+      "steps": [
+        "Run collectAll() — cycle 1 with manifest present",
+        "Assert cycle 1 dashboard.json.integrationAlert === null",
+        "fs.unlinkSync(manifest path)",
+        "Run collectAll() — cycle 2",
+        "Assert no exception thrown",
+        "Re-read dashboard.json; assert integrationAlert.severity === 'warning' and message.includes('not reviewed past')"
+      ],
+      "expected_result": "Cycle 2 completes without throwing; alert re-appears with severity 'warning' and 'not reviewed past' message (fallback baseline applied)",
+      "test_data": {}
+    },
+    {
+      "id": "TC-033f",
+      "requirement_id": "FR-033",
+      "user_story_id": "US-035",
+      "ac_id": "AC-038",
+      "title": "Collector — integration-guard.js source must not cache reviewedUpTo at import time",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["Source file lib/collector/integration-guard.js exists"],
+      "given": "file contents of lib/collector/integration-guard.js read as UTF-8 string",
+      "when": "regex /^\\s*const\\s+reviewedUpTo\\s*=/m and /import.*INTEGRATION_LAST_REVIEWED.*from/m are evaluated against the source string",
+      "then": "both regexes return null (no match) — module must receive reviewedUpTo as a function parameter, not from a module-scoped const or a top-level import of INTEGRATION_LAST_REVIEWED",
+      "steps": [
+        "src = fs.readFileSync('lib/collector/integration-guard.js','utf8')",
+        "Assert /^\\s*const\\s+reviewedUpTo\\s*=/m.test(src) === false",
+        "Assert /import.*INTEGRATION_LAST_REVIEWED.*from/m.test(src) === false",
+        "Additionally assert that exported function signature matches /evaluateIntegrationAlert\\s*\\(\\s*detectedVersion\\s*,\\s*reviewedUpTo/ (param present)"
+      ],
+      "expected_result": "No top-level reviewedUpTo const and no import of INTEGRATION_LAST_REVIEWED; function signature takes reviewedUpTo as parameter",
+      "test_data": {}
+    },
+    {
+      "id": "TC-033e2",
+      "requirement_id": "FR-033",
+      "user_story_id": "US-035",
+      "ac_id": "AC-038",
+      "title": "Collector — two cycles with an edited manifest in between use the edited reviewedUpTo",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": ["AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>"],
+      "given": "cycle 1 runs with manifest.reviewedUpTo='0.1.80' and detectedVersion='0.1.82'",
+      "when": "manifest is rewritten externally to have reviewedUpTo='0.1.82', then cycle 2 runs",
+      "then": "cycle 1 dashboard.integrationAlert.severity==='warning' (0.1.82 > 0.1.80 → alert); cycle 2 dashboard.integrationAlert === null (manifest now reads 0.1.82, no alert)",
+      "steps": [
+        "Write manifest with reviewedUpTo='0.1.80' to disk",
+        "Run collectAll() — cycle 1; assert integrationAlert.severity === 'warning'",
+        "Overwrite manifest with reviewedUpTo='0.1.82'",
+        "Run collectAll() — cycle 2; assert integrationAlert === null"
+      ],
+      "expected_result": "Cycle 1 alert is warning; cycle 2 alert is null — proves per-cycle re-read",
+      "test_data": {}
+    },
+    {
+      "id": "TC-034h",
+      "requirement_id": "FR-034",
+      "user_story_id": "US-036",
+      "ac_id": "AC-039",
+      "title": "Fallback baseline — no manifest, detectedVersion > baseline yields warning",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid> exists and is empty",
+        "FALLBACK_BASELINE exported from lib/constants.js (value '0.1.80' per parent constraint)"
+      ],
+      "given": "no manifest on disk, FALLBACK_BASELINE='0.1.80', detectedVersion='0.1.82'",
+      "when": "collectAll() runs",
+      "then": "dashboard.json.integrationAlert.severity === 'warning' and message contains the substring 'not reviewed past 0.1.80' — identical to pre-feature behavior",
+      "steps": [
+        "Assert no integration-compat.json on disk",
+        "Run collectAll() with detectedVersion='0.1.82'",
+        "Parse dashboard.json",
+        "Assert integrationAlert.severity === 'warning'",
+        "Assert integrationAlert.message.includes('not reviewed past 0.1.80')"
+      ],
+      "expected_result": "integrationAlert.severity==='warning' with message containing 'not reviewed past 0.1.80'",
+      "test_data": {}
+    },
+    {
+      "id": "TC-034e",
+      "requirement_id": "FR-034",
+      "user_story_id": "US-036",
+      "ac_id": "AC-039",
+      "title": "Fallback baseline — manifest value overrides fallback when both present",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": ["AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>"],
+      "given": "manifest.reviewedUpTo='0.1.85', FALLBACK_BASELINE='0.1.80', detectedVersion='0.1.85'",
+      "when": "collectAll() runs",
+      "then": "dashboard.json.integrationAlert === null — the manifest value '0.1.85' is used (not the fallback '0.1.80'), confirming manifest takes precedence",
+      "steps": [
+        "Write manifest with reviewedUpTo='0.1.85' to disk",
+        "Run collectAll() with detectedVersion='0.1.85'",
+        "Assert integrationAlert === null"
+      ],
+      "expected_result": "integrationAlert === null because manifest.reviewedUpTo='0.1.85' was used instead of fallback '0.1.80'",
+      "test_data": {}
+    },
+    {
+      "id": "TC-034f",
+      "requirement_id": "FR-034",
+      "user_story_id": "US-036",
+      "ac_id": "AC-039",
+      "title": "Fallback baseline — exactly one source-of-truth definition exists in lib/constants.js",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["Grep runs over entire lib/ and bin/ tree"],
+      "given": "grep pattern /FALLBACK_BASELINE\\s*=/ recursively over lib/ and bin/",
+      "when": "grep result is collected",
+      "then": "exactly 1 line matches, located in lib/constants.js; no other file in lib/ or bin/ contains a FALLBACK_BASELINE assignment",
+      "steps": [
+        "Run ripgrep for /FALLBACK_BASELINE\\s*=/ in lib/ and bin/",
+        "Assert result.lines.length === 1",
+        "Assert result.lines[0].filePath.endsWith('lib/constants.js')"
+      ],
+      "expected_result": "Exactly 1 assignment, in lib/constants.js — proves single source of truth",
+      "test_data": {}
+    },
+    {
+      "id": "TC-035h",
+      "requirement_id": "FR-035",
+      "user_story_id": "US-032",
+      "ac_id": "AC-033",
+      "title": "Dashboard payload — provenance fields populated when manifest exists",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>"],
+      "given": "manifest has reviewedUpTo='0.1.80', reviewedAt='2026-04-18T12:00:00.000Z', changelogHash='abc123abc123abc123abc123abc123abc123abc123abc123abc123abc123abcd' and detectedVersion='0.1.82'",
+      "when": "collectAll() runs and dashboard.json is written",
+      "then": "dashboard.integrationAlert.reviewedAt === '2026-04-18T12:00:00.000Z' AND dashboard.integrationAlert.changelogHash === 'abc123abc123abc123abc123abc123abc123abc123abc123abc123abc123abcd' — both fields present verbatim",
+      "steps": [
+        "Write manifest",
+        "Run collectAll()",
+        "Parse dashboard.json",
+        "Assert integrationAlert.reviewedAt === '2026-04-18T12:00:00.000Z'",
+        "Assert integrationAlert.changelogHash === 'abc123abc123abc123abc123abc123abc123abc123abc123abc123abc123abcd'"
+      ],
+      "expected_result": "Both provenance fields present in integrationAlert payload byte-for-byte matching manifest",
+      "test_data": {}
+    },
+    {
+      "id": "TC-035e",
+      "requirement_id": "FR-035",
+      "user_story_id": "US-032",
+      "ac_id": "AC-033",
+      "title": "Dashboard payload — provenance fields are null when no manifest exists",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": ["AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid> empty"],
+      "given": "no manifest, detectedVersion='0.1.82', FALLBACK_BASELINE='0.1.80'",
+      "when": "collectAll() runs",
+      "then": "dashboard.integrationAlert.severity==='warning', dashboard.integrationAlert.reviewedAt === null AND dashboard.integrationAlert.changelogHash === null (both null, both present as keys)",
+      "steps": [
+        "Run collectAll() with no manifest",
+        "Parse dashboard.json",
+        "Assert 'reviewedAt' in integrationAlert && integrationAlert.reviewedAt === null",
+        "Assert 'changelogHash' in integrationAlert && integrationAlert.changelogHash === null"
+      ],
+      "expected_result": "Both provenance keys present and both === null (not undefined, not omitted)",
+      "test_data": {}
+    },
+    {
+      "id": "TC-035f",
+      "requirement_id": "FR-035",
+      "user_story_id": "US-032",
+      "ac_id": "AC-033",
+      "title": "React banner — renders provenance subtext at 375px without regressing main message",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "Playwright configured; web bundle built and served at http://localhost:3000",
+        "dashboard.json contains integrationAlert with reviewedAt='2026-04-18T12:00:00.000Z', changelogHash='a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2', severity='warning', message='Aitri 0.1.82 detected — Hub integration not reviewed past 0.1.80'"
+      ],
+      "given": "viewport set to 375x667 (mobile), dashboard loaded",
+      "when": "page.goto('/') and page.waitForSelector('[data-testid=\"integration-alert-banner\"]')",
+      "then": "banner element is visible; textContent contains 'Aitri 0.1.82 detected' (original message, unchanged); a second line element textContent matches /last reviewed 2026-04-18 12:00 UTC · hash a1b2c3d4e5f6…/ (12-char hash prefix with ellipsis); contrast ratio of subtext element (computed --text-secondary on --accent-warn background) is ≥ 4.5:1",
+      "steps": [
+        "page.setViewportSize({ width: 375, height: 667 })",
+        "page.goto('http://localhost:3000')",
+        "page.waitForSelector('[data-testid=\"integration-alert-banner\"]')",
+        "Assert banner.textContent.includes('Aitri 0.1.82 detected — Hub integration not reviewed past 0.1.80')",
+        "Assert banner.textContent.match(/last reviewed 2026-04-18 12:00 UTC · hash a1b2c3d4e5f6…/)",
+        "Compute contrast ratio of [data-testid=\"integration-alert-provenance\"] fg vs bg via DOM getComputedStyle; assert ≥ 4.5"
+      ],
+      "expected_result": "Banner visible at 375px viewport with original warning message preserved and new subtext line 'last reviewed 2026-04-18 12:00 UTC · hash a1b2c3d4e5f6…'; contrast ratio ≥ 4.5:1",
+      "test_data": {}
+    },
+    {
+      "id": "TC-035e2",
+      "requirement_id": "FR-035",
+      "user_story_id": "US-032",
+      "ac_id": "AC-033",
+      "title": "React banner — empty state: subtext row is OMITTED when provenance fields are null",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "Playwright configured; web bundle served",
+        "dashboard.json has integrationAlert with reviewedAt=null, changelogHash=null, severity='warning'"
+      ],
+      "given": "viewport 1440x900, dashboard loaded with null provenance fields",
+      "when": "page.goto('/') and page.waitForSelector('[data-testid=\"integration-alert-banner\"]')",
+      "then": "banner visible with main message, BUT page.locator('[data-testid=\"integration-alert-provenance\"]').count() === 0 (subtext DOM node entirely absent — no empty line, no placeholder string 'null', no rendered element)",
+      "steps": [
+        "Load dashboard with null provenance",
+        "Assert banner element present",
+        "Assert subtext locator count is 0",
+        "Assert innerHTML does not contain the string 'null' inside the banner"
+      ],
+      "expected_result": "Subtext element locator count === 0; banner main message still renders unchanged",
+      "test_data": {}
+    },
+    {
+      "id": "TC-035f2",
+      "requirement_id": "FR-035",
+      "user_story_id": "US-032",
+      "ac_id": "AC-033",
+      "title": "Dashboard payload — integrationAlert is null at top level when no alert (no loose provenance fields)",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>"],
+      "given": "manifest with reviewedUpTo='0.1.82', detectedVersion='0.1.82' (match → no alert)",
+      "when": "collectAll() runs",
+      "then": "dashboard.integrationAlert === null (exact equality), and dashboard does NOT have top-level keys 'reviewedAt' or 'changelogHash' outside of integrationAlert",
+      "steps": [
+        "Write manifest with reviewedUpTo='0.1.82'",
+        "Run collectAll() with detectedVersion='0.1.82'",
+        "Parse dashboard.json",
+        "Assert dashboard.integrationAlert === null",
+        "Assert !('reviewedAt' in dashboard)",
+        "Assert !('changelogHash' in dashboard)"
+      ],
+      "expected_result": "integrationAlert === null and no stray provenance fields at top level",
+      "test_data": {}
+    },
+    {
+      "id": "TC-036h",
+      "requirement_id": "FR-036",
+      "user_story_id": "US-031",
+      "ac_id": "AC-032",
+      "title": "Drift detection — stored hash matches live hash → no drift alert",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": ["AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>"],
+      "given": "CHANGELOG fixture body for '## 0.1.82' hashes to H1='<computed>'; manifest has reviewedUpTo='0.1.82', changelogHash=H1; detectedVersion='0.1.82'",
+      "when": "collectAll() runs one cycle",
+      "then": "dashboard.integrationAlert === null (no drift, no version mismatch) — message does NOT contain 'changelog modified'",
+      "steps": [
+        "Write CHANGELOG fixture and compute H1 via same hashSection logic",
+        "Write manifest with changelogHash=H1 and reviewedUpTo='0.1.82'",
+        "Run collectAll() with detectedVersion='0.1.82'",
+        "Assert integrationAlert === null"
+      ],
+      "expected_result": "integrationAlert === null — no drift detected when hashes match",
+      "test_data": {}
+    },
+    {
+      "id": "TC-036f",
+      "requirement_id": "FR-036",
+      "user_story_id": "US-031",
+      "ac_id": "AC-032",
+      "title": "Drift detection — CHANGELOG edited after review emits 'changelog modified since review' warning",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>"],
+      "given": "manifest has changelogHash='H1' for reviewedUpTo='0.1.82'; CHANGELOG file has been edited so the '## 0.1.82' section now hashes to H2 (H2 !== H1); detectedVersion='0.1.82'",
+      "when": "collectAll() runs one cycle",
+      "then": "dashboard.integrationAlert.severity === 'warning' AND dashboard.integrationAlert.message contains the substring 'changelog modified since review'",
+      "steps": [
+        "Compute H1 from original CHANGELOG content",
+        "Write manifest with changelogHash=H1, reviewedUpTo='0.1.82'",
+        "Overwrite CHANGELOG so section body differs (one char added)",
+        "Run collectAll() with detectedVersion='0.1.82'",
+        "Assert integrationAlert.severity === 'warning'",
+        "Assert integrationAlert.message.includes('changelog modified since review')"
+      ],
+      "expected_result": "integrationAlert.severity==='warning' and message contains 'changelog modified since review'",
+      "test_data": {}
+    },
+    {
+      "id": "TC-036e",
+      "requirement_id": "FR-036",
+      "user_story_id": "US-031",
+      "ac_id": "AC-032",
+      "title": "Drift detection — changelogHash=null in manifest skips drift check (version-only compare)",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": ["AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>"],
+      "given": "manifest has reviewedUpTo='0.1.82' and changelogHash=null (legacy manifest or pre-hash review); detectedVersion='0.1.82'",
+      "when": "collectAll() runs",
+      "then": "dashboard.integrationAlert === null — drift check is skipped; behavior is version comparison only (0.1.82===0.1.82 → null)",
+      "steps": [
+        "Write manifest with reviewedUpTo='0.1.82' and changelogHash=null",
+        "Run collectAll() with detectedVersion='0.1.82'",
+        "Assert integrationAlert === null"
+      ],
+      "expected_result": "integrationAlert === null; drift check bypassed because changelogHash is null",
+      "test_data": {}
+    },
+    {
+      "id": "TC-036e2",
+      "requirement_id": "FR-036",
+      "user_story_id": "US-031",
+      "ac_id": "AC-032",
+      "title": "Drift detection — CHANGELOG file missing at cycle time, drift check skipped with WARN, version compare proceeds",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": ["AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>"],
+      "given": "manifest has reviewedUpTo='0.1.82' and changelogHash='H1'; the CHANGELOG file at the resolved path has been deleted (fs.existsSync returns false); detectedVersion='0.1.82'",
+      "when": "collectAll() runs",
+      "then": "no exception thrown; AITRI_HUB_DIR/logs/aitri-hub.log contains a WARN line matching /changelog.*not.*(found|located)/i; dashboard.integrationAlert === null (version compare proceeds normally because 0.1.82===0.1.82)",
+      "steps": [
+        "Write manifest",
+        "Ensure CHANGELOG path does not exist",
+        "Run collectAll() with detectedVersion='0.1.82'",
+        "Assert no exception",
+        "Grep log for /WARN.*changelog.*not.*(found|located)/i",
+        "Assert dashboard.integrationAlert === null"
+      ],
+      "expected_result": "No exception; WARN log line present; integrationAlert === null (version-compare fallback)",
+      "test_data": {}
+    },
+    {
+      "id": "TC-032-SEC-1",
+      "requirement_id": "FR-032",
+      "user_story_id": "US-034",
+      "ac_id": "AC-036",
+      "title": "Security — CHANGELOG path with '..' traversal is rejected before read",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": ["AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>"],
+      "given": "attacker invokes review with --changelog '<os.tmpdir()>/fixture/../../../../etc/passwd'",
+      "when": "spawnSync('node',['bin/aitri-hub.js','integration','review','0.1.82','--changelog','<tmp>/fixture/../../../../etc/passwd'])",
+      "then": "result.status !== 0, stderr contains 'invalid' or 'changelog' keyword AND does NOT contain 'root:' (no /etc/passwd contents leaked), and no manifest is written",
+      "steps": [
+        "Invoke review with traversal path",
+        "Assert non-zero exit",
+        "Assert !stderr.includes('root:')",
+        "Assert no manifest at AITRI_HUB_DIR/integration-compat.json"
+      ],
+      "expected_result": "Non-zero exit, no /etc/passwd content in stderr, no manifest written",
+      "test_data": { "malicious_path": "<tmp>/fixture/../../../../etc/passwd" }
+    },
+    {
+      "id": "TC-032-SEC-2",
+      "requirement_id": "FR-032",
+      "user_story_id": "US-034",
+      "ac_id": "AC-036",
+      "title": "Security — symlink pointing outside allowed roots is refused by fs.realpathSync check",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>",
+        "fs.symlinkSync(os.tmpdir()+'/real/secret.md', os.tmpdir()+'/fixture/CHANGELOG.md') pointing outside the intended fixture root"
+      ],
+      "given": "symlinked CHANGELOG.md inside the fixture dir points to a file outside the resolved fixture root",
+      "when": "review command runs with --changelog <symlink path>",
+      "then": "result.status !== 0, stderr contains the substring 'symlink' or 'outside' or 'invalid', manifest file is not created",
+      "steps": [
+        "Create symlink pointing outside fixture root",
+        "Run review command with symlink as --changelog",
+        "Assert non-zero exit",
+        "Assert /symlink|outside|invalid/i.test(stderr)",
+        "Assert no manifest written"
+      ],
+      "expected_result": "Exit non-zero; stderr indicates symlink escape detection; no manifest written",
+      "test_data": {}
+    },
+    {
+      "id": "TC-032-SEC-3",
+      "requirement_id": "FR-031",
+      "user_story_id": "US-030",
+      "ac_id": "AC-030",
+      "title": "Security — --note exceeding 500 chars is rejected (extreme-value attack)",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": ["AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid>"],
+      "given": "attacker passes --note with a 501-char 'A'-repeated string",
+      "when": "review command runs with the oversized note and a valid CHANGELOG",
+      "then": "result.status !== 0, stderr contains substring 'note' and 'too long' or 'max 500', no manifest is written",
+      "steps": [
+        "Build note = 'A'.repeat(501)",
+        "Run review with --note <note>",
+        "Assert status !== 0",
+        "Assert stderr.includes('note')",
+        "Assert /too long|max 500/i.test(stderr)",
+        "Assert no manifest written"
+      ],
+      "expected_result": "Non-zero exit, stderr mentions 'note' and 'too long' or 'max 500', no manifest file created",
+      "test_data": { "noteLength": 501 }
+    },
+    {
+      "id": "TC-NFR-030-PERF",
+      "requirement_id": "FR-033",
+      "user_story_id": "US-035",
+      "ac_id": "AC-038",
+      "title": "Performance — manifest read + drift hash add ≤20ms per cycle on 20-project workload",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "medium",
+      "preconditions": [
+        "AITRI_HUB_DIR=<os.tmpdir()>/hub-test-<uuid> with projects.json containing 20 synthetic project entries",
+        "Valid manifest with reviewedUpTo='0.1.82' and changelogHash=H1 (H1 matches current CHANGELOG section)"
+      ],
+      "given": "baseline_ms = median of 10 collectAll() runs measured with manifest ABSENT (fallback path)",
+      "when": "manifest_ms = median of 10 collectAll() runs measured with manifest present + drift check enabled",
+      "then": "(manifest_ms - baseline_ms) <= 20 (milliseconds); both timings measured via performance.now() before and after collectAll()",
+      "steps": [
+        "Seed projects.json with 20 project objects",
+        "Run 10 warm-up cycles",
+        "Remove manifest; measure 10 cycles; baseline_ms = median",
+        "Write valid manifest; measure 10 cycles; manifest_ms = median",
+        "Assert (manifest_ms - baseline_ms) <= 20"
+      ],
+      "expected_result": "Per-cycle overhead of manifest read + SHA-256 re-hash on real fixture adds ≤ 20ms median over 10 runs",
+      "test_data": { "projectCount": 20, "warmupRuns": 10, "sampleRuns": 10, "budgetMs": 20 }
+    }
+  ]
+}

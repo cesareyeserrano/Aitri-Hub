@@ -1,0 +1,304 @@
+{
+  "project_name": "Aitri Hub — Feature: integration-compat-manifest",
+  "project_summary": "Replaces the hardcoded `INTEGRATION_LAST_REVIEWED` ES-module constant with a user-data-directory manifest file (`~/.aitri-hub/integration-compat.json`) that is re-read on every collection cycle and written only via an explicit `aitri-hub integration review <version>` CLI subcommand. The review command computes a SHA-256 over the relevant CHANGELOG.md section and stores it in the manifest as provenance, so clearing the integration warning requires the developer to actually touch the CHANGELOG entry — not merely edit a number.\n\nProduct Analysis:\n  North Star KPI: Time-to-clear — developer can clear a fresh integration warning end-to-end (run command → dashboard updates) in ≤10 seconds with no process restart.\n  JTBD: 'When a new Aitri CLI ships, let me record that I actually reviewed its integration impact, and stop nagging me — without editing source, rebuilding, or restarting the web server.'\n  Guardrail metric: Manifest read must add ≤20ms to a single collection cycle measured on the existing NFR-001 20-project load.",
+  "no_go_zone": [
+    "No automatic detection of changes in docs/integrations/CHANGELOG.md — the developer must explicitly run `aitri-hub integration review` to re-attest; there is no file watcher that auto-clears the alert",
+    "No network fetch of CHANGELOG.md in v1 — the command reads a local path supplied via argument or bundled with the Hub package; remote retrieval is out of scope",
+    "No retroactive migration — the existing hardcoded `INTEGRATION_LAST_REVIEWED = '0.1.80'` is not auto-copied into the manifest at upgrade time; users opt in by running the review command (fallback path preserves today's behavior until they do)",
+    "No multi-user review flow — no signing, no peer approval, no review log beyond the single most recent attestation per installation; this is single-developer attestation only",
+    "No changes to how sub-feature pipelines (features/*/) consume the integration gate — they keep reading the aggregated dashboard.json output exactly as today",
+    "No redesign of the React IntegrationAlertBanner visual style — this feature only adds two provenance fields (reviewedAt, changelogHash) to the alert payload; UI refresh is deferred"
+  ],
+  "user_personas": [
+    {
+      "role": "Solo Developer",
+      "tech_level": "high",
+      "goal": "Clear the Aitri integration alert immediately after upgrading the CLI, without stopping the running `aitri-hub web` process and without editing source files",
+      "pain_point": "Today the only way to clear the warning is to edit `lib/constants.js`, reinstall globally, and restart the web process — a 5-step workflow that is easy to skip or rubber-stamp"
+    },
+    {
+      "role": "Hub Maintainer",
+      "tech_level": "high",
+      "goal": "Ensure that every recorded review was grounded in an actual read of the CHANGELOG section, not a thoughtless version bump",
+      "pain_point": "The current constant-bump workflow provides zero evidence that a review happened; maintainers cannot distinguish a considered attestation from a `git blame one-liner`"
+    },
+    {
+      "role": "Portfolio Manager",
+      "tech_level": "mid",
+      "goal": "See on the web dashboard whether the integration review is current and who/when attested it, without reading source files",
+      "pain_point": "The current alert is opaque — it says 'not reviewed past X' but gives no surface for when or by what mechanism the review could be updated"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "id": "FR-030",
+      "title": "Integration-compat manifest file schema and location",
+      "description": "Hub must read and write a manifest file at `${AITRI_HUB_DIR}/integration-compat.json` (default `~/.aitri-hub/integration-compat.json`). The file is a JSON document with the shape `{ schemaVersion: '1', reviewedUpTo: '<semver>' | null, reviewedAt: '<ISO-8601>' | null, changelogHash: '<64-hex>' | null, reviewerNote: '<string>' | null }`. When absent or malformed, the collector must treat the effective `reviewedUpTo` as the package-declared fallback baseline (FR-034) — it must not crash or block collection.",
+      "priority": "MUST",
+      "type": "persistence",
+      "acceptance_criteria": [
+        "Given no `integration-compat.json` file exists, when the collector runs, then the effective reviewedUpTo is the package fallback baseline and the dashboard's `integrationAlert` is computed accordingly without error",
+        "Given a well-formed manifest with `reviewedUpTo: '0.1.82'`, when the collector runs, then the integration-guard compares against '0.1.82' and suppresses the alert when the detected CLI equals that value",
+        "Given a manifest file whose JSON is malformed (truncated, invalid syntax), when the collector runs, then the collector logs a WARN to ~/.aitri-hub/logs/aitri-hub.log, treats the manifest as absent, and continues — no exception propagates to the collection loop",
+        "Given a manifest file whose `reviewedUpTo` is not a valid `MAJOR.MINOR.PATCH` string, when the collector runs, then the manifest is treated as absent with a WARN log; the collector must not silently accept the invalid value",
+        "Given the default data directory does not yet exist, when any consumer of the manifest reads it for the first time, then the read returns `absent` without creating the directory; the directory is created only on successful write by the review command"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-031",
+      "title": "`aitri-hub integration review <version>` CLI subcommand",
+      "description": "Add a new CLI subcommand `aitri-hub integration review <version> [--changelog <path>] [--note <string>]` that writes the manifest. When `--changelog` is omitted, the command resolves the path to the CHANGELOG.md bundled with the installed Aitri CLI (queried via `aitri --changelog-path` or a documented fallback). The command must refuse to write when the version cannot be located as a section heading in the CHANGELOG. On success, the command exits 0 and prints the written manifest path and reviewedUpTo value.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given the user runs `aitri-hub integration review 0.1.82` while a local CHANGELOG contains a `## 0.1.82` section, when the command runs, then a manifest file is written with reviewedUpTo:'0.1.82', reviewedAt is a valid ISO-8601 UTC timestamp, changelogHash is a 64-char lowercase hex string, and exit code is 0",
+        "Given the user runs `aitri-hub integration review 99.99.99` for a version not present in the resolved CHANGELOG, when the command runs, then nothing is written, stderr contains the substring 'changelog entry not found', and exit code is non-zero",
+        "Given the user runs `aitri-hub integration review` with no version argument, when the command runs, then stderr prints a usage line including 'version' and exit code is non-zero",
+        "Given a prior successful review for the same version, when the user runs the review command again for the same version, then the command is idempotent — it exits 0, the manifest's changelogHash matches the prior value, and reviewedAt is refreshed to the new timestamp (not a duplicate record)",
+        "Given the user passes `--note \"ops-approved\"`, when the command writes the manifest, then reviewerNote equals the exact string 'ops-approved' and round-trips through read without transformation"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-032",
+      "title": "CHANGELOG section detection and SHA-256 hashing",
+      "description": "The review command locates the CHANGELOG section for the requested version by matching a top-level markdown heading containing the version string (e.g. `## 0.1.82`, `## [0.1.82]`, `## 0.1.82 — YYYY-MM-DD`). The section body spans from that heading to the next top-level heading or end-of-file. The computed changelogHash is `sha256(utf8(sectionBody))` as lowercase hex. Leading and trailing whitespace in the captured body must be trimmed before hashing so trivial edits (newline additions at the end) do not alter the hash.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a CHANGELOG with a heading `## 0.1.82 — 2026-04-20` followed by three paragraphs, when the section body is extracted, then the captured text starts at the line after the heading and ends at the character before the next `## ` heading",
+        "Given the same section hashed twice in succession, when sha256 is computed, then the two hashes are identical",
+        "Given a CHANGELOG section that is modified by inserting a single character, when the hash is recomputed, then the new hash differs from the previous hash",
+        "Given the requested version does not appear as a heading in the CHANGELOG, when the review command runs, then `changelog entry not found` is emitted to stderr and no hash is written",
+        "Given the section body contains a trailing blank line, when the hash is computed, then the result matches the hash computed without the trailing blank line (trim before hash)"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-033",
+      "title": "Collector re-reads manifest on every collection cycle without process restart",
+      "description": "The collector must call a read function that loads the manifest from disk on every invocation of `collectAll()` (i.e. every `REFRESH_MS` tick in `aitri-hub web`). The result must NOT be imported at module-load time and must NOT be cached across cycles inside the collector. After a successful `aitri-hub integration review` call, the next collection cycle must reflect the new state within `REFRESH_MS` milliseconds.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a running `aitri-hub web` process with a warning alert active, when the user runs `aitri-hub integration review <currentVersion>` in a separate shell, then within one `REFRESH_MS` tick the new dashboard.json is written with `integrationAlert: null`",
+        "Given two collection cycles separated by an external edit to the manifest file, when the second cycle runs, then the second cycle's integration-guard call uses the edited manifest's reviewedUpTo (not the first cycle's)",
+        "Given the manifest is deleted between two collection cycles, when the second cycle runs, then the collector falls back to the package baseline and writes the corresponding alert state — no exception, no stale reference to the prior manifest",
+        "Given the integration-guard is imported by the collector, when the module's source is inspected, then it must not retain a top-level `const reviewedUpTo = ...` expression that caches the value at import time"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-034",
+      "title": "Package-declared fallback baseline when manifest is absent",
+      "description": "The Hub package must declare a fallback baseline version — the last version the Hub maintainers reviewed at release time — exposed as a single read-only export. When no manifest exists, the integration-guard uses this fallback. The fallback replaces the role previously played by `INTEGRATION_LAST_REVIEWED` but it is no longer the sole source of truth: it is explicitly a default-for-unconfigured-installs.",
+      "priority": "MUST",
+      "type": "persistence",
+      "acceptance_criteria": [
+        "Given the Hub package is freshly installed with no manifest written, when the collector runs, then the alert is computed against the fallback baseline (matching the current pre-feature behavior of `INTEGRATION_LAST_REVIEWED`)",
+        "Given a manifest with reviewedUpTo:'0.1.85' exists and the fallback is '0.1.80', when the collector runs, then the integration-guard uses '0.1.85' — the manifest takes precedence over the fallback",
+        "Given the Hub package source is inspected, when searching for the fallback definition, then exactly one named export declares the fallback value and no other file duplicates it"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-035",
+      "title": "Integration-alert payload includes review provenance",
+      "description": "When the integration-guard emits an alert (non-null), the alert object must include two new optional fields alongside the existing `severity`, `message`, and `changelogUrl`: `reviewedAt` (ISO-8601 string or null) and `changelogHash` (64-hex string or null). When no manifest exists, both fields are null. When a manifest exists but still triggers an alert (because detectedVersion > reviewedUpTo), the fields carry the manifest's values so the web UI can render 'last reviewed at X, hash Y'.",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "Given a manifest with reviewedUpTo:'0.1.80', reviewedAt:'2026-04-18T12:00:00Z', changelogHash:'abc123...' and a detected CLI version '0.1.82', when the collector writes dashboard.json, then `integrationAlert.reviewedAt === '2026-04-18T12:00:00Z'` and `integrationAlert.changelogHash === 'abc123...'`",
+        "Given no manifest exists and a detected CLI version greater than the fallback baseline, when the collector writes dashboard.json, then `integrationAlert.reviewedAt === null` and `integrationAlert.changelogHash === null`",
+        "Given the integration-guard returns null (no alert), when dashboard.json is written, then `integrationAlert === null` at the top level — provenance fields are not emitted separately",
+        "Given the existing React IntegrationAlertBanner renders a payload with the two new fields, when the payload contains them, then rendering does not regress — the banner still displays the message and link exactly as before (additive change only)"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-036",
+      "title": "Detect CHANGELOG drift since last review",
+      "description": "On each collection cycle, when a manifest exists, the collector must re-hash the CHANGELOG section for `manifest.reviewedUpTo` and compare it to `manifest.changelogHash`. When the two hashes differ, the collector must emit a distinct alert severity `warning` with message `integration changelog modified since review` — even if the detected CLI version is not greater than reviewedUpTo. This protects against the CHANGELOG being edited after the review was recorded.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a manifest with reviewedUpTo:'0.1.82' and changelogHash:'H1' and the CHANGELOG section for 0.1.82 currently hashes to H1, when the collector runs, then no drift alert is emitted",
+        "Given a manifest with changelogHash:'H1' and the CHANGELOG for the same version now hashes to H2 (different from H1), when the collector runs, then `integrationAlert.message` contains the substring 'changelog modified since review' and severity is 'warning'",
+        "Given a manifest with changelogHash:null (never reviewed via this feature), when the collector runs, then no drift check is performed and behavior falls back to version comparison only",
+        "Given the CHANGELOG file is absent (cannot be located via the same resolution used in FR-031), when the collector runs, then the drift check is skipped with a WARN log and the version comparison proceeds normally"
+      ],
+      "implementation_level": "functional"
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US-030",
+      "requirement_id": "FR-031",
+      "as_a": "solo developer",
+      "i_want": "a single command that marks a new Aitri CLI version as integration-reviewed",
+      "so_that": "I can clear the warning banner immediately after upgrading without editing source or restarting the web process",
+      "acceptance_criteria": [
+        {
+          "id": "AC-030",
+          "given": "the running `aitri-hub web` process is showing the warning `Aitri 0.1.82 detected — Hub integration not reviewed past 0.1.80` and a local CHANGELOG has a `## 0.1.82` section",
+          "when": "I run `aitri-hub integration review 0.1.82` in a separate shell",
+          "then": "within one `REFRESH_MS` tick, the dashboard refreshes and `integrationAlert` becomes null — no process restart is needed"
+        },
+        {
+          "id": "AC-031",
+          "given": "I run the review command with a version that is not in the CHANGELOG",
+          "when": "the command attempts to write the manifest",
+          "then": "the command exits non-zero with stderr 'changelog entry not found' and the manifest is left unchanged"
+        }
+      ]
+    },
+    {
+      "id": "US-031",
+      "requirement_id": "FR-036",
+      "as_a": "hub maintainer",
+      "i_want": "Hub to detect when the CHANGELOG section has been edited after I attested to it",
+      "so_that": "I cannot be fooled by a later edit into thinking my original attestation still covers the current text",
+      "acceptance_criteria": [
+        {
+          "id": "AC-032",
+          "given": "I previously ran `aitri-hub integration review 0.1.82` and the CHANGELOG section for 0.1.82 has since been edited",
+          "when": "the collector runs its next cycle",
+          "then": "the dashboard shows an alert with severity 'warning' and message containing 'changelog modified since review'"
+        }
+      ]
+    },
+    {
+      "id": "US-032",
+      "requirement_id": "FR-035",
+      "as_a": "portfolio manager",
+      "i_want": "to see when and how the integration review was recorded",
+      "so_that": "I can judge whether the review is current or stale without reading source",
+      "acceptance_criteria": [
+        {
+          "id": "AC-033",
+          "given": "a manifest exists with reviewedAt and changelogHash populated",
+          "when": "I open the web dashboard and the integration banner is present",
+          "then": "the banner's payload contains the reviewedAt timestamp and changelogHash fields so the UI can render provenance alongside the warning"
+        }
+      ]
+    },
+    {
+      "id": "US-033",
+      "requirement_id": "FR-030",
+      "as_a": "solo developer",
+      "i_want": "Hub to read my integration-review state from a manifest file in my user data directory",
+      "so_that": "I can inspect and version-control it locally without touching the Hub package source",
+      "acceptance_criteria": [
+        {
+          "id": "AC-034",
+          "given": "no manifest exists in ~/.aitri-hub/",
+          "when": "I start `aitri-hub web`",
+          "then": "the process does not crash; the collector runs with the fallback baseline and the dashboard renders normally"
+        },
+        {
+          "id": "AC-035",
+          "given": "I manually create a valid manifest with reviewedUpTo:'0.1.82'",
+          "when": "the next collection cycle runs",
+          "then": "the integration-guard compares the detected CLI version against '0.1.82' using the value from my manifest"
+        }
+      ]
+    },
+    {
+      "id": "US-034",
+      "requirement_id": "FR-032",
+      "as_a": "hub maintainer",
+      "i_want": "the review command to record a cryptographic fingerprint of the exact CHANGELOG section I attested to",
+      "so_that": "later edits to that section cannot pass as covered by my original review",
+      "acceptance_criteria": [
+        {
+          "id": "AC-036",
+          "given": "I run the review command against a CHANGELOG section containing three paragraphs",
+          "when": "the command succeeds",
+          "then": "the manifest's changelogHash is the SHA-256 of the trimmed body of that section as a 64-character lowercase hex string"
+        },
+        {
+          "id": "AC-037",
+          "given": "two runs of the same review on an unchanged CHANGELOG",
+          "when": "I compare the two resulting hashes",
+          "then": "they are byte-identical"
+        }
+      ]
+    },
+    {
+      "id": "US-035",
+      "requirement_id": "FR-033",
+      "as_a": "solo developer",
+      "i_want": "Hub to reflect a new review within seconds of my running the command",
+      "so_that": "I never have to kill and restart the `aitri-hub web` process to clear a warning",
+      "acceptance_criteria": [
+        {
+          "id": "AC-038",
+          "given": "the `aitri-hub web` process has been running since before I installed the new Aitri CLI",
+          "when": "I run `aitri-hub integration review <currentVersion>` and wait one REFRESH_MS tick",
+          "then": "the web dashboard's integrationAlert transitions to null on the next refresh with no process-level intervention"
+        }
+      ]
+    },
+    {
+      "id": "US-036",
+      "requirement_id": "FR-034",
+      "as_a": "new hub user",
+      "i_want": "Hub to work out-of-the-box with no manifest configured",
+      "so_that": "a first install matches today's experience and does not require a one-time setup ritual before the dashboard renders",
+      "acceptance_criteria": [
+        {
+          "id": "AC-039",
+          "given": "a freshly installed Hub with no `integration-compat.json`",
+          "when": "I start `aitri-hub web`",
+          "then": "the integration alert behaves exactly as it does today against the package-declared fallback baseline — no prompt, no error, no empty state"
+        }
+      ]
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-030",
+      "category": "Performance",
+      "requirement": "Manifest read plus optional CHANGELOG re-hash must add no more than 20ms to a single collection cycle measured on a 20-project workload",
+      "acceptance_criteria": "A microbenchmark running collectAll() with 20 projects and a present manifest (with drift check enabled) completes within 20ms more than the same run with the manifest removed — measured as median of 50 runs"
+    },
+    {
+      "id": "NFR-031",
+      "category": "Reliability",
+      "requirement": "A malformed manifest or CHANGELOG must never crash the collector or the web server",
+      "acceptance_criteria": "Given deliberately corrupted inputs (truncated JSON manifest, CHANGELOG with no matching section, CHANGELOG file absent), when collectAll() runs, then no exception propagates beyond the collector; each failure mode produces exactly one WARN log entry and the cycle completes with the correct fallback behavior described in FR-030/FR-036"
+    },
+    {
+      "id": "NFR-032",
+      "category": "Security",
+      "requirement": "Paths used by the review command and the manifest read path must be constrained to the user data directory and the resolved CHANGELOG location; symlink escapes must not allow reads outside those roots",
+      "acceptance_criteria": "Given a symlink inside ~/.aitri-hub/ pointing to /etc/passwd, when the collector attempts to read the manifest via that symlink, then the read is rejected (fs.realpathSync check) and a WARN log is emitted — no contents outside the data directory are read"
+    },
+    {
+      "id": "NFR-033",
+      "category": "Observability",
+      "requirement": "Every manifest read outcome (absent, malformed, valid-no-drift, valid-with-drift) must be observable via a single log line per collection cycle at INFO level",
+      "acceptance_criteria": "Given 4 consecutive cycles covering each of the 4 outcomes, when the aitri-hub.log file is inspected, then exactly 4 INFO entries with a stable event key (e.g. 'integration-manifest:absent', 'integration-manifest:malformed', 'integration-manifest:ok', 'integration-manifest:drift') are present"
+    },
+    {
+      "id": "NFR-034",
+      "category": "Usability",
+      "requirement": "The review command's success output must fit in 80 columns and include the written manifest path, the reviewedUpTo value, and the 12-char prefix of the changelogHash for quick eyeballing",
+      "acceptance_criteria": "Running the review command with a terminal width of 80 columns produces an output block where no single line exceeds 80 characters and the three fields (path, version, hash prefix) are each visible on their own line"
+    }
+  ],
+  "constraints": [
+    "Node.js ≥18 for CLI; Docker for web dashboard (inherited from parent project)",
+    "Zero npm runtime dependencies — CLI must use Node built-ins only (crypto.createHash, fs, path, child_process)",
+    "All persistent data written only under ${AITRI_HUB_DIR} (default ~/.aitri-hub/) — never into project directories",
+    "The fallback baseline (FR-034) must have exactly one source-of-truth definition in the Hub package",
+    "The existing `INTEGRATION_LAST_REVIEWED` export must remain importable (as the fallback baseline's underlying value) until a future feature deprecates it explicitly — this feature does NOT remove it from `lib/constants.js`"
+  ],
+  "technology_preferences": [
+    "CLI: Node.js (ESM, zero dependencies) — same as parent project",
+    "Hashing: built-in `crypto.createHash('sha256')` — no external hashing libraries",
+    "JSON I/O: built-in `JSON.parse`/`JSON.stringify` with atomic write via temp-file + rename — reuse the pattern established in `lib/store/dashboard.js`",
+    "CLI argument parsing: inline parser in `bin/aitri-hub.js` — same style as existing subcommands; no argparse library"
+  ]
+}

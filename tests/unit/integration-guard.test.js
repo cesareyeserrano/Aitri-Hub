@@ -56,25 +56,25 @@ describe('semverGt — inline semver comparison', () => {
 // ── TC-010h: alert generated when detected > reviewed ─────────────────────────
 describe('TC-010h: evaluateIntegrationAlert — warning when CLI is newer', () => {
   it('returns object with severity=warning', () => {
-    const result = evaluateIntegrationAlert(HIGHER);
+    const result = evaluateIntegrationAlert(HIGHER, INTEGRATION_LAST_REVIEWED);
     assert.notEqual(result, null);
     assert.equal(result.severity, 'warning');
   });
 
   it('message contains the detected version', () => {
-    const result = evaluateIntegrationAlert(HIGHER);
+    const result = evaluateIntegrationAlert(HIGHER, INTEGRATION_LAST_REVIEWED);
     assert.ok(result.message.includes(HIGHER),
       `message should include '${HIGHER}': ${result.message}`);
   });
 
   it('message contains INTEGRATION_LAST_REVIEWED version', () => {
-    const result = evaluateIntegrationAlert(HIGHER);
+    const result = evaluateIntegrationAlert(HIGHER, INTEGRATION_LAST_REVIEWED);
     assert.ok(result.message.includes(INTEGRATION_LAST_REVIEWED),
       `message should include '${INTEGRATION_LAST_REVIEWED}': ${result.message}`);
   });
 
   it('changelogUrl is a non-empty string', () => {
-    const result = evaluateIntegrationAlert(HIGHER);
+    const result = evaluateIntegrationAlert(HIGHER, INTEGRATION_LAST_REVIEWED);
     assert.ok(typeof result.changelogUrl === 'string' && result.changelogUrl.length > 0);
   });
 });
@@ -82,7 +82,7 @@ describe('TC-010h: evaluateIntegrationAlert — warning when CLI is newer', () =
 // ── TC-010e1: null when equal ─────────────────────────────────────────────────
 describe('TC-010e1: evaluateIntegrationAlert — null when CLI equals reviewed', () => {
   it('returns null when detected version equals INTEGRATION_LAST_REVIEWED', () => {
-    const result = evaluateIntegrationAlert(INTEGRATION_LAST_REVIEWED);
+    const result = evaluateIntegrationAlert(INTEGRATION_LAST_REVIEWED, INTEGRATION_LAST_REVIEWED);
     assert.equal(result, null);
   });
 });
@@ -90,12 +90,12 @@ describe('TC-010e1: evaluateIntegrationAlert — null when CLI equals reviewed',
 // ── TC-010e2: null when older ─────────────────────────────────────────────────
 describe('TC-010e2: evaluateIntegrationAlert — null when CLI is older', () => {
   it('returns null when detected version is older than INTEGRATION_LAST_REVIEWED', () => {
-    const result = evaluateIntegrationAlert('0.1.0');
+    const result = evaluateIntegrationAlert('0.1.0', INTEGRATION_LAST_REVIEWED);
     assert.equal(result, null);
   });
 
   it('returns null for very old version 0.0.1', () => {
-    const result = evaluateIntegrationAlert('0.0.1');
+    const result = evaluateIntegrationAlert('0.0.1', INTEGRATION_LAST_REVIEWED);
     assert.equal(result, null);
   });
 });
@@ -103,19 +103,19 @@ describe('TC-010e2: evaluateIntegrationAlert — null when CLI is older', () => 
 // ── TC-010f: undetectable warning when null ───────────────────────────────────
 describe('TC-010f: evaluateIntegrationAlert — undetectable warning when null', () => {
   it('returns warning object when detectedVersion is null', () => {
-    const result = evaluateIntegrationAlert(null);
+    const result = evaluateIntegrationAlert(null, INTEGRATION_LAST_REVIEWED);
     assert.notEqual(result, null);
     assert.equal(result.severity, 'warning');
   });
 
   it('message contains "undetectable"', () => {
-    const result = evaluateIntegrationAlert(null);
+    const result = evaluateIntegrationAlert(null, INTEGRATION_LAST_REVIEWED);
     assert.ok(result.message.toLowerCase().includes('undetectable'),
       `message should contain 'undetectable': ${result.message}`);
   });
 
   it('changelogUrl is non-empty when detectedVersion is null', () => {
-    const result = evaluateIntegrationAlert(null);
+    const result = evaluateIntegrationAlert(null, INTEGRATION_LAST_REVIEWED);
     assert.ok(typeof result.changelogUrl === 'string' && result.changelogUrl.length > 0);
   });
 });

@@ -1,18 +1,30 @@
 /**
  * Module: web/src/components/IntegrationAlertBanner
  * Purpose: Full-width warning banner shown when the installed Aitri CLI version
- *          exceeds INTEGRATION_LAST_REVIEWED. Renders before any project cards.
- * @aitri-trace FR-ID: FR-012, US-ID: US-012, AC-ID: AC-024, TC-ID: TC-012h
+ *          exceeds the reviewed baseline. Renders provenance subtext when
+ *          both reviewedAt and changelogHash are present (FR-035).
+ * @aitri-trace FR-ID: FR-035, US-ID: US-032, AC-ID: AC-033, TC-ID: TC-035f
  */
 
 import React from 'react';
 
-/**
- * @param {{ alert: { severity: string, message: string, changelogUrl: string } | null }} props
- * @returns {JSX.Element | null}
- */
+function formatReviewedAt(iso) {
+  if (typeof iso !== 'string') return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} `
+       + `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`;
+}
+
 export default function IntegrationAlertBanner({ alert }) {
   if (!alert) return null;
+
+  const formattedDate = formatReviewedAt(alert.reviewedAt);
+  const hashPrefix = typeof alert.changelogHash === 'string' && alert.changelogHash.length >= 12
+    ? alert.changelogHash.slice(0, 12)
+    : null;
+  const showProvenance = formattedDate !== null && hashPrefix !== null;
 
   return (
     <div
@@ -32,6 +44,14 @@ export default function IntegrationAlertBanner({ alert }) {
         >
           View CHANGELOG.md →
         </a>
+      )}
+      {showProvenance && (
+        <span
+          className="integration-alert-banner__provenance"
+          data-testid="integration-alert-provenance"
+        >
+          last reviewed {formattedDate} · hash {hashPrefix}…
+        </span>
       )}
     </div>
   );

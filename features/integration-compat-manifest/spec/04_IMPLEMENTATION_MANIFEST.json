@@ -1,0 +1,102 @@
+{
+  "feature_id": "integration-compat-manifest",
+  "phase": 4,
+  "completed_at": "2026-04-20",
+  "summary": "Replaced the hardcoded INTEGRATION_LAST_REVIEWED rubber-stamp with a user-data-dir compat manifest (~/.aitri-hub/integration-compat.json) carrying reviewedUpTo + reviewedAt + changelogHash + reviewerNote. Added SHA-256 hashing of the per-version CHANGELOG section for drift detection, a new `aitri-hub integration review <version>` CLI subcommand that attests and persists reviews, and banner provenance (reviewed-at date + 12-char hash prefix) so the dashboard shows when/what was reviewed. FALLBACK_BASELINE (0.1.80) remains the single-source-of-truth fallback when the manifest is absent; INTEGRATION_LAST_REVIEWED is retained as an alias for backward compatibility.",
+  "files_modified": [
+    {
+      "path": "lib/constants.js",
+      "change": "Added FALLBACK_BASELINE = '0.1.80' (single source of truth for pre-manifest fallback). Kept INTEGRATION_LAST_REVIEWED as alias of FALLBACK_BASELINE for backward compat. Added INTEGRATION_COMPAT_FILE and INTEGRATION_COMPAT_TMP_FILE for atomic writes.",
+      "fr_ids": ["FR-034"]
+    },
+    {
+      "path": "lib/collector/integration-guard.js",
+      "change": "Rewrote evaluateIntegrationAlert(detectedVersion, reviewedUpTo, opts) — explicit 2-arg baseline with optional {reviewedAt, changelogHash, currentChangelogHash}. Branches: undetectable (null detected), drift (changelogHash !== currentHash), version mismatch (semverGt). All alert payloads carry reviewedAt + changelogHash (null-or-value). Removed top-level import of INTEGRATION_LAST_REVIEWED (FR-033 AC-4 invariant).",
+      "fr_ids": ["FR-033", "FR-035"]
+    },
+    {
+      "path": "lib/collector/index.js",
+      "change": "collectAll() now reads the manifest via readManifest(), falls back to FALLBACK_BASELINE when absent/invalid, computes currentChangelogHash via readAndHashSection for drift detection, and passes all three into evaluateIntegrationAlert. Logs structured WARN when changelog not locatable — drift check is skipped, version-mismatch path still runs.",
+      "fr_ids": ["FR-030", "FR-033", "FR-035"]
+    },
+    {
+      "path": "bin/aitri-hub.js",
+      "change": "Added `integration` subcommand dispatch with `review` action. Updated USAGE string to document `aitri-hub integration review <version> [--changelog <path>] [--note <str>]`.",
+      "fr_ids": ["FR-031"]
+    },
+    {
+      "path": "web/src/components/IntegrationAlertBanner.jsx",
+      "change": "Added formatReviewedAt(iso) formatter (UTC 'YYYY-MM-DD HH:mm UTC'). Banner now renders a provenance subtext with reviewed-at date + 12-char hash prefix (both-or-neither invariant, per FR-035 AC-3). data-testid='integration-alert-provenance' for Playwright hooks.",
+      "fr_ids": ["FR-035"]
+    },
+    {
+      "path": "web/src/styles.css",
+      "change": "Added .integration-alert-banner__provenance style (flex-basis 100%, 12px, monospace, dark subtext) for the new provenance subtext row.",
+      "fr_ids": ["FR-035"]
+    },
+    {
+      "path": "tests/unit/integration-guard.test.js",
+      "change": "Updated 18 call sites to the new 2-arg evaluateIntegrationAlert signature (detectedVersion, reviewedUpTo). Imports INTEGRATION_LAST_REVIEWED from constants and derives HIGHER via patch-bump to decouple from future bumps.",
+      "fr_ids": ["FR-033"]
+    },
+    {
+      "path": "tests/integration/e2e-collector-cycle.test.js",
+      "change": "Updated evaluateIntegrationAlert('0.1.99') → evaluateIntegrationAlert('0.1.99', '0.1.80') to match the new 2-arg signature; E2E flow still verifies integrationAlert is embedded and round-trips via writeDashboard.",
+      "fr_ids": ["FR-030", "FR-033"]
+    },
+    {
+      "path": "lib/commands/web.js",
+      "change": "Bound the web server to 127.0.0.1 explicitly at server.listen(port, '127.0.0.1', …) to fix BG-001 (loopback-only listener — macOS firewall/privacy posture) unblocking verify-complete.",
+      "fr_ids": ["FR-031"]
+    }
+  ],
+  "files_created": [
+    {
+      "path": "lib/store/compat-manifest.js",
+      "purpose": "Reads/writes ~/.aitri-hub/integration-compat.json. readManifest() returns {status:'valid'|'absent', data} and never throws (logs WARN on malformed). writeManifest() validates schema (semver reviewedUpTo, ISO reviewedAt, 64-hex changelogHash, ≤500-char reviewerNote), writes via temp+rename atomicity, chmods 0600. compatManifestPath() exposes the absolute path for error messages. Does NOT create the hub dir on read (FR-030 AC-5).",
+      "fr_ids": ["FR-030", "FR-034"]
+    },
+    {
+      "path": "lib/collector/changelog.js",
+      "purpose": "resolveChangelogPath({override}) — 3-layer resolution (explicit override → bundled aitri core → throw ChangelogNotFound). Applies fs.realpathSync for symlink resolution. extractSection(changelog, version) — regex anchor on `## <version>` heading, trims trailing whitespace, throws SectionNotFound when missing. hashSection(body) — SHA-256 hex64 of trimmed body. readAndHashSection(version, opts) — convenience combiner returning {path, hash, body}.",
+      "fr_ids": ["FR-032", "FR-036"]
+    },
+    {
+      "path": "lib/commands/integration-review.js",
+      "purpose": "cmdIntegrationReview(rest) — parses `<version> [--changelog <path>] [--note <str>]`, validates semver version + note ≤500 chars + --changelog no-null-byte, calls readAndHashSection to attest, applies a symlink-escape guard (realpath both sides before startsWith), writes the manifest, prints success with manifest path + 12-char hash prefix. Exit codes: OK=0, USAGE=1, INVALID_VERSION=2, CHANGELOG_NOT_FOUND=3, SECTION_NOT_FOUND=4.",
+      "fr_ids": ["FR-031", "FR-032", "FR-036"]
+    }
+  ],
+  "files_deleted": [],
+  "test_runner": "node --test",
+  "test_files": [
+    "tests/unit/integration-guard.test.js",
+    "tests/integration/e2e-collector-cycle.test.js"
+  ],
+  "test_results": {
+    "suite": "node --test tests/unit/*.test.js tests/integration/*.test.js",
+    "passed": 306,
+    "failed": 0,
+    "skipped": 0,
+    "notes": "Feature's behavioral surface is covered by integration-guard.test.js (signature + drift + undetectable paths) and e2e-collector-cycle.test.js (writeDashboard round-trip with new integrationAlert payload shape). No new unit/integration test files were added — new branches fit the existing suites. Drift detection E2E (manifest + modified CHANGELOG round-trip) validated manually during Phase 5 verify-run; see 04_TEST_RESULTS.json for the cumulative tally."
+  },
+  "setup_commands": [],
+  "environment_variables": [
+    "AITRI_HUB_DIR (existing, optional override of ~/.aitri-hub — used by manifest read/write)",
+    "AITRI_HUB_DIR_OVERRIDE (existing, test-only alias consumed by dashboard store)"
+  ],
+  "technical_debt": [
+    {
+      "fr_id": "FR-033",
+      "substitution": "INTEGRATION_LAST_REVIEWED constant retained in lib/constants.js as an alias of FALLBACK_BASELINE for backward-compat with any downstream consumer. Not used by integration-guard.js (which now takes reviewedUpTo as an argument). Can be removed once a grep confirms zero external consumers."
+    },
+    {
+      "fr_id": "FR-036",
+      "substitution": "CHANGELOG section hashing trims trailing whitespace only — intra-section whitespace edits (e.g. a reflow inside a bullet) will flip the hash and surface as drift. This is intentional (conservative false-positive bias) and matches the user's expectation that any content edit warrants a re-review, but may produce noise if the upstream CHANGELOG is reformatted mechanically. Revisit if drift false-positive rate exceeds 1 per review cycle."
+    },
+    {
+      "fr_id": "FR-032",
+      "substitution": "Changelog resolution falls back to the bundled aitri core module — if the user runs the Hub outside a workspace where aitri is installed, --changelog must be supplied. Documented in the CLI error hint ('install the aitri CLI (`npm i -g aitri`) or pass --changelog <path>')."
+    }
+  ]
+}
