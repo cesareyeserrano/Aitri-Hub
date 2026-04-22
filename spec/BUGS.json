@@ -29,7 +29,7 @@
       "actual_result": "",
       "environment": null,
       "severity": "medium",
-      "status": "open",
+      "status": "verified",
       "fr": "FR-006",
       "tc_reference": null,
       "phase_detected": null,
@@ -37,7 +37,7 @@
       "evidence": null,
       "reported_by": null,
       "created_at": "2026-04-20T19:15:40.803Z",
-      "updated_at": "2026-04-20T19:15:40.803Z",
+      "updated_at": "2026-04-22T05:41:51.093Z",
       "resolution": null
     },
     {
@@ -49,7 +49,7 @@
       "actual_result": "",
       "environment": null,
       "severity": "medium",
-      "status": "open",
+      "status": "verified",
       "fr": "FR-006",
       "tc_reference": null,
       "phase_detected": null,
@@ -57,7 +57,7 @@
       "evidence": null,
       "reported_by": null,
       "created_at": "2026-04-20T19:15:43.624Z",
-      "updated_at": "2026-04-20T19:15:43.624Z",
+      "updated_at": "2026-04-22T05:41:51.126Z",
       "resolution": null
     },
     {

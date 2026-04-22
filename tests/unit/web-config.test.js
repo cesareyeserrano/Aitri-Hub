@@ -187,3 +187,27 @@ describe('TC-006f: web dashboard — error and empty state components are implem
     );
   });
 });
+
+// ── BG-002: request body size limit on admin API ─────────────────────────────
+
+describe('BG-002: POST/PUT /api/projects enforce MAX_BODY_BYTES limit', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'lib', 'commands', 'web.js'), 'utf8');
+
+  it('defines MAX_BODY_BYTES constant', () => {
+    assert.ok(
+      /const\s+MAX_BODY_BYTES\s*=\s*64\s*\*\s*1024/.test(src),
+      'web.js must cap request body at 64KB via MAX_BODY_BYTES'
+    );
+  });
+
+  it('returns 413 payload_too_large when body exceeds the cap', () => {
+    assert.ok(src.includes("error: 'payload_too_large'"),
+      'oversized body must yield an explicit payload_too_large error');
+    assert.ok(src.includes('413'), 'oversized body must respond with HTTP 413');
+  });
+
+  it('destroys the request stream after sending 413', () => {
+    assert.ok(src.includes('req.destroy()'),
+      'oversized request must be destroyed to stop buffering');
+  });
+});
