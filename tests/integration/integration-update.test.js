@@ -26,13 +26,16 @@ describe('TC-010e2e: aitriVersion flows from .aitri through readAitriState corre
 
   before(() => {
     projectDir = tmpDir('e2e-proj-');
-    fs.writeFileSync(path.join(projectDir, '.aitri'), JSON.stringify({
-      projectName: 'e2e-proj',
-      aitriVersion: '0.1.50',
-      currentPhase: 2,
-      approvedPhases: [1],
-      completedPhases: [1],
-    }));
+    fs.writeFileSync(
+      path.join(projectDir, '.aitri'),
+      JSON.stringify({
+        projectName: 'e2e-proj',
+        aitriVersion: '0.1.50',
+        currentPhase: 2,
+        approvedPhases: [1],
+        completedPhases: [1],
+      }),
+    );
   });
 
   after(() => fs.rmSync(projectDir, { recursive: true, force: true }));
@@ -62,13 +65,16 @@ describe('TC-014e3e: VERSION_MISMATCH alert generated when project aitriVersion 
 
   before(() => {
     projectDir = tmpDir('version-test-');
-    fs.writeFileSync(path.join(projectDir, '.aitri'), JSON.stringify({
-      projectName: 'version-test',
-      aitriVersion: '0.1.01',
-      currentPhase: 1,
-      approvedPhases: [],
-      completedPhases: [],
-    }));
+    fs.writeFileSync(
+      path.join(projectDir, '.aitri'),
+      JSON.stringify({
+        projectName: 'version-test',
+        aitriVersion: '0.1.01',
+        currentPhase: 1,
+        approvedPhases: [],
+        completedPhases: [],
+      }),
+    );
     // Pre-set CLI version cache to a known value to make test deterministic
     _setVersionCache('0.1.99');
   });
@@ -92,8 +98,14 @@ describe('TC-014e3e: VERSION_MISMATCH alert generated when project aitriVersion 
     const versionAlert = alerts.find(a => a.type === 'version-mismatch');
     assert.ok(versionAlert, 'Expected version-mismatch alert to be present');
     assert.equal(versionAlert.severity, 'warning');
-    assert.ok(versionAlert.message.includes('0.1.01'), `Message should contain '0.1.01': ${versionAlert.message}`);
-    assert.ok(versionAlert.message.includes('0.1.99'), `Message should contain '0.1.99': ${versionAlert.message}`);
+    assert.ok(
+      versionAlert.message.includes('0.1.01'),
+      `Message should contain '0.1.01': ${versionAlert.message}`,
+    );
+    assert.ok(
+      versionAlert.message.includes('0.1.99'),
+      `Message should contain '0.1.99': ${versionAlert.message}`,
+    );
   });
 
   it('no version-mismatch alert when aitriVersion matches cached CLI version', () => {

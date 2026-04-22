@@ -29,7 +29,11 @@ export async function addProject(project) {
     body: JSON.stringify(project),
   });
   const json = await res.json();
-  if (!res.ok) throw Object.assign(new Error(json.error ?? 'add_failed'), { code: json.error, status: res.status });
+  if (!res.ok)
+    throw Object.assign(new Error(json.error ?? 'add_failed'), {
+      code: json.error,
+      status: res.status,
+    });
   return json;
 }
 
@@ -46,7 +50,11 @@ export async function updateProject(id, updates) {
     body: JSON.stringify(updates),
   });
   const json = await res.json();
-  if (!res.ok) throw Object.assign(new Error(json.error ?? 'update_failed'), { code: json.error, status: res.status });
+  if (!res.ok)
+    throw Object.assign(new Error(json.error ?? 'update_failed'), {
+      code: json.error,
+      status: res.status,
+    });
   return json;
 }
 
@@ -59,6 +67,9 @@ export async function removeProject(id) {
   const res = await fetch(`${BASE}/${id}`, { method: 'DELETE' });
   if (!res.ok && res.status !== 204) {
     const json = await res.json().catch(() => ({}));
-    throw Object.assign(new Error(json.error ?? 'remove_failed'), { code: json.error, status: res.status });
+    throw Object.assign(new Error(json.error ?? 'remove_failed'), {
+      code: json.error,
+      status: res.status,
+    });
   }
 }

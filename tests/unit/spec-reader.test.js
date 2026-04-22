@@ -102,7 +102,9 @@ describe('TC-014f: readSpecArtifacts — reads from project root when artifactsD
 describe('TC-014e: readSpecArtifacts — returns null when no spec files exist', () => {
   let dir;
 
-  before(() => { dir = tmpDir(); });
+  before(() => {
+    dir = tmpDir();
+  });
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
   it('returns null when neither requirements nor test-cases file is present', () => {

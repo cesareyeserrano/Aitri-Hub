@@ -31,7 +31,7 @@ describe('TC-004h: readTestSummary — valid file returns correct summary', () =
           { fr_id: 'FR-002', status: 'partial' },
         ],
         results: [],
-      })
+      }),
     );
   });
 
@@ -76,7 +76,9 @@ describe('TC-004h: readTestSummary — valid file returns correct summary', () =
 describe('TC-004f: readTestSummary — absent file returns null', () => {
   let dir;
 
-  before(() => { dir = tmpDir(); });
+  before(() => {
+    dir = tmpDir();
+  });
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
   it('does not throw when file absent', () => {
@@ -121,7 +123,7 @@ describe('readTestSummary — respects custom artifactsDir', () => {
         summary: { passed: 5, failed: 1, skipped: 0, total: 6 },
         fr_coverage: [{ fr_id: 'FR-001', status: 'partial' }],
         results: [],
-      })
+      }),
     );
   });
 

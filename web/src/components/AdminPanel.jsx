@@ -16,10 +16,10 @@ import { getProjects, addProject, updateProject, removeProject } from '../lib/ad
  * @returns {JSX.Element}
  */
 export default function AdminPanel() {
-  const [projects, setProjects]         = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState(null);
-  const [showAddForm, setShowAddForm]   = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
   const [removeTarget, setRemoveTarget] = useState(null);
 
   const fetchProjects = useCallback(async () => {
@@ -34,7 +34,9 @@ export default function AdminPanel() {
     }
   }, []);
 
-  useEffect(() => { fetchProjects(); }, [fetchProjects]);
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
 
   async function handleAdd(payload) {
     const { project } = await addProject(payload);
@@ -44,7 +46,7 @@ export default function AdminPanel() {
 
   async function handleEdit(id, updates) {
     const { project } = await updateProject(id, updates);
-    setProjects(prev => prev.map(p => p.id === id ? project : p));
+    setProjects(prev => prev.map(p => (p.id === id ? project : p)));
   }
 
   async function handleRemoveConfirm() {
@@ -63,11 +65,15 @@ export default function AdminPanel() {
           admin.projects
         </div>
         <div className="admin-panel__nav">
-          <a href="/" className="admin-nav-link" onClick={e => {
-            e.preventDefault();
-            window.history.pushState({}, '', '/');
-            window.dispatchEvent(new PopStateEvent('popstate'));
-          }}>
+          <a
+            href="/"
+            className="admin-nav-link"
+            onClick={e => {
+              e.preventDefault();
+              window.history.pushState({}, '', '/');
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
+          >
             ← dashboard
           </a>
         </div>
@@ -83,9 +89,7 @@ export default function AdminPanel() {
       )}
 
       {/* Loading */}
-      {loading && !error && (
-        <div className="admin-panel__loading">loading…</div>
-      )}
+      {loading && !error && <div className="admin-panel__loading">loading…</div>}
 
       {/* Project list */}
       {!loading && !error && (
@@ -100,10 +104,7 @@ export default function AdminPanel() {
       {!loading && !error && (
         <div className="admin-panel__add">
           {showAddForm ? (
-            <AdminAddForm
-              onSubmit={handleAdd}
-              onCancel={() => setShowAddForm(false)}
-            />
+            <AdminAddForm onSubmit={handleAdd} onCancel={() => setShowAddForm(false)} />
           ) : (
             <button
               className="btn btn--primary"

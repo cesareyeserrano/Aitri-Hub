@@ -26,7 +26,10 @@ function makeChildMock({ stdout = '', stderr = '', code = 0, neverClose = false 
   const child = new EventEmitter();
   child.stdout = new EventEmitter();
   child.stderr = new EventEmitter();
-  child.kill = () => { child._killed = true; return true; };
+  child.kill = () => {
+    child._killed = true;
+    return true;
+  };
   child._killed = false;
   setImmediate(() => {
     if (stdout) child.stdout.emit('data', Buffer.from(stdout));
@@ -40,7 +43,10 @@ function makeChildMock({ stdout = '', stderr = '', code = 0, neverClose = false 
 
 function captureSpawn(impl) {
   const calls = [];
-  const fn = (...args) => { calls.push(args); return impl(...args); };
+  const fn = (...args) => {
+    calls.push(args);
+    return impl(...args);
+  };
   return { fn, calls };
 }
 
@@ -52,10 +58,17 @@ describe('TC-010h: readSnapshot — spawns aitri status --json and parses stdout
     const snapshot = {
       snapshotVersion: 1,
       project: 'demo',
-      nextActions: [{ priority: 1, command: 'aitri verify-run', reason: 'Phase 4 approved', severity: 'warn' }],
-      health: { deployable: false, deployableReasons: [{ type: 'verify_not_passed', message: 'verify has not run' }] },
+      nextActions: [
+        { priority: 1, command: 'aitri verify-run', reason: 'Phase 4 approved', severity: 'warn' },
+      ],
+      health: {
+        deployable: false,
+        deployableReasons: [{ type: 'verify_not_passed', message: 'verify has not run' }],
+      },
     };
-    const { fn: spawnFn, calls } = captureSpawn(() => makeChildMock({ stdout: JSON.stringify(snapshot), code: 0 }));
+    const { fn: spawnFn, calls } = captureSpawn(() =>
+      makeChildMock({ stdout: JSON.stringify(snapshot), code: 0 }),
+    );
     const result = await readSnapshot(projectDir, { spawnFn });
 
     assert.equal(calls.length, 1);
@@ -78,7 +91,9 @@ describe('TC-010h: readSnapshot — spawns aitri status --json and parses stdout
 describe('TC-010f: readSnapshot — exit code 1 returns spawn_failed', () => {
   it('TC-010f: returns ok:false reason=spawn_failed, detail contains stderr', async () => {
     const projectDir = tmpDir('aitri-fixture-002-');
-    const { fn: spawnFn } = captureSpawn(() => makeChildMock({ stdout: '', stderr: 'not an aitri project', code: 1 }));
+    const { fn: spawnFn } = captureSpawn(() =>
+      makeChildMock({ stdout: '', stderr: 'not an aitri project', code: 1 }),
+    );
     const result = await readSnapshot(projectDir, { spawnFn });
     assert.equal(result.ok, false);
     assert.equal(result.reason, 'spawn_failed');
@@ -94,7 +109,10 @@ describe('TC-010e1: readSnapshot — hung spawn is SIGKILLed at timeoutMs', () =
   it('TC-010e1: kills child once and returns reason=timeout with durationMs in [timeout, timeout+1000)', async () => {
     const projectDir = tmpDir('aitri-fixture-003-');
     let child;
-    const spawnFn = () => { child = makeChildMock({ neverClose: true }); return child; };
+    const spawnFn = () => {
+      child = makeChildMock({ neverClose: true });
+      return child;
+    };
     const result = await readSnapshot(projectDir, { spawnFn, timeoutMs: 100 });
     assert.equal(result.ok, false);
     assert.equal(result.reason, 'timeout');
@@ -156,7 +174,12 @@ describe('TC-011h: projectFromSnapshot — aitriState equivalent to legacy reade
     };
     const projected = projectFromSnapshot(snapshot);
     assert.equal(projected.aitriState.verifyPassed, true);
-    assert.deepEqual(projected.aitriState.verifySummary, { total: 30, passed: 30, failed: 0, skipped: 0 });
+    assert.deepEqual(projected.aitriState.verifySummary, {
+      total: 30,
+      passed: 30,
+      failed: 0,
+      skipped: 0,
+    });
   });
 
   it("BG-007: verifyPassed is false when verify phase status === 'failed'", () => {
@@ -164,7 +187,11 @@ describe('TC-011h: projectFromSnapshot — aitriState equivalent to legacy reade
       snapshotVersion: 1,
       project: 'demo',
       phases: [
-        { key: 'verify', status: 'failed', verifySummary: { total: 10, passed: 9, failed: 1, skipped: 0 } },
+        {
+          key: 'verify',
+          status: 'failed',
+          verifySummary: { total: 10, passed: 9, failed: 1, skipped: 0 },
+        },
       ],
       driftPhases: [],
     };
@@ -180,7 +207,13 @@ describe('BG-008: projectFromSnapshot — aggregatedTestSummary from CLI tests.t
     const snapshot = {
       snapshotVersion: 1,
       project: 'demo',
-      phases: [{ key: 'verify', status: 'passed', verifySummary: { total: 27, passed: 27, failed: 0, skipped: 0 } }],
+      phases: [
+        {
+          key: 'verify',
+          status: 'passed',
+          verifySummary: { total: 27, passed: 27, failed: 0, skipped: 0 },
+        },
+      ],
       tests: {
         totals: { passed: 249, failed: 0, skipped: 45, manual: 0, total: 294 },
         perPipeline: [],
@@ -204,7 +237,13 @@ describe('BG-008: projectFromSnapshot — aggregatedTestSummary from CLI tests.t
     const snapshot = {
       snapshotVersion: 1,
       project: 'demo',
-      phases: [{ key: 'verify', status: 'passed', verifySummary: { total: 10, passed: 10, failed: 0, skipped: 0 } }],
+      phases: [
+        {
+          key: 'verify',
+          status: 'passed',
+          verifySummary: { total: 10, passed: 10, failed: 0, skipped: 0 },
+        },
+      ],
       driftPhases: [],
     };
     const projected = projectFromSnapshot(snapshot);
@@ -231,17 +270,17 @@ describe('TC-016h: formatLastSessionLine — verbose relative time', () => {
 
 describe('TC-016e1: formatRelativeTime — relative-time bucket boundaries', () => {
   const now = new Date('2026-04-17T14:00:00Z');
-  const minus = (deltaMs) => new Date(now.getTime() - deltaMs).toISOString();
+  const minus = deltaMs => new Date(now.getTime() - deltaMs).toISOString();
 
   const cases = [
-    { delta: 59_000,                expect: 'just now'     },
-    { delta: 60_000,                expect: '1m ago'       },
-    { delta: 59 * 60_000,           expect: '59m ago'      },
-    { delta: 60 * 60_000,           expect: '1h ago'       },
-    { delta: 23 * 3_600_000,        expect: '23h ago'      },
-    { delta: 24 * 3_600_000,        expect: '1d ago'       },
-    { delta: 6  * 86_400_000,       expect: '6d ago'       },
-    { delta: 7  * 86_400_000,       expect: 'Apr 10, 2026' },
+    { delta: 59_000, expect: 'just now' },
+    { delta: 60_000, expect: '1m ago' },
+    { delta: 59 * 60_000, expect: '59m ago' },
+    { delta: 60 * 60_000, expect: '1h ago' },
+    { delta: 23 * 3_600_000, expect: '23h ago' },
+    { delta: 24 * 3_600_000, expect: '1d ago' },
+    { delta: 6 * 86_400_000, expect: '6d ago' },
+    { delta: 7 * 86_400_000, expect: 'Apr 10, 2026' },
   ];
 
   for (const c of cases) {

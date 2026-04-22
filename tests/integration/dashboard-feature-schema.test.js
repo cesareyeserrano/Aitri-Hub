@@ -27,13 +27,24 @@ describe('TC-014h: writeDashboard — writes featurePipelines and aggregatedTcTo
       collectedAt: new Date().toISOString(),
       integrationAlert: null,
       meta: { detectedAitriVersion: '0.1.76' },
-      projects: [{
-        name: 'my-project',
-        location: '/tmp/my-project',
-        testSummary: { total: 30, passed: 30, failed: 0, skipped: 0, available: true },
-        featurePipelines: [{ name: 'feat-a', tcCount: 61, approvedPhases: [1, 2], currentPhase: 3, totalPhases: 5, verifyStatus: null }],
-        aggregatedTcTotal: 91,
-      }],
+      projects: [
+        {
+          name: 'my-project',
+          location: '/tmp/my-project',
+          testSummary: { total: 30, passed: 30, failed: 0, skipped: 0, available: true },
+          featurePipelines: [
+            {
+              name: 'feat-a',
+              tcCount: 61,
+              approvedPhases: [1, 2],
+              currentPhase: 3,
+              totalPhases: 5,
+              verifyStatus: null,
+            },
+          ],
+          aggregatedTcTotal: 91,
+        },
+      ],
     };
     writeDashboard(data);
     const parsed = JSON.parse(fs.readFileSync(dashboardFilePath(), 'utf8'));
@@ -53,7 +64,8 @@ describe('TC-014h2: writeDashboard — integrationAlert at top level', () => {
       integrationAlert: {
         severity: 'warning',
         message: 'Aitri 0.1.77 detected — Hub integration not reviewed past 0.1.76',
-        changelogUrl: 'https://github.com/cesareyeserrano/Aitri/blob/main/docs/integrations/CHANGELOG.md',
+        changelogUrl:
+          'https://github.com/cesareyeserrano/Aitri/blob/main/docs/integrations/CHANGELOG.md',
       },
       meta: { detectedAitriVersion: '0.1.77' },
       projects: [],
@@ -62,7 +74,10 @@ describe('TC-014h2: writeDashboard — integrationAlert at top level', () => {
     const parsed = JSON.parse(fs.readFileSync(dashboardFilePath(), 'utf8'));
     assert.equal(parsed.integrationAlert.severity, 'warning');
     assert.ok(parsed.integrationAlert.message.includes('0.1.77'));
-    assert.ok(typeof parsed.integrationAlert.changelogUrl === 'string' && parsed.integrationAlert.changelogUrl.length > 0);
+    assert.ok(
+      typeof parsed.integrationAlert.changelogUrl === 'string' &&
+        parsed.integrationAlert.changelogUrl.length > 0,
+    );
   });
 });
 
@@ -74,12 +89,14 @@ describe('TC-014e1: writeDashboard — no features', () => {
       collectedAt: new Date().toISOString(),
       integrationAlert: null,
       meta: { detectedAitriVersion: null },
-      projects: [{
-        name: 'no-feat-project',
-        testSummary: { total: 15, passed: 15, failed: 0, skipped: 0, available: true },
-        featurePipelines: [],
-        aggregatedTcTotal: 15,
-      }],
+      projects: [
+        {
+          name: 'no-feat-project',
+          testSummary: { total: 15, passed: 15, failed: 0, skipped: 0, available: true },
+          featurePipelines: [],
+          aggregatedTcTotal: 15,
+        },
+      ],
     };
     writeDashboard(data);
     const parsed = JSON.parse(fs.readFileSync(dashboardFilePath(), 'utf8'));
@@ -97,15 +114,17 @@ describe('TC-014e2: writeDashboard — existing fields unaffected by new fields'
       collectedAt: new Date().toISOString(),
       integrationAlert: null,
       meta: { detectedAitriVersion: '0.1.76' },
-      projects: [{
-        name: 'compat-project',
-        status: 'healthy',
-        location: '/tmp/compat',
-        gitMeta: { branch: 'main', lastCommitAgeHours: 2 },
-        alerts: [],
-        featurePipelines: [],
-        aggregatedTcTotal: 0,
-      }],
+      projects: [
+        {
+          name: 'compat-project',
+          status: 'healthy',
+          location: '/tmp/compat',
+          gitMeta: { branch: 'main', lastCommitAgeHours: 2 },
+          alerts: [],
+          featurePipelines: [],
+          aggregatedTcTotal: 0,
+        },
+      ],
     };
     writeDashboard(data);
     const parsed = JSON.parse(fs.readFileSync(dashboardFilePath(), 'utf8'));
@@ -126,11 +145,24 @@ describe('TC-014f: writeDashboard — output is always valid JSON', () => {
     const data = {
       schemaVersion: '1',
       collectedAt: new Date().toISOString(),
-      integrationAlert: { severity: 'warning', message: 'test', changelogUrl: 'http://example.com' },
+      integrationAlert: {
+        severity: 'warning',
+        message: 'test',
+        changelogUrl: 'http://example.com',
+      },
       meta: { detectedAitriVersion: '0.2.0' },
       projects: Array.from({ length: 5 }, (_, i) => ({
         name: `proj-${i}`,
-        featurePipelines: [{ name: 'f', tcCount: i, approvedPhases: [1], currentPhase: 2, totalPhases: 5, verifyStatus: null }],
+        featurePipelines: [
+          {
+            name: 'f',
+            tcCount: i,
+            approvedPhases: [1],
+            currentPhase: 2,
+            totalPhases: 5,
+            verifyStatus: null,
+          },
+        ],
         aggregatedTcTotal: i + 5,
       })),
     };

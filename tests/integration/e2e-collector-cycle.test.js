@@ -32,7 +32,7 @@ function writeAitri(projectDir, state) {
       verifyPassed: true,
       verifySummary: { passed: 30, failed: 0, skipped: 0 },
       ...state,
-    })
+    }),
   );
 }
 
@@ -44,7 +44,7 @@ function writeTestResults(dir, artifactsDir, summary) {
   fs.mkdirSync(specDir, { recursive: true });
   fs.writeFileSync(
     path.join(specDir, '04_TEST_RESULTS.json'),
-    JSON.stringify({ summary, fr_coverage: [] })
+    JSON.stringify({ summary, fr_coverage: [] }),
   );
 }
 
@@ -58,7 +58,7 @@ describe('TC-E2E-001: full collector cycle — integrationAlert in dashboard.jso
   const savedOverride = process.env.AITRI_HUB_DIR_OVERRIDE;
 
   before(() => {
-    hubTmpDir  = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-e2e-001-'));
+    hubTmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-e2e-001-'));
     projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'e2e-proj-001-'));
     process.env.AITRI_HUB_DIR_OVERRIDE = hubTmpDir;
 
@@ -68,7 +68,7 @@ describe('TC-E2E-001: full collector cycle — integrationAlert in dashboard.jso
 
   after(() => {
     process.env.AITRI_HUB_DIR_OVERRIDE = savedOverride ?? '';
-    fs.rmSync(hubTmpDir,  { recursive: true, force: true });
+    fs.rmSync(hubTmpDir, { recursive: true, force: true });
     fs.rmSync(projectDir, { recursive: true, force: true });
   });
 
@@ -93,12 +93,14 @@ describe('TC-E2E-001: full collector cycle — integrationAlert in dashboard.jso
       collectedAt: new Date().toISOString(),
       meta: { detectedAitriVersion: '0.1.99' },
       integrationAlert,
-      projects: [{
-        name: 'e2e-proj',
-        location: projectDir,
-        featurePipelines: [],
-        aggregatedTcTotal: 30,
-      }],
+      projects: [
+        {
+          name: 'e2e-proj',
+          location: projectDir,
+          featurePipelines: [],
+          aggregatedTcTotal: 30,
+        },
+      ],
     };
 
     writeDashboard(payload);
@@ -125,12 +127,18 @@ describe('TC-E2E-001: full collector cycle — integrationAlert in dashboard.jso
 
     const result = await collectAll([project]);
 
-    assert.ok(Object.prototype.hasOwnProperty.call(result, 'integrationAlert'),
-      'collectAll result must have integrationAlert property');
-    assert.ok(Object.prototype.hasOwnProperty.call(result, 'meta'),
-      'collectAll result must have meta property');
-    assert.ok(Object.prototype.hasOwnProperty.call(result.meta, 'detectedAitriVersion'),
-      'meta must include detectedAitriVersion');
+    assert.ok(
+      Object.prototype.hasOwnProperty.call(result, 'integrationAlert'),
+      'collectAll result must have integrationAlert property',
+    );
+    assert.ok(
+      Object.prototype.hasOwnProperty.call(result, 'meta'),
+      'collectAll result must have meta property',
+    );
+    assert.ok(
+      Object.prototype.hasOwnProperty.call(result.meta, 'detectedAitriVersion'),
+      'meta must include detectedAitriVersion',
+    );
     // integrationAlert is null or an alert object — never undefined
     assert.notEqual(result.integrationAlert, undefined);
   });
@@ -146,7 +154,7 @@ describe('TC-E2E-002: full collector cycle — aggregatedTcTotal with feature su
   const savedOverride = process.env.AITRI_HUB_DIR_OVERRIDE;
 
   before(() => {
-    hubTmpDir  = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-e2e-002-'));
+    hubTmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-e2e-002-'));
     projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'e2e-proj-002-'));
     process.env.AITRI_HUB_DIR_OVERRIDE = hubTmpDir;
 
@@ -165,14 +173,14 @@ describe('TC-E2E-002: full collector cycle — aggregatedTcTotal with feature su
         approvedPhases: [1, 2, 3],
         completedPhases: [1, 2, 3],
         artifactsDir: 'spec',
-      })
+      }),
     );
     writeTestResults(featDir, 'spec', { passed: 58, failed: 3, skipped: 0, total: 61 });
   });
 
   after(() => {
     process.env.AITRI_HUB_DIR_OVERRIDE = savedOverride ?? '';
-    fs.rmSync(hubTmpDir,  { recursive: true, force: true });
+    fs.rmSync(hubTmpDir, { recursive: true, force: true });
     fs.rmSync(projectDir, { recursive: true, force: true });
   });
 

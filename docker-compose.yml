@@ -5,13 +5,13 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "${AITRI_HUB_PORT:-3000}:3000"
+      - '${AITRI_HUB_PORT:-3000}:3000'
     volumes:
       # Mount ~/.aitri-hub/ as read-only so nginx can serve dashboard.json
-      - "${HOME}/.aitri-hub:/data:ro"
+      - '${HOME}/.aitri-hub:/data:ro'
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:3000/health']
       interval: 10s
       timeout: 5s
       retries: 3

@@ -18,13 +18,17 @@ import { formatLastSessionLine } from '../../../lib/collector/relative-time.js';
 function healthScore(project) {
   const approved = project.aitriState?.approvedPhases?.length ?? 0;
   const pipeline = Math.min(40, approved * 8);
-  const ts       = project.testSummary;
-  const testPts  = ts?.available && ts.total > 0 ? Math.round((ts.passed / ts.total) * 30) : 0;
+  const ts = project.testSummary;
+  const testPts = ts?.available && ts.total > 0 ? Math.round((ts.passed / ts.total) * 30) : 0;
   const hasBlocking = (project.alerts ?? []).some(a => a.severity === 'blocking');
   const blockPts = hasBlocking ? 0 : 20;
-  const cs       = project.complianceSummary;
-  const compPts  = cs?.available
-    ? cs.overallStatus === 'compliant' ? 10 : cs.overallStatus === 'partial' ? 5 : 0
+  const cs = project.complianceSummary;
+  const compPts = cs?.available
+    ? cs.overallStatus === 'compliant'
+      ? 10
+      : cs.overallStatus === 'partial'
+        ? 5
+        : 0
     : 0;
   return Math.min(100, pipeline + testPts + blockPts + compPts);
 }
@@ -34,29 +38,29 @@ function scoreGrade(score) {
   if (score >= 75) return { label: 'B', color: 'var(--syn-teal)' };
   if (score >= 55) return { label: 'C', color: 'var(--syn-yellow)' };
   if (score >= 35) return { label: 'D', color: 'var(--syn-orange)' };
-  return               { label: 'F', color: 'var(--syn-red)' };
+  return { label: 'F', color: 'var(--syn-red)' };
 }
 
 // ── Format helpers ────────────────────────────────────────────────────────────
 
 function formatAge(hours) {
   if (hours === null || hours === undefined) return 'N/A';
-  if (hours < 1)   return `${Math.round(hours * 60)}m ago`;
-  if (hours < 48)  return `${Math.round(hours)}h ago`;
+  if (hours < 1) return `${Math.round(hours * 60)}m ago`;
+  if (hours < 48) return `${Math.round(hours)}h ago`;
   return `${Math.round(hours / 24)}d ago`;
 }
 
 function ageColor(hours) {
   if (hours === null || hours === undefined) return 'var(--text-dim)';
-  if (hours < 24)  return 'var(--syn-green)';
+  if (hours < 24) return 'var(--syn-green)';
   if (hours <= 72) return 'var(--syn-yellow)';
   return 'var(--syn-red)';
 }
 
 function formatTests(ts, effectiveTotal) {
   if (!ts || !ts.available) return { label: 'N/A', pct: 0, ok: null };
-  const total  = effectiveTotal ?? ts.total;
-  const pct    = total > 0 ? Math.round((ts.passed / total) * 100) : 0;
+  const total = effectiveTotal ?? ts.total;
+  const pct = total > 0 ? Math.round((ts.passed / total) * 100) : 0;
   return {
     label: `${ts.passed}/${total} (${pct}%)`,
     pct,
@@ -69,8 +73,8 @@ function relTime(at) {
   if (!at) return null;
   const diff = Date.now() - new Date(at).getTime();
   const m = Math.floor(diff / 60_000);
-  if (m < 1)    return 'just now';
-  if (m < 60)   return `${m}m ago`;
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
   if (m < 1440) return `${Math.floor(m / 60)}h ago`;
   return `${Math.floor(m / 1440)}d ago`;
 }
@@ -82,16 +86,17 @@ function SectionLabel({ label }) {
 // ── DEGRADATION row (FR-017) ──────────────────────────────────────────────────
 
 const DEGRADATION_TEXT = {
-  not_installed:    'Aitri CLI not installed — limited report',
-  version_too_old:  'Aitri CLI too old (need ≥0.1.77) — limited report',
-  spawn_failed:     'Aitri snapshot failed — limited report',
-  parse_failed:     'Aitri snapshot output unreadable — limited report',
-  timeout:          'Aitri snapshot timed out — limited report',
+  not_installed: 'Aitri CLI not installed — limited report',
+  version_too_old: 'Aitri CLI too old (need ≥0.1.77) — limited report',
+  spawn_failed: 'Aitri snapshot failed — limited report',
+  parse_failed: 'Aitri snapshot output unreadable — limited report',
+  timeout: 'Aitri snapshot timed out — limited report',
 };
 
 function DegradationRow({ reason }) {
   if (!reason) return null;
-  const text = DEGRADATION_TEXT[reason] ?? `Aitri snapshot unavailable (${reason}) — limited report`;
+  const text =
+    DEGRADATION_TEXT[reason] ?? `Aitri snapshot unavailable (${reason}) — limited report`;
   return (
     <div className="degradation-warning-row" data-testid="degradation-warning-row">
       ⚠ {text}
@@ -111,23 +116,19 @@ function NextActionRow({ next }) {
       </div>
     );
   }
-  const sev = next.severity === 'critical' || next.severity === 'warn' || next.severity === 'info'
-    ? next.severity : 'info';
+  const sev =
+    next.severity === 'critical' || next.severity === 'warn' || next.severity === 'info'
+      ? next.severity
+      : 'info';
   return (
-    <div
-      className={`next-action-row severity-${sev}`}
-      data-testid="next-action-row"
-    >
+    <div className={`next-action-row severity-${sev}`} data-testid="next-action-row">
       <span className="next-action-row__command" data-testid="next-action-command">
         {next.command}
       </span>
       <span className="next-action-row__reason" data-testid="next-action-reason">
         {next.reason}
       </span>
-      <span
-        className={`next-action-row__badge severity-${sev}`}
-        data-testid="next-action-badge"
-      >
+      <span className={`next-action-row__badge severity-${sev}`} data-testid="next-action-badge">
         {sev}
       </span>
     </div>
@@ -139,9 +140,10 @@ function NextActionRow({ next }) {
 function DeployHealthSection({ health }) {
   if (!health || health.deployable === true) return null;
   const reasons = Array.isArray(health.deployableReasons) ? health.deployableReasons : [];
-  const rows = reasons.length > 0
-    ? reasons
-    : [{ type: 'unknown', message: 'Project not deployable — reason unavailable' }];
+  const rows =
+    reasons.length > 0
+      ? reasons
+      : [{ type: 'unknown', message: 'Project not deployable — reason unavailable' }];
   return (
     <>
       <hr className="card__divider" />
@@ -189,11 +191,9 @@ function BlockersSection({ alerts, normalize }) {
           </div>
         ))}
         {showNormalize && (
-          <div
-            className="normalize-warning-row severity-warn"
-            data-testid="normalize-warning-row"
-          >
-            {uncounted} {uncounted === 1 ? 'file' : 'files'} changed outside pipeline — run: aitri normalize
+          <div className="normalize-warning-row severity-warn" data-testid="normalize-warning-row">
+            {uncounted} {uncounted === 1 ? 'file' : 'files'} changed outside pipeline — run: aitri
+            normalize
           </div>
         )}
       </div>
@@ -203,15 +203,26 @@ function BlockersSection({ alerts, normalize }) {
 
 // ── PIPELINE section (existing + lastSession line per FR-016) ────────────────
 
-const PHASE_NAMES = { 1: 'Requirements', 2: 'Design', 3: 'Tests', 4: 'Implementation', 5: 'Compliance' };
-const EVENT_COLOR = { approved: 'var(--syn-green)', completed: 'var(--syn-teal)', rejected: 'var(--syn-red)' };
+const PHASE_NAMES = {
+  1: 'Requirements',
+  2: 'Design',
+  3: 'Tests',
+  4: 'Implementation',
+  5: 'Compliance',
+};
+const EVENT_COLOR = {
+  approved: 'var(--syn-green)',
+  completed: 'var(--syn-teal)',
+  rejected: 'var(--syn-red)',
+};
 
 function PipelineSection({ aitriState, lastSession }) {
   if (!aitriState) return null;
   const { approvedPhases = [], currentPhase, events = [] } = aitriState;
   const approved = approvedPhases.length;
-  const pct      = Math.round((approved / 5) * 100);
-  const barColor = approved === 5 ? 'var(--syn-green)' : pct >= 60 ? 'var(--syn-yellow)' : 'var(--syn-teal)';
+  const pct = Math.round((approved / 5) * 100);
+  const barColor =
+    approved === 5 ? 'var(--syn-green)' : pct >= 60 ? 'var(--syn-yellow)' : 'var(--syn-teal)';
   const lastEvent = events.length > 0 ? events[events.length - 1] : null;
   const lastSessionText = formatLastSessionLine(lastSession ?? null);
   return (
@@ -237,12 +248,25 @@ function PipelineSection({ aitriState, lastSession }) {
         </div>
         {lastEvent && (
           <div className="card-section__row" style={{ marginTop: '4px' }}>
-            <span style={{ color: EVENT_COLOR[lastEvent.event] ?? 'var(--syn-comment)', fontSize: '13px' }}>◎</span>
-            <span style={{ color: EVENT_COLOR[lastEvent.event] ?? 'var(--syn-comment)', fontSize: '12px' }}>
+            <span
+              style={{
+                color: EVENT_COLOR[lastEvent.event] ?? 'var(--syn-comment)',
+                fontSize: '13px',
+              }}
+            >
+              ◎
+            </span>
+            <span
+              style={{
+                color: EVENT_COLOR[lastEvent.event] ?? 'var(--syn-comment)',
+                fontSize: '12px',
+              }}
+            >
               {lastEvent.event}
             </span>
             <span style={{ color: 'var(--text-dim)', fontSize: '11px', marginLeft: '4px' }}>
-              {lastEvent.phase != null && `phase ${lastEvent.phase} · `}{relTime(lastEvent.at)}
+              {lastEvent.phase != null && `phase ${lastEvent.phase} · `}
+              {relTime(lastEvent.at)}
             </span>
           </div>
         )}
@@ -259,9 +283,7 @@ function PipelineSection({ aitriState, lastSession }) {
 // ── QUALITY section (existing + staleness indicators per FR-014) ─────────────
 
 function StalenessIndicators({ staleVerify, audit }) {
-  const verifyStale = Array.isArray(staleVerify)
-    ? staleVerify.find(v => v.scope === 'root')
-    : null;
+  const verifyStale = Array.isArray(staleVerify) ? staleVerify.find(v => v.scope === 'root') : null;
   return (
     <>
       {verifyStale && (
@@ -282,21 +304,33 @@ function StalenessIndicators({ staleVerify, audit }) {
           audit missing
         </span>
       )}
-      {audit && audit.exists === true && Number.isInteger(audit.stalenessDays) && audit.stalenessDays >= 30 && (
-        <span
-          className="severity-warn"
-          data-testid="audit-stale-indicator"
-          style={{ marginLeft: '8px', fontSize: '11px' }}
-        >
-          audit stale ({audit.stalenessDays}d)
-        </span>
-      )}
+      {audit &&
+        audit.exists === true &&
+        Number.isInteger(audit.stalenessDays) &&
+        audit.stalenessDays >= 30 && (
+          <span
+            className="severity-warn"
+            data-testid="audit-stale-indicator"
+            style={{ marginLeft: '8px', fontSize: '11px' }}
+          >
+            audit stale ({audit.stalenessDays}d)
+          </span>
+        )}
     </>
   );
 }
 
 function QualitySection({ project }) {
-  const { testSummary, aggregatedTestSummary, complianceSummary, requirementsSummary, specQuality, aggregatedTcTotal, health, audit } = project;
+  const {
+    testSummary,
+    aggregatedTestSummary,
+    complianceSummary,
+    requirementsSummary,
+    specQuality,
+    aggregatedTcTotal,
+    health,
+    audit,
+  } = project;
   // Prefer the CLI's canonical aggregate (tests.totals) — both numerator and
   // denominator from the same source. Fall back to the legacy path (main
   // pipeline numerator, recomputed aggregate denominator) only for snapshots
@@ -319,12 +353,21 @@ function QualitySection({ project }) {
           <span className="card-section__key">tests</span>
           <span
             className="card-section__val"
-            style={{ color: tests.ok === false ? 'var(--syn-red)' : tests.ok === true ? 'var(--syn-green)' : 'var(--text-dim)' }}
+            style={{
+              color:
+                tests.ok === false
+                  ? 'var(--syn-red)'
+                  : tests.ok === true
+                    ? 'var(--syn-green)'
+                    : 'var(--text-dim)',
+            }}
           >
             Tests: {tests.label}
           </span>
           {tests.ok === false && (
-            <span data-testid="blocking-badge" className="blocking-badge">{tests.failed} failing</span>
+            <span data-testid="blocking-badge" className="blocking-badge">
+              {tests.failed} failing
+            </span>
           )}
           <StalenessIndicators staleVerify={health?.staleVerify} audit={audit} />
         </div>
@@ -334,7 +377,8 @@ function QualitySection({ project }) {
             <span className="card-section__icon">◈</span>
             <span className="card-section__key">coverage</span>
             <span className="card-section__val" style={{ color: 'var(--text-dim)' }}>
-              {requirementsSummary.covered ?? requirementsSummary.total}/{requirementsSummary.total} FRs covered
+              {requirementsSummary.covered ?? requirementsSummary.total}/{requirementsSummary.total}{' '}
+              FRs covered
               {requirementsSummary.covered === requirementsSummary.total && (
                 <span style={{ color: 'var(--syn-green)', marginLeft: '4px' }}>✓</span>
               )}
@@ -347,28 +391,32 @@ function QualitySection({ project }) {
             <span className="card-section__icon">◆</span>
             <span className="card-section__key">spec</span>
             <span className="card-section__val" style={{ color: 'var(--syn-yellow)' }}>
-              ⚠ {specQuality.placeholders} placeholder{specQuality.placeholders > 1 ? 's' : ''} unresolved
+              ⚠ {specQuality.placeholders} placeholder{specQuality.placeholders > 1 ? 's' : ''}{' '}
+              unresolved
             </span>
           </div>
         )}
 
-        {hasCompliance && (() => {
-          const s = complianceSummary.overallStatus;
-          const cfg = s === 'compliant'
-            ? { color: 'var(--syn-green)',   icon: '✓', label: 'COMPLIANT' }
-            : s === 'partial'
-            ? { color: 'var(--syn-yellow)',  icon: '⚠', label: 'PARTIAL' }
-            : { color: 'var(--syn-comment)', icon: '·', label: 'DRAFT' };
-          return (
-            <div className="card-section__row">
-              <span className="card-section__icon">◇</span>
-              <span className="card-section__key">comply</span>
-              <span className="card-section__val" style={{ color: cfg.color }}>
-                {cfg.icon} {cfg.label} · {complianceSummary.levels?.production_ready ?? 0}/{complianceSummary.total} production_ready
-              </span>
-            </div>
-          );
-        })()}
+        {hasCompliance &&
+          (() => {
+            const s = complianceSummary.overallStatus;
+            const cfg =
+              s === 'compliant'
+                ? { color: 'var(--syn-green)', icon: '✓', label: 'COMPLIANT' }
+                : s === 'partial'
+                  ? { color: 'var(--syn-yellow)', icon: '⚠', label: 'PARTIAL' }
+                  : { color: 'var(--syn-comment)', icon: '·', label: 'DRAFT' };
+            return (
+              <div className="card-section__row">
+                <span className="card-section__icon">◇</span>
+                <span className="card-section__key">comply</span>
+                <span className="card-section__val" style={{ color: cfg.color }}>
+                  {cfg.icon} {cfg.label} · {complianceSummary.levels?.production_ready ?? 0}/
+                  {complianceSummary.total} production_ready
+                </span>
+              </div>
+            );
+          })()}
       </div>
     </>
   );
@@ -389,7 +437,9 @@ function GitSection({ gitMeta }) {
           <span className="card-section__val" style={{ color: 'var(--syn-blue)' }}>
             {branch ?? 'unknown'}
           </span>
-          <span style={{ color: ageColor(lastCommitAgeHours), fontSize: '11px', marginLeft: '6px' }}>
+          <span
+            style={{ color: ageColor(lastCommitAgeHours), fontSize: '11px', marginLeft: '6px' }}
+          >
             · {formatAge(lastCommitAgeHours)}
           </span>
         </div>
@@ -423,7 +473,7 @@ function VersionSection({ project }) {
 
   const mismatch = (alerts ?? []).find(a => a.type === 'version-mismatch');
   const cliVer = mismatch
-    ? (mismatch.message.match(/CLI\s+(\d+\.\d+\.\d+)/) ?? [])[1] ?? null
+    ? ((mismatch.message.match(/CLI\s+(\d+\.\d+\.\d+)/) ?? [])[1] ?? null)
     : null;
 
   return (
@@ -433,7 +483,9 @@ function VersionSection({ project }) {
       <div className="card-section">
         {aitriVer && (
           <div className="card-section__row" data-testid="version-row">
-            <span className="card-section__icon" style={{ color: 'var(--syn-comment)' }}>⊙</span>
+            <span className="card-section__icon" style={{ color: 'var(--syn-comment)' }}>
+              ⊙
+            </span>
             <span className="card-section__key">aitri</span>
             <span
               className="card-section__val"
@@ -447,7 +499,8 @@ function VersionSection({ project }) {
                 data-testid="version-mismatch-hint"
                 style={{ color: 'var(--syn-yellow)', fontSize: '11px', marginLeft: '6px' }}
               >
-                ⚠ CLI {cliVer ? `v${cliVer}` : 'newer'} · {mismatch.command ?? 'aitri adopt --upgrade'}
+                ⚠ CLI {cliVer ? `v${cliVer}` : 'newer'} ·{' '}
+                {mismatch.command ?? 'aitri adopt --upgrade'}
               </span>
             )}
           </div>
@@ -490,7 +543,9 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
     >
       <div className="card__header">
         <div className="card__header-left">
-          <span className="card__name" title={name}>{name}</span>
+          <span className="card__name" title={name}>
+            {name}
+          </span>
           {appVersion && (
             <span className="card__app-version" data-testid="app-version">
               v{appVersion}
@@ -507,11 +562,21 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
               ✖ {blockingCount}
             </span>
           )}
-          <span className="grade-badge" style={{ color: grade.color }} title={`Health score: ${score}`}>
+          <span
+            className="grade-badge"
+            style={{ color: grade.color }}
+            title={`Health score: ${score}`}
+          >
             [{grade.label}]
           </span>
           <span className={`status-badge status-badge--${status}`} data-testid="status-badge">
-            {status === 'healthy' ? '✓ ' : status === 'warning' ? '⚠ ' : status === 'error' ? '✖ ' : '? '}
+            {status === 'healthy'
+              ? '✓ '
+              : status === 'warning'
+                ? '⚠ '
+                : status === 'error'
+                  ? '✖ '
+                  : '? '}
             {status === 'unreadable' ? 'UNREADABLE' : status?.toUpperCase()}
           </span>
         </div>

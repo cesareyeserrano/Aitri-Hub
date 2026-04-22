@@ -22,9 +22,9 @@ function formatClock(date) {
 
 function formatRelativeTime(date) {
   if (!date) return '—';
-  const diffMs  = Date.now() - date.getTime();
+  const diffMs = Date.now() - date.getTime();
   const diffMin = Math.floor(diffMs / 60_000);
-  if (diffMin < 1)  return 'just now';
+  if (diffMin < 1) return 'just now';
   if (diffMin < 60) return `${diffMin}m ago`;
   const diffH = Math.floor(diffMin / 60);
   return `${diffH}h ago`;

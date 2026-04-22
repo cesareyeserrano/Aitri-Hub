@@ -29,12 +29,15 @@ function createFakeRemote(bareDir) {
   execSync('git init', { cwd: workDir, stdio: 'ignore' });
   execSync('git config user.email "test@aitri-hub.test"', { cwd: workDir, stdio: 'ignore' });
   execSync('git config user.name "Aitri Test"', { cwd: workDir, stdio: 'ignore' });
-  fs.writeFileSync(path.join(workDir, '.aitri'), JSON.stringify({
-    projectName: 'remote-proj',
-    currentPhase: 2,
-    approvedPhases: [1],
-    completedPhases: [1, 2],
-  }));
+  fs.writeFileSync(
+    path.join(workDir, '.aitri'),
+    JSON.stringify({
+      projectName: 'remote-proj',
+      currentPhase: 2,
+      approvedPhases: [1],
+      completedPhases: [1, 2],
+    }),
+  );
   execSync('git add .', { cwd: workDir, stdio: 'ignore' });
   execSync('git commit -m "initial"', { cwd: workDir, stdio: 'ignore' });
   execSync(`git clone --bare "${workDir}" "${bareDir}"`, { stdio: 'ignore' });
@@ -77,7 +80,7 @@ describe('TC-008h: collectOne — first run clones remote project to cache', () 
     const cloneDir = path.join(tmpHubDir, 'cache', cacheSubdir[0]);
     assert.ok(
       fs.existsSync(path.join(cloneDir, '.git')),
-      `Cloned directory at ${cloneDir} must contain .git`
+      `Cloned directory at ${cloneDir} must contain .git`,
     );
   });
 
@@ -95,7 +98,7 @@ describe('TC-008h: collectOne — first run clones remote project to cache', () 
     // If clone succeeded, gitMeta should be populated
     assert.ok(
       result.gitMeta?.isGitRepo === true || result.status !== 'unreadable',
-      `Expected gitMeta.isGitRepo=true or non-unreadable status, got status=${result.status}`
+      `Expected gitMeta.isGitRepo=true or non-unreadable status, got status=${result.status}`,
     );
   });
 });
@@ -145,14 +148,14 @@ describe('TC-008e: collectOne — subsequent run pulls existing cache (no re-clo
     // Directory still exists and is the same one (not deleted and recreated)
     assert.ok(
       fs.existsSync(path.join(cloneDir, '.git')),
-      'Cache directory must still exist after second call'
+      'Cache directory must still exist after second call',
     );
     // Cache dirs count should not have grown (no new clone dir added)
     const cacheDirsAfter = fs.readdirSync(path.join(tmpHubDir, 'cache'));
     assert.equal(
       cacheDirsAfter.length,
       cacheSubdir.length,
-      'No new cache directories should be created on second call'
+      'No new cache directories should be created on second call',
     );
   });
 });
@@ -206,7 +209,7 @@ describe('TC-008f: collectOne — unreachable remote shows cache-stale, no crash
     assert.equal(
       result.status,
       'unreadable',
-      `Expected status=unreadable when clone fails, got: ${result.status}`
+      `Expected status=unreadable when clone fails, got: ${result.status}`,
     );
   });
 
@@ -223,7 +226,7 @@ describe('TC-008f: collectOne — unreachable remote shows cache-stale, no crash
     assert.notEqual(
       result.collectionError,
       null,
-      'collectionError must be set when remote clone fails'
+      'collectionError must be set when remote clone fails',
     );
   });
 });

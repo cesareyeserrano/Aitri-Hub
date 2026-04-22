@@ -63,14 +63,18 @@ describe('TC-010h: evaluateIntegrationAlert — warning when CLI is newer', () =
 
   it('message contains the detected version', () => {
     const result = evaluateIntegrationAlert(HIGHER, INTEGRATION_LAST_REVIEWED);
-    assert.ok(result.message.includes(HIGHER),
-      `message should include '${HIGHER}': ${result.message}`);
+    assert.ok(
+      result.message.includes(HIGHER),
+      `message should include '${HIGHER}': ${result.message}`,
+    );
   });
 
   it('message contains INTEGRATION_LAST_REVIEWED version', () => {
     const result = evaluateIntegrationAlert(HIGHER, INTEGRATION_LAST_REVIEWED);
-    assert.ok(result.message.includes(INTEGRATION_LAST_REVIEWED),
-      `message should include '${INTEGRATION_LAST_REVIEWED}': ${result.message}`);
+    assert.ok(
+      result.message.includes(INTEGRATION_LAST_REVIEWED),
+      `message should include '${INTEGRATION_LAST_REVIEWED}': ${result.message}`,
+    );
   });
 
   it('changelogUrl is a non-empty string', () => {
@@ -110,8 +114,10 @@ describe('TC-010f: evaluateIntegrationAlert — undetectable warning when null',
 
   it('message contains "undetectable"', () => {
     const result = evaluateIntegrationAlert(null, INTEGRATION_LAST_REVIEWED);
-    assert.ok(result.message.toLowerCase().includes('undetectable'),
-      `message should contain 'undetectable': ${result.message}`);
+    assert.ok(
+      result.message.toLowerCase().includes('undetectable'),
+      `message should contain 'undetectable': ${result.message}`,
+    );
   });
 
   it('changelogUrl is non-empty when detectedVersion is null', () => {

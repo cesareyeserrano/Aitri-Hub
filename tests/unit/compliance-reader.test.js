@@ -21,7 +21,7 @@ const COMPLIANT_ARTIFACT = {
   requirement_compliance: [
     { id: 'FR-001', level: 'production_ready' },
     { id: 'FR-002', level: 'production_ready' },
-    { id: 'FR-003', level: 'complete'         },
+    { id: 'FR-003', level: 'complete' },
   ],
 };
 
@@ -32,7 +32,7 @@ const PARTIAL_ARTIFACT = {
   overall_status: 'partial',
   requirement_compliance: [
     { id: 'FR-001', level: 'production_ready' },
-    { id: 'FR-002', level: 'partial'          },
+    { id: 'FR-002', level: 'partial' },
     { id: 'FR-003', level: 'functionally_present' },
   ],
 };
@@ -45,7 +45,10 @@ describe('readComplianceSummary — compliant artifact', () => {
   before(() => {
     dir = tmpDir();
     fs.mkdirSync(path.join(dir, 'spec'));
-    fs.writeFileSync(path.join(dir, 'spec', '05_PROOF_OF_COMPLIANCE.json'), JSON.stringify(COMPLIANT_ARTIFACT));
+    fs.writeFileSync(
+      path.join(dir, 'spec', '05_PROOF_OF_COMPLIANCE.json'),
+      JSON.stringify(COMPLIANT_ARTIFACT),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -79,7 +82,10 @@ describe('readComplianceSummary — partial artifact', () => {
   before(() => {
     dir = tmpDir();
     fs.mkdirSync(path.join(dir, 'spec'));
-    fs.writeFileSync(path.join(dir, 'spec', '05_PROOF_OF_COMPLIANCE.json'), JSON.stringify(PARTIAL_ARTIFACT));
+    fs.writeFileSync(
+      path.join(dir, 'spec', '05_PROOF_OF_COMPLIANCE.json'),
+      JSON.stringify(PARTIAL_ARTIFACT),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -105,7 +111,10 @@ describe('readComplianceSummary — respects custom artifactsDir', () => {
   before(() => {
     dir = tmpDir();
     fs.mkdirSync(path.join(dir, 'artifacts'));
-    fs.writeFileSync(path.join(dir, 'artifacts', '05_PROOF_OF_COMPLIANCE.json'), JSON.stringify(COMPLIANT_ARTIFACT));
+    fs.writeFileSync(
+      path.join(dir, 'artifacts', '05_PROOF_OF_COMPLIANCE.json'),
+      JSON.stringify(COMPLIANT_ARTIFACT),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -125,7 +134,9 @@ describe('readComplianceSummary — respects custom artifactsDir', () => {
 
 describe('readComplianceSummary — absent file returns null', () => {
   let dir;
-  before(() => { dir = tmpDir(); });
+  before(() => {
+    dir = tmpDir();
+  });
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
   it('returns null when file absent', () => {

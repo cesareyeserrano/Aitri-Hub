@@ -18,7 +18,7 @@ function groupByFolder(projects) {
       folder = 'remote';
     } else {
       const parts = (p.location ?? '').replace(/\/$/, '').split('/');
-      folder = parts.length >= 2 ? parts[parts.length - 2] : (parts[0] || 'projects');
+      folder = parts.length >= 2 ? parts[parts.length - 2] : parts[0] || 'projects';
     }
     if (!groups.has(folder)) groups.set(folder, []);
     groups.get(folder).push(p);
@@ -60,9 +60,7 @@ function TriageSection({ issues }) {
             <span className="triage__project">{issue.projectName}</span>
             <span className="triage__arrow">→</span>
             <span className="triage__msg">{issue.message}</span>
-            {issue.command && (
-              <code className="triage__cmd">{issue.command}</code>
-            )}
+            {issue.command && <code className="triage__cmd">{issue.command}</code>}
           </div>
         ))}
       </div>
@@ -96,7 +94,9 @@ export default function HomeView({ projects, loading }) {
   if (loading) {
     return (
       <div className="project-grid">
-        {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
+        {[1, 2, 3].map(i => (
+          <SkeletonCard key={i} />
+        ))}
       </div>
     );
   }
@@ -131,35 +131,33 @@ export default function HomeView({ projects, loading }) {
     );
   }
 
-  const healthy  = projects.filter(p => p.status === 'healthy').length;
-  const warning  = projects.filter(p => p.status === 'warning').length;
-  const error    = projects.filter(p => p.status === 'error' || p.status === 'unreadable').length;
+  const healthy = projects.filter(p => p.status === 'healthy').length;
+  const warning = projects.filter(p => p.status === 'warning').length;
+  const error = projects.filter(p => p.status === 'error' || p.status === 'unreadable').length;
   const pipeline = avgPipelinePct(projects);
 
   const blockingIssues = projects.flatMap(p =>
     (p.alerts ?? [])
       .filter(a => a.severity === 'blocking')
-      .map(a => ({ ...a, projectName: p.name }))
+      .map(a => ({ ...a, projectName: p.name })),
   );
 
-  const groups    = groupByFolder(projects);
+  const groups = groupByFolder(projects);
   const multiGroup = groups.length > 1;
 
   return (
     <div className="overview-tab">
       {/* ── Health summary tiles ── */}
       <div className="overview-stats">
-        <StatTile label="projects"  value={projects.length} colorVar="--text" />
-        <StatTile label="healthy"   value={healthy}         colorVar="--syn-green" />
-        <StatTile label="warning"   value={warning}         colorVar="--syn-yellow" alert={warning > 0} />
-        <StatTile label="blocking"  value={error}           colorVar="--syn-red"    alert={error > 0} />
-        <StatTile label="pipeline"  value={`${pipeline}%`}  colorVar="--syn-teal" />
+        <StatTile label="projects" value={projects.length} colorVar="--text" />
+        <StatTile label="healthy" value={healthy} colorVar="--syn-green" />
+        <StatTile label="warning" value={warning} colorVar="--syn-yellow" alert={warning > 0} />
+        <StatTile label="blocking" value={error} colorVar="--syn-red" alert={error > 0} />
+        <StatTile label="pipeline" value={`${pipeline}%`} colorVar="--syn-teal" />
       </div>
 
       {/* ── Triage — blocking issues only ── */}
-      {blockingIssues.length > 0 && (
-        <TriageSection issues={blockingIssues} />
-      )}
+      {blockingIssues.length > 0 && <TriageSection issues={blockingIssues} />}
 
       {/* ── Project grid ── */}
       {groups.map(({ folder, projects: groupProjects }, gi) => {

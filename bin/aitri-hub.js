@@ -50,7 +50,7 @@ async function main() {
       } else {
         console.error(
           `Unknown 'integration' action: '${action ?? ''}'. Expected: review.\n` +
-          `Usage: aitri-hub integration review <version> [--changelog <path>] [--note <str>]`,
+            `Usage: aitri-hub integration review <version> [--changelog <path>] [--note <str>]`,
         );
         process.exitCode = 1;
       }

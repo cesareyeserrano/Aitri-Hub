@@ -55,7 +55,7 @@ test("TC-002f: setup exits 1 with 'Unknown command'", () => {
 });
 
 /** @aitri-tc TC-003f FR-001 */
-test("TC-003f: init exits 1 within 2s without blocking on stdin", () => {
+test('TC-003f: init exits 1 within 2s without blocking on stdin', () => {
   const r = run(['init'], { input: '' });
   assert.equal(r.status, 1);
   assert.ok(r.stderr.includes("Unknown command: 'init'"));
@@ -184,7 +184,8 @@ test('TC-017h: DEPLOYMENT.md wraps Docker under an Optional heading', () => {
   const dockerLines = lines
     .map((l, i) => ({ l, i }))
     .filter(({ l }) => l.includes('docker compose up'));
-  for (const { i } of dockerLines) assert.ok(i > optIdx, `docker compose up at line ${i} before heading at ${optIdx}`);
+  for (const { i } of dockerLines)
+    assert.ok(i > optIdx, `docker compose up at line ${i} before heading at ${optIdx}`);
 });
 
 /** @aitri-tc TC-018f FR-004 */
@@ -204,9 +205,27 @@ test('TC-019h: legacy projects.json (with defaultInterface) reads unchanged', as
       version: 1,
       defaultInterface: 'cli',
       projects: [
-        { id: 'a', name: 'Alpha', type: 'local', location: '/tmp/alpha', addedAt: '2025-01-01T00:00:00Z' },
-        { id: 'b', name: 'Beta',  type: 'local', location: '/tmp/beta',  addedAt: '2025-01-02T00:00:00Z' },
-        { id: 'c', name: 'Gamma', type: 'local', location: '/tmp/gamma', addedAt: '2025-01-03T00:00:00Z' },
+        {
+          id: 'a',
+          name: 'Alpha',
+          type: 'local',
+          location: '/tmp/alpha',
+          addedAt: '2025-01-01T00:00:00Z',
+        },
+        {
+          id: 'b',
+          name: 'Beta',
+          type: 'local',
+          location: '/tmp/beta',
+          addedAt: '2025-01-02T00:00:00Z',
+        },
+        {
+          id: 'c',
+          name: 'Gamma',
+          type: 'local',
+          location: '/tmp/gamma',
+          addedAt: '2025-01-03T00:00:00Z',
+        },
       ],
     };
     writeFileSync(join(dir, 'projects.json'), JSON.stringify(legacy));
@@ -214,7 +233,10 @@ test('TC-019h: legacy projects.json (with defaultInterface) reads unchanged', as
     const { readProjects } = await import('../../lib/store/projects.js');
     const result = readProjects();
     assert.equal(result.projects.length, 3);
-    assert.deepEqual(result.projects.map(p => p.name), ['Alpha', 'Beta', 'Gamma']);
+    assert.deepEqual(
+      result.projects.map(p => p.name),
+      ['Alpha', 'Beta', 'Gamma'],
+    );
   } finally {
     delete process.env.AITRI_HUB_DIR;
     rmSync(dir, { recursive: true, force: true });
@@ -225,9 +247,20 @@ test('TC-019h: legacy projects.json (with defaultInterface) reads unchanged', as
 test('TC-021e: projects.json without version field reads correctly', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'hub-minimal-'));
   try {
-    writeFileSync(join(dir, 'projects.json'), JSON.stringify({
-      projects: [{ id: 'x', name: 'X', type: 'local', location: '/tmp/x', addedAt: '2025-01-01T00:00:00Z' }],
-    }));
+    writeFileSync(
+      join(dir, 'projects.json'),
+      JSON.stringify({
+        projects: [
+          {
+            id: 'x',
+            name: 'X',
+            type: 'local',
+            location: '/tmp/x',
+            addedAt: '2025-01-01T00:00:00Z',
+          },
+        ],
+      }),
+    );
     process.env.AITRI_HUB_DIR = dir;
     const { readProjects } = await import('../../lib/store/projects.js');
     const result = readProjects();

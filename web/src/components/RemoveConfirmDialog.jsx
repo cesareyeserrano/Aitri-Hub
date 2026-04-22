@@ -20,12 +20,14 @@ export default function RemoveConfirmDialog({ project, onConfirm, onCancel }) {
     <div className="dialog-overlay" role="dialog" aria-modal="true" aria-label="Confirm removal">
       <div className="dialog">
         <div className="dialog__header">
-          <span className="dialog__icon" style={{ color: 'var(--syn-red)' }}>✖</span>
+          <span className="dialog__icon" style={{ color: 'var(--syn-red)' }}>
+            ✖
+          </span>
           <span className="dialog__title">Remove project?</span>
         </div>
         <p className="dialog__body">
-          <span style={{ color: 'var(--syn-orange)' }}>{project.name}</span> will be removed from the
-          dashboard. This only affects monitoring — your project files are untouched.
+          <span style={{ color: 'var(--syn-orange)' }}>{project.name}</span> will be removed from
+          the dashboard. This only affects monitoring — your project files are untouched.
         </p>
         <div className="dialog__actions">
           <button className="btn btn--danger" onClick={onConfirm} data-testid="confirm-remove">

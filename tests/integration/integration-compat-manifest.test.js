@@ -23,7 +23,11 @@ import { fileURLToPath } from 'node:url';
 
 import { extractSection, hashSection } from '../../lib/collector/changelog.js';
 import { evaluateIntegrationAlert } from '../../lib/collector/integration-guard.js';
-import { readManifest, writeManifest, compatManifestPath } from '../../lib/store/compat-manifest.js';
+import {
+  readManifest,
+  writeManifest,
+  compatManifestPath,
+} from '../../lib/store/compat-manifest.js';
 import { FALLBACK_BASELINE } from '../../lib/constants.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -120,10 +124,7 @@ describe('FR-032 — extractSection + hashSection', () => {
 
 describe('FR-033 — integration-guard source-level invariants', () => {
   it('TC-033f: no top-level reviewedUpTo const and no import of INTEGRATION_LAST_REVIEWED', () => {
-    const src = fs.readFileSync(
-      path.join(REPO_ROOT, 'lib/collector/integration-guard.js'),
-      'utf8',
-    );
+    const src = fs.readFileSync(path.join(REPO_ROOT, 'lib/collector/integration-guard.js'), 'utf8');
     assert.equal(/^\s*const\s+reviewedUpTo\s*=/m.test(src), false);
     assert.equal(/import.*INTEGRATION_LAST_REVIEWED.*from/m.test(src), false);
     assert.match(src, /evaluateIntegrationAlert\s*\(\s*detectedVersion\s*,\s*reviewedUpTo/);
@@ -135,7 +136,7 @@ describe('FR-033 — integration-guard source-level invariants', () => {
 describe('FR-034 — FALLBACK_BASELINE single source of truth', () => {
   it('TC-034f: exactly one FALLBACK_BASELINE assignment under lib/ and bin/', () => {
     const hits = [];
-    const visit = (dir) => {
+    const visit = dir => {
       for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
         const full = path.join(dir, entry.name);
@@ -162,7 +163,10 @@ describe('FR-030 — readManifest round-trips', () => {
   let hubDir;
   const saved = process.env.AITRI_HUB_DIR;
 
-  before(() => { hubDir = mkHubDir('cm-030'); process.env.AITRI_HUB_DIR = hubDir; });
+  before(() => {
+    hubDir = mkHubDir('cm-030');
+    process.env.AITRI_HUB_DIR = hubDir;
+  });
   after(() => {
     process.env.AITRI_HUB_DIR = saved ?? '';
     fs.rmSync(hubDir, { recursive: true, force: true });
@@ -244,7 +248,10 @@ describe('FR-035 — alert payload provenance fields', () => {
     });
     assert.ok(alert);
     assert.equal(alert.reviewedAt, '2026-04-18T12:00:00.000Z');
-    assert.equal(alert.changelogHash, 'abc123abc123abc123abc123abc123abc123abc123abc123abc123abc123abcd');
+    assert.equal(
+      alert.changelogHash,
+      'abc123abc123abc123abc123abc123abc123abc123abc123abc123abc123abcd',
+    );
   });
 
   it('TC-035e: reviewedAt + changelogHash both present as keys with null value when no manifest', () => {
@@ -355,12 +362,13 @@ describe('FR-031 + Security — integration review CLI', () => {
   before(() => {
     hubDir = mkHubDir('cli-031');
     const mk = mkChangelogDir('cli-031');
-    clDir = mk.dir; clPath = mk.path;
+    clDir = mk.dir;
+    clPath = mk.path;
   });
   after(() => {
     process.env.AITRI_HUB_DIR = savedHub ?? '';
     fs.rmSync(hubDir, { recursive: true, force: true });
-    fs.rmSync(clDir,  { recursive: true, force: true });
+    fs.rmSync(clDir, { recursive: true, force: true });
   });
 
   const runCli = (args, extraEnv = {}) =>
@@ -381,12 +389,15 @@ describe('FR-031 + Security — integration review CLI', () => {
     // Fresh hub dir so this test doesn't see stale manifests from other cases.
     const localHub = mkHubDir('cli-031e2');
     try {
-      const r = spawnSync('node', [
-        CLI, 'integration', 'review', '0.1.82',
-        '--changelog', clPath, '--note', 'ops-approved',
-      ], { env: { ...process.env, AITRI_HUB_DIR: localHub }, encoding: 'utf8' });
+      const r = spawnSync(
+        'node',
+        [CLI, 'integration', 'review', '0.1.82', '--changelog', clPath, '--note', 'ops-approved'],
+        { env: { ...process.env, AITRI_HUB_DIR: localHub }, encoding: 'utf8' },
+      );
       assert.equal(r.status, 0, `stderr: ${r.stderr}`);
-      const saved = JSON.parse(fs.readFileSync(path.join(localHub, 'integration-compat.json'), 'utf8'));
+      const saved = JSON.parse(
+        fs.readFileSync(path.join(localHub, 'integration-compat.json'), 'utf8'),
+      );
       assert.equal(saved.reviewerNote, 'ops-approved');
     } finally {
       fs.rmSync(localHub, { recursive: true, force: true });
@@ -406,10 +417,11 @@ describe('FR-031 + Security — integration review CLI', () => {
     const localHub = mkHubDir('cli-sec-3');
     try {
       const oversized = 'A'.repeat(501);
-      const r = spawnSync('node', [
-        CLI, 'integration', 'review', '0.1.82',
-        '--changelog', clPath, '--note', oversized,
-      ], { env: { ...process.env, AITRI_HUB_DIR: localHub }, encoding: 'utf8' });
+      const r = spawnSync(
+        'node',
+        [CLI, 'integration', 'review', '0.1.82', '--changelog', clPath, '--note', oversized],
+        { env: { ...process.env, AITRI_HUB_DIR: localHub }, encoding: 'utf8' },
+      );
       assert.notEqual(r.status, 0);
       const err = r.stderr.toString();
       assert.ok(err.includes('note'));

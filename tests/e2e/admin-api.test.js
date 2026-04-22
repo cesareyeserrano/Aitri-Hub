@@ -15,9 +15,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
-const HUB_DIR  = '/tmp/aitri-hub-e2e';
+const HUB_DIR = '/tmp/aitri-hub-e2e';
 const PROJECTS = path.join(HUB_DIR, 'projects.json');
-const BASE     = 'http://localhost:3099';
+const BASE = 'http://localhost:3099';
 
 // Ensure hub dir exists and projects.json is clean before each test
 test.beforeEach(() => {
@@ -54,7 +54,9 @@ test('TC-e2eAdminAdd: POST /api/projects persists entry to projects.json', async
 
 // ── TC-016h ───────────────────────────────────────────────────────────────────
 
-test('TC-016h: GET /api/projects returns 200 with empty array when projects.json absent', async ({ request }) => {
+test('TC-016h: GET /api/projects returns 200 with empty array when projects.json absent', async ({
+  request,
+}) => {
   // beforeEach removes projects.json — file is absent
   const res = await request.get(`${BASE}/api/projects`);
   expect(res.status()).toBe(200);
@@ -116,7 +118,9 @@ test('TC-016f: POST returns 500 when hub dir is read-only (write failure)', asyn
 
 // ── TC-NFR010h ────────────────────────────────────────────────────────────────
 
-test('TC-NFR010h: POST with path traversal location ../../etc/passwd returns 400 path_traversal', async ({ request }) => {
+test('TC-NFR010h: POST with path traversal location ../../etc/passwd returns 400 path_traversal', async ({
+  request,
+}) => {
   const res = await request.post(`${BASE}/api/projects`, {
     data: { name: 'evil', type: 'local', location: '../../etc/passwd' },
     headers: { 'Content-Type': 'application/json' },
@@ -128,7 +132,9 @@ test('TC-NFR010h: POST with path traversal location ../../etc/passwd returns 400
 
 // ── TC-NFR010e ────────────────────────────────────────────────────────────────
 
-test('TC-NFR010e: POST with ../traversal in location returns 400 path_traversal', async ({ request }) => {
+test('TC-NFR010e: POST with ../traversal in location returns 400 path_traversal', async ({
+  request,
+}) => {
   const res = await request.post(`${BASE}/api/projects`, {
     data: { name: 'evil2', type: 'local', location: '/valid/../etc/passwd' },
     headers: { 'Content-Type': 'application/json' },
@@ -152,7 +158,9 @@ test('TC-NFR010f: POST with non-existent absolute path returns 400', async ({ re
 
 // ── TC-NFR011h ────────────────────────────────────────────────────────────────
 
-test('TC-NFR011h: GET /api/projects succeeds — logging does not interfere with response', async ({ request }) => {
+test('TC-NFR011h: GET /api/projects succeeds — logging does not interfere with response', async ({
+  request,
+}) => {
   // Observability: verify GET still returns 200 when logging is active
   const res = await request.get(`${BASE}/api/projects`);
   expect(res.status()).toBe(200);
@@ -162,7 +170,9 @@ test('TC-NFR011h: GET /api/projects succeeds — logging does not interfere with
 
 // ── TC-NFR011f ────────────────────────────────────────────────────────────────
 
-test('TC-NFR011f: POST with empty body returns 400 — error path logging does not crash server', async ({ request }) => {
+test('TC-NFR011f: POST with empty body returns 400 — error path logging does not crash server', async ({
+  request,
+}) => {
   const res = await request.post(`${BASE}/api/projects`, {
     data: '',
     headers: { 'Content-Type': 'application/json' },
@@ -175,7 +185,9 @@ test('TC-NFR011f: POST with empty body returns 400 — error path logging does n
 
 // ── TC-e2eAdminRemove ─────────────────────────────────────────────────────────
 
-test('TC-e2eAdminRemove: DELETE /api/projects/:id removes entry from projects.json', async ({ request }) => {
+test('TC-e2eAdminRemove: DELETE /api/projects/:id removes entry from projects.json', async ({
+  request,
+}) => {
   // Seed one project directly on disk
   const seedProject = {
     id: 'abc12345',
@@ -222,7 +234,9 @@ test('TC-023h: POST with type=folder and valid directory returns 201', async ({ 
 
 // ── TC-023e ───────────────────────────────────────────────────────────────────
 
-test('TC-023e: POST with type=folder and non-existent path returns 400 path_not_found', async ({ request }) => {
+test('TC-023e: POST with type=folder and non-existent path returns 400 path_not_found', async ({
+  request,
+}) => {
   const res = await request.post(`${BASE}/api/projects`, {
     data: { name: 'bad-workspace', type: 'folder', location: '/nonexistent-aitri-folder-e2e-xyz' },
     headers: { 'Content-Type': 'application/json' },
@@ -234,7 +248,9 @@ test('TC-023e: POST with type=folder and non-existent path returns 400 path_not_
 
 // ── TC-023f ───────────────────────────────────────────────────────────────────
 
-test('TC-023f: POST with type=folder pointing to a file returns 400 not_a_directory', async ({ request }) => {
+test('TC-023f: POST with type=folder pointing to a file returns 400 not_a_directory', async ({
+  request,
+}) => {
   // Create a temp file to use as target
   const tmpFile = path.join(os.tmpdir(), `aitri-test-file-${Date.now()}.txt`);
   fs.writeFileSync(tmpFile, 'test');
@@ -286,8 +302,9 @@ test('TC-e2eFolderScan: register folder type; dashboard shows child cards', asyn
 
     expect(dashProjects.length).toBeGreaterThanOrEqual(2);
     // Parent folder entry should NOT appear in dashboard
-    const parentCard = (await (await request.get(`${BASE}/data/dashboard.json`)).json())
-      .projects?.find(p => p.name === 'e2e-workspace');
+    const parentCard = (
+      await (await request.get(`${BASE}/data/dashboard.json`)).json()
+    ).projects?.find(p => p.name === 'e2e-workspace');
     expect(parentCard).toBeUndefined();
   } finally {
     fs.rmSync(workspace, { recursive: true, force: true });

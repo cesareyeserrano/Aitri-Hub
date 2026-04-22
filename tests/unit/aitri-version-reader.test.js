@@ -39,8 +39,10 @@ describe('TC-013f: detectAitriVersion — null on ENOENT', () => {
     // The function should exist and return string or null — cannot call real aitri in CI
     // but we verify the interface contract
     const result = detectAitriVersion();
-    assert.ok(result === null || typeof result === 'string',
-      `should return null or string, got ${typeof result}`);
+    assert.ok(
+      result === null || typeof result === 'string',
+      `should return null or string, got ${typeof result}`,
+    );
   });
 });
 

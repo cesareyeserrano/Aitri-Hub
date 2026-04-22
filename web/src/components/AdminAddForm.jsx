@@ -8,13 +8,13 @@
 import React, { useState } from 'react';
 
 const ERROR_MESSAGES = {
-  name_required:    'Name is required.',
-  name_duplicate:   'A project with that name already exists.',
-  location_required:'Location is required.',
-  path_traversal:   'Path contains invalid segments (..).',
-  path_not_found:   'Path not found on the filesystem.',
-  not_a_directory:  'Path exists but is not a directory.',
-  invalid_json:     'Invalid request.',
+  name_required: 'Name is required.',
+  name_duplicate: 'A project with that name already exists.',
+  location_required: 'Location is required.',
+  path_traversal: 'Path contains invalid segments (..).',
+  path_not_found: 'Path not found on the filesystem.',
+  not_a_directory: 'Path exists but is not a directory.',
+  invalid_json: 'Invalid request.',
 };
 
 /**
@@ -25,10 +25,10 @@ const ERROR_MESSAGES = {
  * @returns {JSX.Element}
  */
 export default function AdminAddForm({ onSubmit, onCancel }) {
-  const [name, setName]         = useState('');
-  const [type, setType]         = useState('local');
+  const [name, setName] = useState('');
+  const [type, setType] = useState('local');
   const [location, setLocation] = useState('');
-  const [error, setError]       = useState(null);
+  const [error, setError] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e) {
@@ -84,7 +84,8 @@ export default function AdminAddForm({ onSubmit, onCancel }) {
           </select>
           {type === 'folder' && (
             <p className="admin-field__hint" data-testid="folder-hint">
-              Scans immediate child directories — each one with <code>package.json</code> or <code>.aitri</code> appears as its own card.
+              Scans immediate child directories — each one with <code>package.json</code> or{' '}
+              <code>.aitri</code> appears as its own card.
             </p>
           )}
         </label>
@@ -99,9 +100,11 @@ export default function AdminAddForm({ onSubmit, onCancel }) {
             value={location}
             onChange={e => setLocation(e.target.value)}
             placeholder={
-              type === 'remote' ? 'https://github.com/org/repo'
-              : type === 'folder' ? '/abs/path/to/workspace'
-              : '/abs/path/to/project'
+              type === 'remote'
+                ? 'https://github.com/org/repo'
+                : type === 'folder'
+                  ? '/abs/path/to/workspace'
+                  : '/abs/path/to/project'
             }
             required
             data-testid="input-location"
@@ -110,7 +113,12 @@ export default function AdminAddForm({ onSubmit, onCancel }) {
       </div>
 
       <div className="admin-add-form__actions">
-        <button className="btn btn--primary" type="submit" disabled={submitting} data-testid="submit-add">
+        <button
+          className="btn btn--primary"
+          type="submit"
+          disabled={submitting}
+          data-testid="submit-add"
+        >
           {submitting ? 'Adding…' : 'Add'}
         </button>
         <button className="btn btn--ghost" type="button" onClick={onCancel}>

@@ -17,11 +17,11 @@ function tmpDir() {
 }
 
 const SAMPLE_AITRI = {
-  currentPhase:    1,
-  approvedPhases:  [],
+  currentPhase: 1,
+  approvedPhases: [],
   completedPhases: [],
-  artifactsDir:    '',
-  projectName:     'e2e-test-project',
+  artifactsDir: '',
+  projectName: 'e2e-test-project',
 };
 
 // TC-017i — collectOne includes bugsSummary in project data
@@ -31,9 +31,12 @@ describe('TC-017i: collectOne — bugsSummary in project data', () => {
   before(() => {
     dir = tmpDir();
     fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify(SAMPLE_AITRI));
-    fs.writeFileSync(path.join(dir, 'BUGS.json'), JSON.stringify({
-      bugs: [{ id: 'BG-001', status: 'open', severity: 'critical' }],
-    }));
+    fs.writeFileSync(
+      path.join(dir, 'BUGS.json'),
+      JSON.stringify({
+        bugs: [{ id: 'BG-001', status: 'open', severity: 'critical' }],
+      }),
+    );
     // Minimal git repo so git-reader doesn't fail
     fs.mkdirSync(path.join(dir, '.git'), { recursive: true });
     fs.writeFileSync(path.join(dir, '.git', 'HEAD'), 'ref: refs/heads/main\n');
@@ -45,7 +48,7 @@ describe('TC-017i: collectOne — bugsSummary in project data', () => {
     const project = { id: 'e2e-001', name: 'e2e-test', location: dir, type: 'local' };
     const data = await collectOne(project);
     assert.ok(data.bugsSummary !== null, 'bugsSummary should not be null');
-    assert.equal(data.bugsSummary.open,     1, 'open count should be 1');
+    assert.equal(data.bugsSummary.open, 1, 'open count should be 1');
     assert.equal(data.bugsSummary.critical, 1, 'critical count should be 1');
   });
 });
@@ -57,9 +60,12 @@ describe('TC-018i: collectOne — blocking bug alert in alerts array', () => {
   before(() => {
     dir = tmpDir();
     fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify(SAMPLE_AITRI));
-    fs.writeFileSync(path.join(dir, 'BUGS.json'), JSON.stringify({
-      bugs: [{ id: 'BG-001', status: 'open', severity: 'critical' }],
-    }));
+    fs.writeFileSync(
+      path.join(dir, 'BUGS.json'),
+      JSON.stringify({
+        bugs: [{ id: 'BG-001', status: 'open', severity: 'critical' }],
+      }),
+    );
     fs.mkdirSync(path.join(dir, '.git'), { recursive: true });
     fs.writeFileSync(path.join(dir, '.git', 'HEAD'), 'ref: refs/heads/main\n');
   });

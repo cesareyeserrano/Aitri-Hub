@@ -21,16 +21,19 @@ describe('TC-002h: readAitriState — valid .aitri extracts all fields', () => {
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      projectName: 'finance-app',
-      currentPhase: 4,
-      approvedPhases: [1, 2, 3],
-      completedPhases: [1, 2, 3, 4],
-      verifyPassed: true,
-      verifySummary: { passed: 28, failed: 0, skipped: 2, total: 30 },
-      artifactHashes: { '1': 'abc123', '2': 'def456', '3': 'ghi789' },
-      rejections: {},
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        projectName: 'finance-app',
+        currentPhase: 4,
+        approvedPhases: [1, 2, 3],
+        completedPhases: [1, 2, 3, 4],
+        verifyPassed: true,
+        verifySummary: { passed: 28, failed: 0, skipped: 2, total: 30 },
+        artifactHashes: { 1: 'abc123', 2: 'def456', 3: 'ghi789' },
+        rejections: {},
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -84,14 +87,17 @@ describe('TC-002e: readAitriState — rejection entry extracted correctly', () =
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 2,
-      approvedPhases: [1],
-      completedPhases: [1, 2],
-      rejections: {
-        '2': { at: '2026-03-10T12:00:00Z', feedback: 'Missing API docs' },
-      },
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 2,
+        approvedPhases: [1],
+        completedPhases: [1, 2],
+        rejections: {
+          2: { at: '2026-03-10T12:00:00Z', feedback: 'Missing API docs' },
+        },
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -140,7 +146,9 @@ describe('TC-002f: readAitriState — malformed JSON returns null', () => {
 describe('readAitriState — missing .aitri returns null', () => {
   let dir;
 
-  before(() => { dir = tmpDir(); });
+  before(() => {
+    dir = tmpDir();
+  });
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
   it('returns null when .aitri does not exist', () => {
@@ -161,13 +169,16 @@ describe('readAitriState — .aitri as directory reads .aitri/config.json', () =
   before(() => {
     dir = tmpDir();
     fs.mkdirSync(path.join(dir, '.aitri'));
-    fs.writeFileSync(path.join(dir, '.aitri', 'config.json'), JSON.stringify({
-      projectName: 'dir-project',
-      currentPhase: 2,
-      approvedPhases: [1],
-      completedPhases: [1, 2],
-      artifactsDir: 'artifacts',
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri', 'config.json'),
+      JSON.stringify({
+        projectName: 'dir-project',
+        currentPhase: 2,
+        approvedPhases: [1],
+        completedPhases: [1, 2],
+        artifactsDir: 'artifacts',
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -196,19 +207,27 @@ describe('readAitriState — events array is read correctly', () => {
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 3,
-      approvedPhases: [1, 2],
-      completedPhases: [1, 2, 3],
-      events: [
-        { at: '2026-03-10T10:00:00Z', event: 'completed', phase: 1 },
-        { at: '2026-03-10T11:00:00Z', event: 'approved',  phase: 1 },
-        { at: '2026-03-11T09:00:00Z', event: 'completed', phase: 2 },
-        { at: '2026-03-11T10:00:00Z', event: 'approved',  phase: 2 },
-        { at: '2026-03-12T08:00:00Z', event: 'rejected',  phase: 3, feedback: 'missing edge cases' },
-        { at: '2026-03-13T09:00:00Z', event: 'completed', phase: 3 },
-      ],
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 3,
+        approvedPhases: [1, 2],
+        completedPhases: [1, 2, 3],
+        events: [
+          { at: '2026-03-10T10:00:00Z', event: 'completed', phase: 1 },
+          { at: '2026-03-10T11:00:00Z', event: 'approved', phase: 1 },
+          { at: '2026-03-11T09:00:00Z', event: 'completed', phase: 2 },
+          { at: '2026-03-11T10:00:00Z', event: 'approved', phase: 2 },
+          {
+            at: '2026-03-12T08:00:00Z',
+            event: 'rejected',
+            phase: 3,
+            feedback: 'missing edge cases',
+          },
+          { at: '2026-03-13T09:00:00Z', event: 'completed', phase: 3 },
+        ],
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -239,9 +258,14 @@ describe('readAitriState — events defaults to [] when absent', () => {
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 1, approvedPhases: [], completedPhases: [],
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 1,
+        approvedPhases: [],
+        completedPhases: [],
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -259,18 +283,35 @@ describe('readAitriState — features[] contains sub-pipeline state', () => {
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 3, approvedPhases: [1, 2], completedPhases: [1, 2, 3],
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 3,
+        approvedPhases: [1, 2],
+        completedPhases: [1, 2, 3],
+      }),
+    );
     // Two feature sub-pipelines
     fs.mkdirSync(path.join(dir, 'features', 'auth'), { recursive: true });
-    fs.writeFileSync(path.join(dir, 'features', 'auth', '.aitri'), JSON.stringify({
-      projectName: 'auth', currentPhase: 2, approvedPhases: [1], completedPhases: [1, 2],
-    }));
+    fs.writeFileSync(
+      path.join(dir, 'features', 'auth', '.aitri'),
+      JSON.stringify({
+        projectName: 'auth',
+        currentPhase: 2,
+        approvedPhases: [1],
+        completedPhases: [1, 2],
+      }),
+    );
     fs.mkdirSync(path.join(dir, 'features', 'billing'), { recursive: true });
-    fs.writeFileSync(path.join(dir, 'features', 'billing', '.aitri'), JSON.stringify({
-      projectName: 'billing', currentPhase: 1, approvedPhases: [], completedPhases: [1],
-    }));
+    fs.writeFileSync(
+      path.join(dir, 'features', 'billing', '.aitri'),
+      JSON.stringify({
+        projectName: 'billing',
+        currentPhase: 1,
+        approvedPhases: [],
+        completedPhases: [1],
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -299,9 +340,14 @@ describe('readAitriState — features[] is empty when features/ does not exist',
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 1, approvedPhases: [], completedPhases: [],
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 1,
+        approvedPhases: [],
+        completedPhases: [],
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -317,14 +363,24 @@ describe('readAitriState — features/ subdirs without .aitri are ignored', () =
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 1, approvedPhases: [], completedPhases: [],
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 1,
+        approvedPhases: [],
+        completedPhases: [],
+      }),
+    );
     // A features/ dir with one valid and one invalid entry
     fs.mkdirSync(path.join(dir, 'features', 'valid-feature'), { recursive: true });
-    fs.writeFileSync(path.join(dir, 'features', 'valid-feature', '.aitri'), JSON.stringify({
-      currentPhase: 1, approvedPhases: [], completedPhases: [],
-    }));
+    fs.writeFileSync(
+      path.join(dir, 'features', 'valid-feature', '.aitri'),
+      JSON.stringify({
+        currentPhase: 1,
+        approvedPhases: [],
+        completedPhases: [],
+      }),
+    );
     fs.mkdirSync(path.join(dir, 'features', 'empty-dir'), { recursive: true });
   });
 
@@ -344,12 +400,15 @@ describe('TC-011f: readAitriState — artifactsDir defaults to "" when field abs
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      projectName: 'adopted-project',
-      currentPhase: 1,
-      approvedPhases: [],
-      completedPhases: [],
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        projectName: 'adopted-project',
+        currentPhase: 1,
+        approvedPhases: [],
+        completedPhases: [],
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -366,13 +425,16 @@ describe('TC-011h: readAitriState — artifactsDir "spec" preserved when explici
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      projectName: 'hub',
-      artifactsDir: 'spec',
-      currentPhase: 1,
-      approvedPhases: [],
-      completedPhases: [],
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        projectName: 'hub',
+        artifactsDir: 'spec',
+        currentPhase: 1,
+        approvedPhases: [],
+        completedPhases: [],
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -393,11 +455,14 @@ describe('TC-011e: readAitriState — projectName defaults to path.basename(proj
 
   before(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'finance-tracker-'));
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 1,
-      approvedPhases: [],
-      completedPhases: [],
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 1,
+        approvedPhases: [],
+        completedPhases: [],
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -415,15 +480,18 @@ describe('TC-010h: readAitriState — returns aitriVersion, updatedAt, createdAt
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      projectName: 'test',
-      aitriVersion: '0.1.63',
-      updatedAt: '2026-03-17T23:00:00.000Z',
-      createdAt: '2025-11-01T14:00:00.000Z',
-      currentPhase: 2,
-      approvedPhases: [1],
-      completedPhases: [1],
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        projectName: 'test',
+        aitriVersion: '0.1.63',
+        updatedAt: '2026-03-17T23:00:00.000Z',
+        createdAt: '2025-11-01T14:00:00.000Z',
+        currentPhase: 2,
+        approvedPhases: [1],
+        completedPhases: [1],
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -449,12 +517,15 @@ describe('TC-010f: readAitriState — returns null for aitriVersion, updatedAt, 
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      projectName: 'legacy-project',
-      currentPhase: 3,
-      approvedPhases: [1, 2],
-      completedPhases: [1, 2],
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        projectName: 'legacy-project',
+        currentPhase: 3,
+        approvedPhases: [1, 2],
+        completedPhases: [1, 2],
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -484,12 +555,15 @@ describe('TC-010e: readAitriState — returns aitriVersion=null when field is a 
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      aitriVersion: 163,
-      currentPhase: 1,
-      approvedPhases: [],
-      completedPhases: [],
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        aitriVersion: 163,
+        currentPhase: 1,
+        approvedPhases: [],
+        completedPhases: [],
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -507,13 +581,16 @@ describe('TC-012h: detectDrift — driftPhases fast path returns hasDrift=true',
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 3,
-      approvedPhases: [1, 2],
-      completedPhases: [1, 2],
-      driftPhases: ['2'],
-      artifactHashes: {},
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 3,
+        approvedPhases: [1, 2],
+        completedPhases: [1, 2],
+        driftPhases: ['2'],
+        artifactHashes: {},
+      }),
+    );
     // No artifact files — proves fast path doesn't need them
   });
 
@@ -530,13 +607,16 @@ describe('TC-012f: detectDrift — empty driftPhases[] does not trigger drift', 
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 2,
-      approvedPhases: [1],
-      completedPhases: [1],
-      driftPhases: [],
-      artifactHashes: {},
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 2,
+        approvedPhases: [1],
+        completedPhases: [1],
+        driftPhases: [],
+        artifactHashes: {},
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -552,12 +632,15 @@ describe('TC-012e: detectDrift — absent driftPhases (pre-v0.1.58) falls throug
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 2,
-      approvedPhases: [1],
-      completedPhases: [1],
-      artifactHashes: {},
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 2,
+        approvedPhases: [1],
+        completedPhases: [1],
+        artifactHashes: {},
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -588,13 +671,16 @@ describe('TC-013h: detectDrift — hasDrift=false when artifact matches stored h
     dir = tmpDir();
     fs.mkdirSync(path.join(dir, 'spec'));
     fs.writeFileSync(path.join(dir, 'spec', '01_REQUIREMENTS.json'), content);
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 2,
-      approvedPhases: [1],
-      completedPhases: [1],
-      artifactsDir: 'spec',
-      artifactHashes: { '1': sha256(content) },
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 2,
+        approvedPhases: [1],
+        completedPhases: [1],
+        artifactsDir: 'spec',
+        artifactHashes: { 1: sha256(content) },
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -612,13 +698,16 @@ describe('TC-013f: detectDrift — hasDrift=true when artifact differs from stor
     dir = tmpDir();
     fs.mkdirSync(path.join(dir, 'spec'));
     fs.writeFileSync(path.join(dir, 'spec', '01_REQUIREMENTS.json'), '{"project_name":"modified"}');
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 2,
-      approvedPhases: [1],
-      completedPhases: [1],
-      artifactsDir: 'spec',
-      artifactHashes: { '1': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 2,
+        approvedPhases: [1],
+        completedPhases: [1],
+        artifactsDir: 'spec',
+        artifactHashes: { 1: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' },
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -634,12 +723,15 @@ describe('TC-013e: detectDrift — approved phase with no stored hash is NOT cou
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 2,
-      approvedPhases: [1],
-      completedPhases: [1],
-      artifactHashes: {},
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 2,
+        approvedPhases: [1],
+        completedPhases: [1],
+        artifactHashes: {},
+      }),
+    );
   });
 
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -655,13 +747,16 @@ describe('TC-013e2: detectDrift — artifact file missing on disk returns hasDri
 
   before(() => {
     dir = tmpDir();
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 2,
-      approvedPhases: [1],
-      completedPhases: [1],
-      artifactsDir: 'spec',
-      artifactHashes: { '1': 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 2,
+        approvedPhases: [1],
+        completedPhases: [1],
+        artifactsDir: 'spec',
+        artifactHashes: { 1: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb' },
+      }),
+    );
     // spec/01_REQUIREMENTS.json intentionally NOT created
   });
 

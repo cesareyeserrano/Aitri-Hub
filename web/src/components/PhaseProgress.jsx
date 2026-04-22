@@ -26,9 +26,9 @@ export default function PhaseProgress({ aitriState }) {
     );
   }
 
-  const currentPhase  = aitriState.currentPhase ?? 0;
-  const approved      = aitriState.approvedPhases?.length ?? 0;
-  const verifyPassed  = aitriState.verifyPassed === true;
+  const currentPhase = aitriState.currentPhase ?? 0;
+  const approved = aitriState.approvedPhases?.length ?? 0;
+  const verifyPassed = aitriState.verifyPassed === true;
 
   return (
     <div className="phase-section" data-testid="phase-progress">

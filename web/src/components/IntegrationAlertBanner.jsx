@@ -12,18 +12,21 @@ function formatReviewedAt(iso) {
   if (typeof iso !== 'string') return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} `
-       + `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`;
+  const pad = n => String(n).padStart(2, '0');
+  return (
+    `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ` +
+    `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`
+  );
 }
 
 export default function IntegrationAlertBanner({ alert }) {
   if (!alert) return null;
 
   const formattedDate = formatReviewedAt(alert.reviewedAt);
-  const hashPrefix = typeof alert.changelogHash === 'string' && alert.changelogHash.length >= 12
-    ? alert.changelogHash.slice(0, 12)
-    : null;
+  const hashPrefix =
+    typeof alert.changelogHash === 'string' && alert.changelogHash.length >= 12
+      ? alert.changelogHash.slice(0, 12)
+      : null;
   const showProvenance = formattedDate !== null && hashPrefix !== null;
 
   return (
@@ -33,7 +36,9 @@ export default function IntegrationAlertBanner({ alert }) {
       role="alert"
       aria-live="polite"
     >
-      <span className="integration-alert-banner__icon" aria-hidden="true">⚠</span>
+      <span className="integration-alert-banner__icon" aria-hidden="true">
+        ⚠
+      </span>
       <span className="integration-alert-banner__message">{alert.message}</span>
       {alert.changelogUrl && (
         <a

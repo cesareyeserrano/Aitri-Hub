@@ -51,7 +51,10 @@ describe('TC-003h: readGitMeta — active git repo returns correct metadata', ()
 
   it('lastCommitAgeHours is a non-negative number', () => {
     const result = readGitMeta(dir);
-    assert.ok(typeof result.lastCommitAgeHours === 'number', 'lastCommitAgeHours should be a number');
+    assert.ok(
+      typeof result.lastCommitAgeHours === 'number',
+      'lastCommitAgeHours should be a number',
+    );
     assert.ok(result.lastCommitAgeHours >= 0, 'lastCommitAgeHours should be >= 0');
   });
 
@@ -69,7 +72,10 @@ describe('TC-003h: readGitMeta — active git repo returns correct metadata', ()
   it('lastCommitAgeHours is close to 0 for a just-created commit', () => {
     const result = readGitMeta(dir);
     // Commit was just made — should be < 0.1 hours (< 6 minutes)
-    assert.ok(result.lastCommitAgeHours < 0.1, `Expected age < 0.1h, got: ${result.lastCommitAgeHours}`);
+    assert.ok(
+      result.lastCommitAgeHours < 0.1,
+      `Expected age < 0.1h, got: ${result.lastCommitAgeHours}`,
+    );
   });
 });
 
@@ -78,7 +84,9 @@ describe('TC-003h: readGitMeta — active git repo returns correct metadata', ()
 describe('TC-003f: readGitMeta — non-git directory returns null', () => {
   let dir;
 
-  before(() => { dir = tmpDir(); });
+  before(() => {
+    dir = tmpDir();
+  });
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
   it('does not throw for non-git directory', () => {

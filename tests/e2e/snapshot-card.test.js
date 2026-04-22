@@ -61,7 +61,7 @@ function dashboard(projects) {
 }
 
 async function stubDashboard(page, body, { delayMs = 0 } = {}) {
-  await page.route('**/data/dashboard.json', async (route) => {
+  await page.route('**/data/dashboard.json', async route => {
     if (delayMs > 0) await new Promise(r => setTimeout(r, delayMs));
     await route.fulfill({
       status: 200,
@@ -79,20 +79,40 @@ async function gotoCard(page, body, opts) {
 
 // ── FR-012: NEXT ACTION row (5 TCs) ──────────────────────────────────────────
 
-test('TC-012h: NEXT ACTION row renders command + reason + warn severity at 1440px', async ({ browser }) => {
+test('TC-012h: NEXT ACTION row renders command + reason + warn severity at 1440px', async ({
+  browser,
+}) => {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
-  await gotoCard(page, dashboard([baseProject({
-    nextActions: [{ priority: 1, command: 'aitri verify-run', reason: 'Phase 4 approved — run verify next', severity: 'warn' }],
-  })]));
+  await gotoCard(
+    page,
+    dashboard([
+      baseProject({
+        nextActions: [
+          {
+            priority: 1,
+            command: 'aitri verify-run',
+            reason: 'Phase 4 approved — run verify next',
+            severity: 'warn',
+          },
+        ],
+      }),
+    ]),
+  );
 
   await expect(page.locator('[data-testid="next-action-command"]')).toHaveText('aitri verify-run');
-  await expect(page.locator('[data-testid="next-action-reason"]')).toHaveText('Phase 4 approved — run verify next');
-  await expect(page.locator('[data-testid="next-action-row"]').first()).toHaveClass(/severity-warn/);
+  await expect(page.locator('[data-testid="next-action-reason"]')).toHaveText(
+    'Phase 4 approved — run verify next',
+  );
+  await expect(page.locator('[data-testid="next-action-row"]').first()).toHaveClass(
+    /severity-warn/,
+  );
   await ctx.close();
 });
 
-test('TC-012f: NEXT ACTION row shows idle text + neutral styling when nextActions is empty', async ({ page }) => {
+test('TC-012f: NEXT ACTION row shows idle text + neutral styling when nextActions is empty', async ({
+  page,
+}) => {
   await gotoCard(page, dashboard([baseProject({ nextActions: [] })]));
 
   const row = page.locator('[data-testid="next-action-row"]');
@@ -101,18 +121,37 @@ test('TC-012f: NEXT ACTION row shows idle text + neutral styling when nextAction
   await expect(page.locator('[data-testid="next-action-badge"]')).toHaveCount(0);
 });
 
-test('TC-012e1: long command wraps without horizontal page scroll at 375px', async ({ browser }) => {
+test('TC-012e1: long command wraps without horizontal page scroll at 375px', async ({
+  browser,
+}) => {
   const ctx = await browser.newContext({ viewport: { width: 375, height: 812 } });
   const page = await ctx.newPage();
-  const longCmd = 'aitri verify-run --cmd="npm test --reporter=verbose --bail --coverage --runInBand --maxWorkers=2"';
-  await gotoCard(page, dashboard([baseProject({
-    nextActions: [{ priority: 1, command: longCmd, reason: 'Long command should wrap below', severity: 'warn' }],
-  })]));
+  const longCmd =
+    'aitri verify-run --cmd="npm test --reporter=verbose --bail --coverage --runInBand --maxWorkers=2"';
+  await gotoCard(
+    page,
+    dashboard([
+      baseProject({
+        nextActions: [
+          {
+            priority: 1,
+            command: longCmd,
+            reason: 'Long command should wrap below',
+            severity: 'warn',
+          },
+        ],
+      }),
+    ]),
+  );
 
   // Assert the card body itself doesn't introduce horizontal overflow.
   // (Header brace can overflow at <480px — pre-existing layout, out of scope.)
-  const cardWidth = await page.locator('[data-testid="project-card"]').evaluate(el => el.scrollWidth);
-  const cardClient = await page.locator('[data-testid="project-card"]').evaluate(el => el.clientWidth);
+  const cardWidth = await page
+    .locator('[data-testid="project-card"]')
+    .evaluate(el => el.scrollWidth);
+  const cardClient = await page
+    .locator('[data-testid="project-card"]')
+    .evaluate(el => el.clientWidth);
   expect(cardWidth).toBeLessThanOrEqual(cardClient);
 
   const cmdRect = await page.locator('[data-testid="next-action-command"]').boundingBox();
@@ -124,9 +163,14 @@ test('TC-012e1: long command wraps without horizontal page scroll at 375px', asy
 });
 
 test('TC-012e2: NEXT ACTION row sits immediately above PIPELINE section', async ({ page }) => {
-  await gotoCard(page, dashboard([baseProject({
-    nextActions: [{ priority: 1, command: 'aitri verify-run', reason: 'go', severity: 'warn' }],
-  })]));
+  await gotoCard(
+    page,
+    dashboard([
+      baseProject({
+        nextActions: [{ priority: 1, command: 'aitri verify-run', reason: 'go', severity: 'warn' }],
+      }),
+    ]),
+  );
 
   const nextRect = await page.locator('[data-testid="next-action-row"]').boundingBox();
   const pipelineRect = await page.locator('[data-testid="pipeline-section"]').boundingBox();
@@ -138,16 +182,21 @@ test('TC-012e2: NEXT ACTION row sits immediately above PIPELINE section', async 
 // ── FR-013: DEPLOY HEALTH section (3 TCs) ────────────────────────────────────
 
 test('TC-013h: DEPLOY HEALTH renders one row per deployableReason', async ({ page }) => {
-  await gotoCard(page, dashboard([baseProject({
-    health: {
-      deployable: false,
-      deployableReasons: [
-        { type: 'verify_not_passed', message: 'verify has not run' },
-        { type: 'bugs_open',         message: '2 critical bugs open' },
-        { type: 'phase_drift',       message: 'phase 3 drifted' },
-      ],
-    },
-  })]));
+  await gotoCard(
+    page,
+    dashboard([
+      baseProject({
+        health: {
+          deployable: false,
+          deployableReasons: [
+            { type: 'verify_not_passed', message: 'verify has not run' },
+            { type: 'bugs_open', message: '2 critical bugs open' },
+            { type: 'phase_drift', message: 'phase 3 drifted' },
+          ],
+        },
+      }),
+    ]),
+  );
 
   const rows = page.locator('[data-testid="deploy-health-row"]');
   await expect(rows).toHaveCount(3);
@@ -160,14 +209,24 @@ test('TC-013h: DEPLOY HEALTH renders one row per deployableReason', async ({ pag
 });
 
 test('TC-013f: DEPLOY HEALTH section is hidden when deployable=true', async ({ page }) => {
-  await gotoCard(page, dashboard([baseProject({ health: { deployable: true, deployableReasons: [] } })]));
+  await gotoCard(
+    page,
+    dashboard([baseProject({ health: { deployable: true, deployableReasons: [] } })]),
+  );
   await expect(page.locator('[data-testid="deploy-health-section"]')).toHaveCount(0);
 });
 
-test('TC-013e: fallback row renders when deployable=false and reasons[] empty', async ({ page }) => {
-  await gotoCard(page, dashboard([baseProject({
-    health: { deployable: false, deployableReasons: [] },
-  })]));
+test('TC-013e: fallback row renders when deployable=false and reasons[] empty', async ({
+  page,
+}) => {
+  await gotoCard(
+    page,
+    dashboard([
+      baseProject({
+        health: { deployable: false, deployableReasons: [] },
+      }),
+    ]),
+  );
 
   const rows = page.locator('[data-testid="deploy-health-row"]');
   await expect(rows).toHaveCount(1);
@@ -177,16 +236,23 @@ test('TC-013e: fallback row renders when deployable=false and reasons[] empty', 
 
 // ── FR-014: QUALITY staleness indicators (4 TCs) ─────────────────────────────
 
-test('TC-014h: verify-stale-indicator renders "verify stale (18d)" with warn class', async ({ browser }) => {
+test('TC-014h: verify-stale-indicator renders "verify stale (18d)" with warn class', async ({
+  browser,
+}) => {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
-  await gotoCard(page, dashboard([baseProject({
-    health: {
-      deployable: false,
-      deployableReasons: [{ type: 'verify_not_passed', message: 'verify has not run' }],
-      staleVerify: [{ scope: 'root', days: 18 }],
-    },
-  })]));
+  await gotoCard(
+    page,
+    dashboard([
+      baseProject({
+        health: {
+          deployable: false,
+          deployableReasons: [{ type: 'verify_not_passed', message: 'verify has not run' }],
+          staleVerify: [{ scope: 'root', days: 18 }],
+        },
+      }),
+    ]),
+  );
 
   const ind = page.locator('[data-testid="verify-stale-indicator"]');
   await expect(ind).toHaveText('verify stale (18d)');
@@ -195,10 +261,15 @@ test('TC-014h: verify-stale-indicator renders "verify stale (18d)" with warn cla
 });
 
 test('TC-014f: no staleness indicator when both verify and audit are clean', async ({ page }) => {
-  await gotoCard(page, dashboard([baseProject({
-    health: { deployable: true, deployableReasons: [], staleVerify: [] },
-    audit: { exists: true, stalenessDays: 2 },
-  })]));
+  await gotoCard(
+    page,
+    dashboard([
+      baseProject({
+        health: { deployable: true, deployableReasons: [], staleVerify: [] },
+        audit: { exists: true, stalenessDays: 2 },
+      }),
+    ]),
+  );
 
   await expect(page.locator('[data-testid="verify-stale-indicator"]')).toHaveCount(0);
   await expect(page.locator('[data-testid="audit-stale-indicator"]')).toHaveCount(0);
@@ -206,22 +277,29 @@ test('TC-014f: no staleness indicator when both verify and audit are clean', asy
 });
 
 test('TC-014e1: "audit missing" renders when audit.exists=false', async ({ page }) => {
-  await gotoCard(page, dashboard([baseProject({
-    audit: { exists: false, stalenessDays: null },
-  })]));
+  await gotoCard(
+    page,
+    dashboard([
+      baseProject({
+        audit: { exists: false, stalenessDays: null },
+      }),
+    ]),
+  );
 
   await expect(page.locator('[data-testid="audit-missing-indicator"]')).toHaveText('audit missing');
   await expect(page.locator('[data-testid="audit-stale-indicator"]')).toHaveCount(0);
 });
 
 test('TC-014e2: indicator inline at 768px, wraps below at 375px', async ({ browser }) => {
-  const fixture = dashboard([baseProject({
-    health: {
-      deployable: false,
-      deployableReasons: [{ type: 'verify_not_passed', message: 'stale' }],
-      staleVerify: [{ scope: 'root', days: 30 }],
-    },
-  })]);
+  const fixture = dashboard([
+    baseProject({
+      health: {
+        deployable: false,
+        deployableReasons: [{ type: 'verify_not_passed', message: 'stale' }],
+        staleVerify: [{ scope: 'root', days: 30 }],
+      },
+    }),
+  ]);
 
   const ctx768 = await browser.newContext({ viewport: { width: 768, height: 1024 } });
   const p768 = await ctx768.newPage();
@@ -249,9 +327,14 @@ test('TC-014e2: indicator inline at 768px, wraps below at 375px', async ({ brows
 // ── FR-015: BLOCKERS normalize-warning row (4 TCs) ───────────────────────────
 
 test('TC-015h: plural normalize-warning row renders for uncountedFiles=3', async ({ page }) => {
-  await gotoCard(page, dashboard([baseProject({
-    normalize: { state: 'drift', method: 'mtime', baseRef: null, uncountedFiles: 3 },
-  })]));
+  await gotoCard(
+    page,
+    dashboard([
+      baseProject({
+        normalize: { state: 'drift', method: 'mtime', baseRef: null, uncountedFiles: 3 },
+      }),
+    ]),
+  );
 
   const row = page.locator('[data-testid="normalize-warning-row"]');
   await expect(row).toHaveText('3 files changed outside pipeline — run: aitri normalize');
@@ -259,24 +342,40 @@ test('TC-015h: plural normalize-warning row renders for uncountedFiles=3', async
 });
 
 test('TC-015f: normalize-warning row absent when uncountedFiles=0', async ({ page }) => {
-  await gotoCard(page, dashboard([baseProject({
-    normalize: { state: 'ok', method: 'mtime', baseRef: null, uncountedFiles: 0 },
-  })]));
+  await gotoCard(
+    page,
+    dashboard([
+      baseProject({
+        normalize: { state: 'ok', method: 'mtime', baseRef: null, uncountedFiles: 0 },
+      }),
+    ]),
+  );
   await expect(page.locator('[data-testid="normalize-warning-row"]')).toHaveCount(0);
 });
 
 test('TC-015e1: singular normalize-warning row renders for uncountedFiles=1', async ({ page }) => {
-  await gotoCard(page, dashboard([baseProject({
-    normalize: { state: 'drift', method: 'mtime', baseRef: null, uncountedFiles: 1 },
-  })]));
-  await expect(page.locator('[data-testid="normalize-warning-row"]'))
-    .toHaveText('1 file changed outside pipeline — run: aitri normalize');
+  await gotoCard(
+    page,
+    dashboard([
+      baseProject({
+        normalize: { state: 'drift', method: 'mtime', baseRef: null, uncountedFiles: 1 },
+      }),
+    ]),
+  );
+  await expect(page.locator('[data-testid="normalize-warning-row"]')).toHaveText(
+    '1 file changed outside pipeline — run: aitri normalize',
+  );
 });
 
 test('TC-015e2: normalize-warning row absent when uncountedFiles=null', async ({ page }) => {
-  await gotoCard(page, dashboard([baseProject({
-    normalize: { state: null, method: null, baseRef: null, uncountedFiles: null },
-  })]));
+  await gotoCard(
+    page,
+    dashboard([
+      baseProject({
+        normalize: { state: null, method: null, baseRef: null, uncountedFiles: null },
+      }),
+    ]),
+  );
   await expect(page.locator('[data-testid="normalize-warning-row"]')).toHaveCount(0);
 });
 
@@ -292,17 +391,22 @@ test('TC-016f: no last-session line renders when lastSession is undefined', asyn
 // ── FR-017: degradation warning row (1 TC) ───────────────────────────────────
 
 test('TC-017h: degradation warning row + legacy data both render', async ({ page }) => {
-  await gotoCard(page, dashboard([baseProject({
-    degradationReason: 'not_installed',
-    aitriState: {
-      projectName: 'demo-project',
-      approvedPhases: [1, 2],
-      currentPhase: 3,
-      verifyPassed: false,
-      events: [],
-    },
-    testSummary: { available: true, passed: 5, failed: 0, total: 5 },
-  })]));
+  await gotoCard(
+    page,
+    dashboard([
+      baseProject({
+        degradationReason: 'not_installed',
+        aitriState: {
+          projectName: 'demo-project',
+          approvedPhases: [1, 2],
+          currentPhase: 3,
+          verifyPassed: false,
+          events: [],
+        },
+        testSummary: { available: true, passed: 5, failed: 0, total: 5 },
+      }),
+    ]),
+  );
 
   const warn = page.locator('[data-testid="degradation-warning-row"]');
   await expect(warn).toContainText('Aitri CLI not installed — limited report');
@@ -325,10 +429,18 @@ test('TC-S001: NEXT ACTION row idle state shows guidance text (not blank)', asyn
   await expect(row).toContainText('No action — project idle');
 });
 
-test('TC-S002: skeleton replaced by next-action-row after dashboard.json resolves', async ({ page }) => {
-  await stubDashboard(page, dashboard([baseProject({
-    nextActions: [{ priority: 1, command: 'aitri verify-run', reason: 'go', severity: 'warn' }],
-  })]), { delayMs: 600 });
+test('TC-S002: skeleton replaced by next-action-row after dashboard.json resolves', async ({
+  page,
+}) => {
+  await stubDashboard(
+    page,
+    dashboard([
+      baseProject({
+        nextActions: [{ priority: 1, command: 'aitri verify-run', reason: 'go', severity: 'warn' }],
+      }),
+    ]),
+    { delayMs: 600 },
+  );
 
   await page.goto(BASE_URL);
 
@@ -337,18 +449,30 @@ test('TC-S002: skeleton replaced by next-action-row after dashboard.json resolve
   await expect(page.locator('[data-testid="next-action-command"]')).toHaveText('aitri verify-run');
 });
 
-test('TC-S003: DEPLOY HEALTH section absent for deployable project (no all-clear badge)', async ({ page }) => {
-  await gotoCard(page, dashboard([baseProject({ health: { deployable: true, deployableReasons: [] } })]));
+test('TC-S003: DEPLOY HEALTH section absent for deployable project (no all-clear badge)', async ({
+  page,
+}) => {
+  await gotoCard(
+    page,
+    dashboard([baseProject({ health: { deployable: true, deployableReasons: [] } })]),
+  );
   await expect(page.locator('[data-testid="deploy-health-section"]')).toHaveCount(0);
   await expect(page.getByText('DEPLOY HEALTH')).toHaveCount(0);
 });
 
 // ── Design token contrast (1 TC) ─────────────────────────────────────────────
 
-test('TC-DT001: severity-warn token contrast ratio against card background ≥4.5:1', async ({ page }) => {
-  await gotoCard(page, dashboard([baseProject({
-    nextActions: [{ priority: 1, command: 'aitri verify-run', reason: 'r', severity: 'warn' }],
-  })]));
+test('TC-DT001: severity-warn token contrast ratio against card background ≥4.5:1', async ({
+  page,
+}) => {
+  await gotoCard(
+    page,
+    dashboard([
+      baseProject({
+        nextActions: [{ priority: 1, command: 'aitri verify-run', reason: 'r', severity: 'warn' }],
+      }),
+    ]),
+  );
 
   const ratio = await page.evaluate(() => {
     function srgb(c) {
@@ -361,7 +485,10 @@ test('TC-DT001: severity-warn token contrast ratio against card background ≥4.
     function parseRgb(s) {
       const m = s.match(/rgba?\(([^)]+)\)/);
       if (!m) return [0, 0, 0];
-      return m[1].split(',').slice(0, 3).map(x => parseInt(x.trim(), 10));
+      return m[1]
+        .split(',')
+        .slice(0, 3)
+        .map(x => parseInt(x.trim(), 10));
     }
     const badge = document.querySelector('[data-testid="next-action-badge"]');
     const card = document.querySelector('[data-testid="project-card"]');

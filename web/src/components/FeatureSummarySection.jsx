@@ -30,10 +30,7 @@ export default function FeatureSummarySection({ featurePipelines }) {
   const count = featurePipelines.length;
 
   return (
-    <div
-      className="feature-summary"
-      data-testid="feature-summary-section"
-    >
+    <div className="feature-summary" data-testid="feature-summary-section">
       <button
         className="feature-summary__toggle"
         onClick={() => setExpanded(e => !e)}
@@ -48,11 +45,7 @@ export default function FeatureSummarySection({ featurePipelines }) {
       </button>
 
       {expanded && (
-        <ul
-          id="feature-summary-list"
-          className="feature-summary__list"
-          role="list"
-        >
+        <ul id="feature-summary-list" className="feature-summary__list" role="list">
           {featurePipelines.map(feature => (
             <li key={feature.name} className="feature-summary__item">
               <span className="feature-summary__name">{feature.name}</span>
@@ -60,12 +53,13 @@ export default function FeatureSummarySection({ featurePipelines }) {
                 {phaseLabel(feature.approvedPhases, feature.totalPhases ?? 5)}
               </span>
               <span className="feature-summary__verify">
-                {feature.verifyStatus?.passed === true
-                  ? <span className="color--healthy">✓ verified</span>
-                  : feature.verifyStatus?.passed === false
-                    ? <span className="color--error">✗ failed</span>
-                    : <span className="color--dim">— not verified</span>
-                }
+                {feature.verifyStatus?.passed === true ? (
+                  <span className="color--healthy">✓ verified</span>
+                ) : feature.verifyStatus?.passed === false ? (
+                  <span className="color--error">✗ failed</span>
+                ) : (
+                  <span className="color--dim">— not verified</span>
+                )}
               </span>
             </li>
           ))}

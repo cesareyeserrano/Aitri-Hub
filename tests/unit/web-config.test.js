@@ -24,30 +24,27 @@ describe('TC-006h: web dashboard — Docker deployment artifacts are configured'
   it('docker/docker-compose.yml exists', () => {
     assert.ok(
       fs.existsSync(path.join(ROOT, 'docker', 'docker-compose.yml')),
-      'docker-compose.yml must exist for `aitri-hub web` to work'
+      'docker-compose.yml must exist for `aitri-hub web` to work',
     );
   });
 
   it('docker-compose.yml contains port 3000 mapping', () => {
     const content = fs.readFileSync(path.join(ROOT, 'docker', 'docker-compose.yml'), 'utf8');
-    assert.ok(
-      content.includes('3000'),
-      'docker-compose.yml must expose port 3000'
-    );
+    assert.ok(content.includes('3000'), 'docker-compose.yml must expose port 3000');
   });
 
   it('docker-compose.yml contains ~/.aitri-hub volume mount', () => {
     const content = fs.readFileSync(path.join(ROOT, 'docker', 'docker-compose.yml'), 'utf8');
     assert.ok(
       content.includes('.aitri-hub') && content.includes('/data'),
-      'docker-compose.yml must mount ~/.aitri-hub to /data inside container'
+      'docker-compose.yml must mount ~/.aitri-hub to /data inside container',
     );
   });
 
   it('docker/Dockerfile exists', () => {
     assert.ok(
       fs.existsSync(path.join(ROOT, 'docker', 'Dockerfile')),
-      'Dockerfile must exist to build the web image'
+      'Dockerfile must exist to build the web image',
     );
   });
 
@@ -55,30 +52,27 @@ describe('TC-006h: web dashboard — Docker deployment artifacts are configured'
     const content = fs.readFileSync(path.join(ROOT, 'docker', 'Dockerfile'), 'utf8');
     assert.ok(
       content.includes('nginx') && content.includes('alpine'),
-      'Dockerfile must use nginx:alpine as the serving image'
+      'Dockerfile must use nginx:alpine as the serving image',
     );
   });
 
   it('docker/nginx.conf exists', () => {
     assert.ok(
       fs.existsSync(path.join(ROOT, 'docker', 'nginx.conf')),
-      'nginx.conf must exist for the web server configuration'
+      'nginx.conf must exist for the web server configuration',
     );
   });
 
   it('nginx.conf listens on port 3000', () => {
     const content = fs.readFileSync(path.join(ROOT, 'docker', 'nginx.conf'), 'utf8');
-    assert.ok(
-      content.includes('listen 3000'),
-      'nginx.conf must listen on port 3000'
-    );
+    assert.ok(content.includes('listen 3000'), 'nginx.conf must listen on port 3000');
   });
 
   it('nginx.conf serves /data/ location for dashboard.json', () => {
     const content = fs.readFileSync(path.join(ROOT, 'docker', 'nginx.conf'), 'utf8');
     assert.ok(
       content.includes('/data/'),
-      'nginx.conf must include /data/ location to serve dashboard.json'
+      'nginx.conf must include /data/ location to serve dashboard.json',
     );
   });
 
@@ -86,7 +80,7 @@ describe('TC-006h: web dashboard — Docker deployment artifacts are configured'
     const content = fs.readFileSync(path.join(ROOT, 'docker', 'nginx.conf'), 'utf8');
     assert.ok(
       content.includes('no-store') || content.includes('no-cache'),
-      'nginx.conf must prevent caching of dashboard.json'
+      'nginx.conf must prevent caching of dashboard.json',
     );
   });
 });
@@ -97,7 +91,7 @@ describe('TC-006e: web dashboard — React app has responsive CSS configuration'
   it('web/src/styles.css exists', () => {
     assert.ok(
       fs.existsSync(path.join(ROOT, 'web', 'src', 'styles.css')),
-      'styles.css must exist with design tokens'
+      'styles.css must exist with design tokens',
     );
   });
 
@@ -105,7 +99,7 @@ describe('TC-006e: web dashboard — React app has responsive CSS configuration'
     const content = fs.readFileSync(path.join(ROOT, 'web', 'src', 'styles.css'), 'utf8');
     assert.ok(
       content.includes('768px'),
-      'styles.css must include 768px breakpoint for tablet layout'
+      'styles.css must include 768px breakpoint for tablet layout',
     );
   });
 
@@ -113,7 +107,7 @@ describe('TC-006e: web dashboard — React app has responsive CSS configuration'
     const content = fs.readFileSync(path.join(ROOT, 'web', 'src', 'styles.css'), 'utf8');
     assert.ok(
       content.includes('auto-fill') && content.includes('minmax'),
-      'project-grid must use auto-fill minmax for responsive columns'
+      'project-grid must use auto-fill minmax for responsive columns',
     );
   });
 
@@ -126,10 +120,13 @@ describe('TC-006e: web dashboard — React app has responsive CSS configuration'
   });
 
   it('ProjectCard component file exists with data-testid attributes', () => {
-    const content = fs.readFileSync(path.join(ROOT, 'web', 'src', 'components', 'ProjectCard.jsx'), 'utf8');
+    const content = fs.readFileSync(
+      path.join(ROOT, 'web', 'src', 'components', 'ProjectCard.jsx'),
+      'utf8',
+    );
     assert.ok(
       content.includes('data-testid="project-card"'),
-      'ProjectCard must have data-testid="project-card" for E2E tests'
+      'ProjectCard must have data-testid="project-card" for E2E tests',
     );
   });
 
@@ -137,7 +134,7 @@ describe('TC-006e: web dashboard — React app has responsive CSS configuration'
     const content = fs.readFileSync(path.join(ROOT, 'web', 'src', 'App.jsx'), 'utf8');
     assert.ok(
       content.includes('/data/dashboard.json'),
-      'App.jsx must poll /data/dashboard.json — the nginx-served data endpoint'
+      'App.jsx must poll /data/dashboard.json — the nginx-served data endpoint',
     );
   });
 });
@@ -148,34 +145,45 @@ describe('TC-006f: web dashboard — error and empty state components are implem
   it('ConnectionBanner component file exists', () => {
     assert.ok(
       fs.existsSync(path.join(ROOT, 'web', 'src', 'components', 'ConnectionBanner.jsx')),
-      'ConnectionBanner.jsx must exist to show reconnection status'
+      'ConnectionBanner.jsx must exist to show reconnection status',
     );
   });
 
   it('ConnectionBanner handles "failed" status with user-actionable message', () => {
     const content = fs.readFileSync(
-      path.join(ROOT, 'web', 'src', 'components', 'ConnectionBanner.jsx'), 'utf8'
+      path.join(ROOT, 'web', 'src', 'components', 'ConnectionBanner.jsx'),
+      'utf8',
     );
     assert.ok(
-      content.includes('failed') && (content.includes('docker') || content.includes('aitri-hub web')),
-      'ConnectionBanner must show recovery command when connection fails'
+      content.includes('failed') &&
+        (content.includes('docker') || content.includes('aitri-hub web')),
+      'ConnectionBanner must show recovery command when connection fails',
     );
   });
 
   it('App.jsx renders empty state when no projects present', () => {
     // Empty state is delegated to HomeView in hub-mvp-web redesign.
     const appSrc = fs.readFileSync(path.join(ROOT, 'web', 'src', 'App.jsx'), 'utf8');
-    const homeSrc = fs.readFileSync(path.join(ROOT, 'web', 'src', 'components', 'HomeView.jsx'), 'utf8');
-    const hasEmptyState = appSrc.includes('empty-state') || appSrc.includes('No projects')
-      || homeSrc.includes('empty-state') || homeSrc.includes('No projects');
-    assert.ok(hasEmptyState, 'App or HomeView must render an empty state when projects array is empty');
+    const homeSrc = fs.readFileSync(
+      path.join(ROOT, 'web', 'src', 'components', 'HomeView.jsx'),
+      'utf8',
+    );
+    const hasEmptyState =
+      appSrc.includes('empty-state') ||
+      appSrc.includes('No projects') ||
+      homeSrc.includes('empty-state') ||
+      homeSrc.includes('No projects');
+    assert.ok(
+      hasEmptyState,
+      'App or HomeView must render an empty state when projects array is empty',
+    );
   });
 
   it('nginx.conf returns 404 for missing files in /data/', () => {
     const content = fs.readFileSync(path.join(ROOT, 'docker', 'nginx.conf'), 'utf8');
     assert.ok(
       content.includes('=404'),
-      'nginx.conf must return 404 when dashboard.json is missing'
+      'nginx.conf must return 404 when dashboard.json is missing',
     );
   });
 
@@ -183,7 +191,7 @@ describe('TC-006f: web dashboard — error and empty state components are implem
     const content = fs.readFileSync(path.join(ROOT, 'docker', 'nginx.conf'), 'utf8');
     assert.ok(
       content.includes('X-Frame-Options'),
-      'nginx.conf must include X-Frame-Options security header'
+      'nginx.conf must include X-Frame-Options security header',
     );
   });
 });
@@ -196,18 +204,22 @@ describe('BG-002: POST/PUT /api/projects enforce MAX_BODY_BYTES limit', () => {
   it('defines MAX_BODY_BYTES constant', () => {
     assert.ok(
       /const\s+MAX_BODY_BYTES\s*=\s*64\s*\*\s*1024/.test(src),
-      'web.js must cap request body at 64KB via MAX_BODY_BYTES'
+      'web.js must cap request body at 64KB via MAX_BODY_BYTES',
     );
   });
 
   it('returns 413 payload_too_large when body exceeds the cap', () => {
-    assert.ok(src.includes("error: 'payload_too_large'"),
-      'oversized body must yield an explicit payload_too_large error');
+    assert.ok(
+      src.includes("error: 'payload_too_large'"),
+      'oversized body must yield an explicit payload_too_large error',
+    );
     assert.ok(src.includes('413'), 'oversized body must respond with HTTP 413');
   });
 
   it('destroys the request stream after sending 413', () => {
-    assert.ok(src.includes('req.destroy()'),
-      'oversized request must be destroyed to stop buffering');
+    assert.ok(
+      src.includes('req.destroy()'),
+      'oversized request must be destroyed to stop buffering',
+    );
   });
 });

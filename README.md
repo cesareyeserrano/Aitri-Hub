@@ -16,10 +16,10 @@ Cuando gestionas N proyectos con Aitri, necesitas entrar en cada uno para ejecut
 
 ## Requisitos
 
-| Herramienta    | Versión mínima | Necesario para     |
-|----------------|----------------|--------------------|
-| Node.js        | ≥18.0.0        | CLI + dashboard    |
-| Git            | ≥2.30          | Proyectos remotos  |
+| Herramienta | Versión mínima | Necesario para    |
+| ----------- | -------------- | ----------------- |
+| Node.js     | ≥18.0.0        | CLI + dashboard   |
+| Git         | ≥2.30          | Proyectos remotos |
 
 > Docker es **opcional** y sólo se usa para despliegue empaquetado. Consulta [DEPLOYMENT.md](./DEPLOYMENT.md).
 
@@ -34,24 +34,24 @@ Abre [http://localhost:3000](http://localhost:3000). La primera vez que entres, 
 
 ## Comandos
 
-| Comando                                  | Descripción                              |
-|------------------------------------------|------------------------------------------|
-| `aitri-hub web`                          | Inicia el dashboard en `localhost:3000`  |
+| Comando                                  | Descripción                                  |
+| ---------------------------------------- | -------------------------------------------- |
+| `aitri-hub web`                          | Inicia el dashboard en `localhost:3000`      |
 | `aitri-hub integration review <version>` | Registra una revisión del CHANGELOG de Aitri |
-| `aitri-hub help`                         | Muestra la ayuda                         |
-| `aitri-hub --version`                    | Muestra la versión                       |
+| `aitri-hub help`                         | Muestra la ayuda                             |
+| `aitri-hub --version`                    | Muestra la versión                           |
 
 ## Variables de entorno
 
 Todas son opcionales y tienen valores por defecto:
 
-| Variable                   | Default        | Descripción                          |
-|----------------------------|----------------|--------------------------------------|
-| `AITRI_HUB_DIR`            | `~/.aitri-hub` | Directorio de estado y caché         |
-| `AITRI_HUB_PORT`           | `3000`         | Puerto del dashboard                 |
+| Variable                   | Default        | Descripción                            |
+| -------------------------- | -------------- | -------------------------------------- |
+| `AITRI_HUB_DIR`            | `~/.aitri-hub` | Directorio de estado y caché           |
+| `AITRI_HUB_PORT`           | `3000`         | Puerto del dashboard                   |
 | `AITRI_HUB_REFRESH_MS`     | `5000`         | Intervalo de refresh del colector (ms) |
-| `AITRI_HUB_GIT_TIMEOUT_MS` | `5000`         | Timeout para operaciones Git (ms)    |
-| `AITRI_HUB_MAX_PROJECTS`   | `50`           | Máximo de proyectos registrados      |
+| `AITRI_HUB_GIT_TIMEOUT_MS` | `5000`         | Timeout para operaciones Git (ms)      |
+| `AITRI_HUB_MAX_PROJECTS`   | `50`           | Máximo de proyectos registrados        |
 | `AITRI_HUB_STALE_HOURS`    | `72`           | Horas para considerar commit estancado |
 
 ## Estructura del proyecto

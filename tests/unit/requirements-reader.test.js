@@ -16,11 +16,11 @@ function tmpDir() {
 const SAMPLE_REQUIREMENTS = {
   project_name: 'my-app',
   functional_requirements: [
-    { id: 'FR-001', priority: 'MUST',   title: 'User login'      },
-    { id: 'FR-002', priority: 'MUST',   title: 'User signup'     },
-    { id: 'FR-003', priority: 'SHOULD', title: 'Dark mode'       },
-    { id: 'FR-004', priority: 'COULD',  title: 'Export CSV'      },
-    { id: 'FR-005', priority: 'MUST',   title: 'Password reset'  },
+    { id: 'FR-001', priority: 'MUST', title: 'User login' },
+    { id: 'FR-002', priority: 'MUST', title: 'User signup' },
+    { id: 'FR-003', priority: 'SHOULD', title: 'Dark mode' },
+    { id: 'FR-004', priority: 'COULD', title: 'Export CSV' },
+    { id: 'FR-005', priority: 'MUST', title: 'Password reset' },
   ],
   user_stories: [],
   non_functional_requirements: [],
@@ -36,7 +36,7 @@ describe('readRequirementsSummary — valid artifact', () => {
     fs.mkdirSync(path.join(dir, 'spec'));
     fs.writeFileSync(
       path.join(dir, 'spec', '01_REQUIREMENTS.json'),
-      JSON.stringify(SAMPLE_REQUIREMENTS)
+      JSON.stringify(SAMPLE_REQUIREMENTS),
     );
   });
 
@@ -77,7 +77,7 @@ describe('readRequirementsSummary — custom artifactsDir', () => {
     fs.mkdirSync(path.join(dir, 'artifacts'));
     fs.writeFileSync(
       path.join(dir, 'artifacts', '01_REQUIREMENTS.json'),
-      JSON.stringify(SAMPLE_REQUIREMENTS)
+      JSON.stringify(SAMPLE_REQUIREMENTS),
     );
   });
 
@@ -98,7 +98,9 @@ describe('readRequirementsSummary — custom artifactsDir', () => {
 
 describe('readRequirementsSummary — absent file returns null', () => {
   let dir;
-  before(() => { dir = tmpDir(); });
+  before(() => {
+    dir = tmpDir();
+  });
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
   it('returns null', () => assert.equal(readRequirementsSummary(dir), null));

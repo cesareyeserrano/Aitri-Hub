@@ -12,9 +12,10 @@
 
 ## Open
 
-- [x] P2 — **External signals contract (`spec/06_EXTERNAL_SIGNALS.json`)** *(implemented)* — Hub can't run static analysis, security scans, or dependency audits directly. External tools (ESLint, npm audit, GitLeaks, Snyk, etc.) should be able to write their findings into a standardized file that Hub reads and surfaces as alerts.
+- [x] P2 — **External signals contract (`spec/06_EXTERNAL_SIGNALS.json`)** _(implemented)_ — Hub can't run static analysis, security scans, or dependency audits directly. External tools (ESLint, npm audit, GitLeaks, Snyk, etc.) should be able to write their findings into a standardized file that Hub reads and surfaces as alerts.
 
   Schema proposal:
+
   ```json
   {
     "generatedAt": "ISO8601",
@@ -46,7 +47,7 @@
   - File absent → no alert, no crash
   - Invalid JSON → no alert, no crash
 
-- [x] P2 — **Self-managed project registry** *(implemented)* — Since Aitri v0.1.64, `aitri init` no longer auto-registers projects in Hub. New users won't know they need to run `aitri-hub setup` manually.
+- [x] P2 — **Self-managed project registry** _(implemented)_ — Since Aitri v0.1.64, `aitri init` no longer auto-registers projects in Hub. New users won't know they need to run `aitri-hub setup` manually.
 
   Problem: First-time Hub users initialize an Aitri project and expect it to appear in Hub automatically. It no longer does. Without clear onboarding guidance, Hub appears broken.
 
@@ -70,7 +71,7 @@
   - `aitri-hub setup --scan ~/projects` finds all Aitri projects and offers to register them
   - `aitri-hub monitor` shows registered projects correctly
 
-- [x] P3 — **GitHub remote project polling** *(implemented)* — Hub monitors local projects via filesystem poll every 5s. Remote projects (GitHub repos) have no equivalent live monitoring mechanism.
+- [x] P3 — **GitHub remote project polling** _(implemented)_ — Hub monitors local projects via filesystem poll every 5s. Remote projects (GitHub repos) have no equivalent live monitoring mechanism.
 
   Problem: Teams working on separate machines use GitHub as the shared source. Hub can register remote projects but cannot detect when the pipeline advances (new approval, drift, etc.) without a manual refresh.
 
@@ -106,25 +107,24 @@
   The existing `integrationAlert` ([lib/collector/integration-guard.js](lib/collector/integration-guard.js)) is a different axis: it warns Hub developers when the installed Aitri exceeds what Hub has reviewed. It does not cover "user's CLI is stale".
 
   Design (validated with the author 2026-04-21):
-
   - Add a **dashboard-level** alert (not per-project) alongside `integrationAlert`.
   - Compare `detectAitriVersion()` (already computed once per cycle in `collectAll`) against the `version` field of `package.json` fetched from the Aitri repo on GitHub.
   - Emit `cliUpdateAlert` only when `detected < upstream`. Never when equal or ahead.
   - Failure-silent on any fetch error (offline, 404, 429, timeout) — missing the alert is acceptable; crashing is not.
 
   Files:
-  - `lib/collector/upstream-version-reader.js` *(new)* — fetches `package.json` from configurable upstream URL, parses `.version`, TTL-caches in memory. Reuses `httpsGet` pattern from [lib/collector/github-poller.js](lib/collector/github-poller.js).
-  - `lib/collector/upstream-guard.js` *(new)* — pure function `evaluateUpstreamAlert(detectedVersion, upstreamVersion) → alert | null`. Reuses `semverGt`-style compare.
+  - `lib/collector/upstream-version-reader.js` _(new)_ — fetches `package.json` from configurable upstream URL, parses `.version`, TTL-caches in memory. Reuses `httpsGet` pattern from [lib/collector/github-poller.js](lib/collector/github-poller.js).
+  - `lib/collector/upstream-guard.js` _(new)_ — pure function `evaluateUpstreamAlert(detectedVersion, upstreamVersion) → alert | null`. Reuses `semverGt`-style compare.
   - `lib/collector/index.js` — in `collectAll`, invoke reader + guard, embed result as `cliUpdateAlert` at dashboard level (next to `integrationAlert`); add `meta.latestAitriVersion` alongside `meta.detectedAitriVersion`.
   - `lib/constants.js` — add:
     - `UPSTREAM_URL_DEFAULT = 'https://raw.githubusercontent.com/cesareyeserrano/Aitri/main/package.json'`
     - `UPSTREAM_URL_FALLBACK = 'https://raw.githubusercontent.com/cesareyeserrano/Aitri/master/package.json'`
-    - `UPSTREAM_REFRESH_MS = parseInt(process.env.AITRI_HUB_UPSTREAM_REFRESH_MS ?? '21600000', 10)` *(6 hours)*
+    - `UPSTREAM_REFRESH_MS = parseInt(process.env.AITRI_HUB_UPSTREAM_REFRESH_MS ?? '21600000', 10)` _(6 hours)_
     - Env override `AITRI_HUB_UPSTREAM_URL` respected by the reader.
-    - New alert type in `ALERT_TYPE`: `CLI_OUTDATED: 'cli-outdated'` *(reserved; may also live only in the dashboard payload without an engine-side entry — decide in Phase 2)*.
-  - `tests/unit/upstream-guard.test.js` *(new)* — pure cases: detected < upstream → alert; detected ≥ upstream → null; either null → null.
-  - `tests/unit/upstream-version-reader.test.js` *(new)* — stub `https.get`: success, 404, 429, timeout, invalid JSON, missing `version` field. Verify TTL cache prevents re-fetch inside window.
-  - `tests/unit/collector-index.test.js` *(update if exists)* — assert `meta.latestAitriVersion` and `cliUpdateAlert` fields appear in dashboard payload.
+    - New alert type in `ALERT_TYPE`: `CLI_OUTDATED: 'cli-outdated'` _(reserved; may also live only in the dashboard payload without an engine-side entry — decide in Phase 2)_.
+  - `tests/unit/upstream-guard.test.js` _(new)_ — pure cases: detected < upstream → alert; detected ≥ upstream → null; either null → null.
+  - `tests/unit/upstream-version-reader.test.js` _(new)_ — stub `https.get`: success, 404, 429, timeout, invalid JSON, missing `version` field. Verify TTL cache prevents re-fetch inside window.
+  - `tests/unit/collector-index.test.js` _(update if exists)_ — assert `meta.latestAitriVersion` and `cliUpdateAlert` fields appear in dashboard payload.
   - `README.md` — document `AITRI_HUB_UPSTREAM_URL` and `AITRI_HUB_UPSTREAM_REFRESH_MS` env vars.
   - `STYLE_GUIDE.md` — specify rendering of dashboard-level alert banner if not already covered by `integrationAlert` rendering.
 

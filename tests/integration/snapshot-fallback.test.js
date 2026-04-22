@@ -173,8 +173,19 @@ describe('TC-011f: snapshot success path skips demoted readers', () => {
         { key: 3, status: 'approved' },
         { key: 4, status: 'completed' },
       ],
-      bugs: { total: 0, open: 0, blocking: 0, critical: 0, high: 0, medium: 0, low: 0,
-              fixed: 0, verified: 0, closed: 0, openIds: [] },
+      bugs: {
+        total: 0,
+        open: 0,
+        blocking: 0,
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0,
+        fixed: 0,
+        verified: 0,
+        closed: 0,
+        openIds: [],
+      },
       audit: { exists: false, stalenessDays: null },
       normalize: { state: null, method: null, baseRef: null, uncountedFiles: 0 },
       health: { deployable: true, deployableReasons: [] },
@@ -211,8 +222,16 @@ describe('TC-011f: snapshot success path skips demoted readers', () => {
     const result = await collectOne(project);
 
     assert.equal(result.degradationReason, null, 'snapshot should have succeeded');
-    assert.equal(result.aitriState.projectName, 'snapshot-ok', 'projectName should come from snapshot, not basename');
-    assert.equal(result.bugsSummary?.open, 0, 'bugsSummary should be projected from snapshot.bugs (legacy would be null)');
+    assert.equal(
+      result.aitriState.projectName,
+      'snapshot-ok',
+      'projectName should come from snapshot, not basename',
+    );
+    assert.equal(
+      result.bugsSummary?.open,
+      0,
+      'bugsSummary should be projected from snapshot.bugs (legacy would be null)',
+    );
     // No BUGS.json exists on disk, yet bugsSummary is non-null — proves snapshot path was used, NOT readBugsSummary.
     assert.ok(!fs.existsSync(path.join(projectDir, 'BUGS.json')));
     // Demoted reader equivalence end: silently inferred from the above.

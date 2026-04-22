@@ -31,7 +31,15 @@ test('TC-001h: admin API add-project path persists a local entry to projects.jso
     const { writeProjects, readProjects } = await import('../../lib/store/projects.js');
     writeProjects({
       version: 1,
-      projects: [{ id: 'a', name: 'proj-a', type: 'local', location: projDir, addedAt: new Date().toISOString() }],
+      projects: [
+        {
+          id: 'a',
+          name: 'proj-a',
+          type: 'local',
+          location: projDir,
+          addedAt: new Date().toISOString(),
+        },
+      ],
     });
     const result = readProjects();
     assert.equal(result.projects.length, 1);

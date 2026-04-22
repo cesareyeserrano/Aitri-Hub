@@ -8,7 +8,7 @@
 import React, { useState } from 'react';
 
 const ERROR_MESSAGES = {
-  name_required:  'Name is required.',
+  name_required: 'Name is required.',
   path_traversal: 'Path contains invalid segments (..).',
   path_not_found: 'Path not found on the filesystem.',
 };
@@ -17,10 +17,10 @@ const ERROR_MESSAGES = {
  * Inline edit row for a single project.
  */
 function EditRow({ project, onSave, onCancel }) {
-  const [name, setName]         = useState(project.name);
+  const [name, setName] = useState(project.name);
   const [location, setLocation] = useState(project.location);
-  const [error, setError]       = useState(null);
-  const [saving, setSaving]     = useState(false);
+  const [error, setError] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   async function handleSave(e) {
     e.preventDefault();
@@ -36,7 +36,11 @@ function EditRow({ project, onSave, onCancel }) {
 
   return (
     <form className="admin-edit-row" onSubmit={handleSave} data-testid="edit-row">
-      {error && <div className="admin-add-form__error" role="alert">{error}</div>}
+      {error && (
+        <div className="admin-add-form__error" role="alert">
+          {error}
+        </div>
+      )}
       <input
         className="admin-field__input"
         value={name}

@@ -37,7 +37,7 @@ export default function ProgressBar({ value, max, label, showLabel = false }) {
     return () => cancelAnimationFrame(id);
   }, []);
 
-  const safePct    = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
+  const safePct = max > 0 ? Math.min(100, Math.max(0, (value / max) * 100)) : 0;
   const displayPct = mounted ? safePct : 0;
 
   return (

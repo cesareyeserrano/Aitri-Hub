@@ -19,7 +19,7 @@ function groupByFolder(projects) {
       folder = 'remote';
     } else {
       const parts = (p.location ?? '').replace(/\/$/, '').split('/');
-      folder = parts.length >= 2 ? parts[parts.length - 2] : (parts[0] || 'projects');
+      folder = parts.length >= 2 ? parts[parts.length - 2] : parts[0] || 'projects';
     }
     if (!groups.has(folder)) groups.set(folder, []);
     groups.get(folder).push(p);
@@ -56,20 +56,22 @@ function phaseDistribution(projects) {
  * - Compliance (10pts): 10=compliant, 5=partial, 0=other
  */
 export function healthScore(project) {
-  const approved  = project.aitriState?.approvedPhases?.length ?? 0;
-  const pipeline  = Math.min(40, approved * 8);
+  const approved = project.aitriState?.approvedPhases?.length ?? 0;
+  const pipeline = Math.min(40, approved * 8);
 
-  const ts        = project.testSummary;
-  const testPts   = ts?.available && ts.total > 0
-    ? Math.round((ts.passed / ts.total) * 30)
-    : 0;
+  const ts = project.testSummary;
+  const testPts = ts?.available && ts.total > 0 ? Math.round((ts.passed / ts.total) * 30) : 0;
 
   const hasBlocking = (project.alerts ?? []).some(a => a.severity === 'blocking');
-  const blockPts  = hasBlocking ? 0 : 20;
+  const blockPts = hasBlocking ? 0 : 20;
 
-  const cs        = project.complianceSummary;
-  const compPts   = cs?.available
-    ? cs.overallStatus === 'compliant' ? 10 : cs.overallStatus === 'partial' ? 5 : 0
+  const cs = project.complianceSummary;
+  const compPts = cs?.available
+    ? cs.overallStatus === 'compliant'
+      ? 10
+      : cs.overallStatus === 'partial'
+        ? 5
+        : 0
     : 0;
 
   return Math.min(100, pipeline + testPts + blockPts + compPts);
@@ -80,7 +82,7 @@ function scoreGrade(score) {
   if (score >= 75) return { label: 'B', color: 'var(--syn-teal)' };
   if (score >= 55) return { label: 'C', color: 'var(--syn-yellow)' };
   if (score >= 35) return { label: 'D', color: 'var(--syn-orange)' };
-  return               { label: 'F', color: 'var(--syn-red)' };
+  return { label: 'F', color: 'var(--syn-red)' };
 }
 
 // ── Stat tile ─────────────────────────────────────────────────────────────────
@@ -112,9 +114,7 @@ function TriageSection({ issues }) {
             <span className="triage__project">{issue.projectName}</span>
             <span className="triage__arrow">→</span>
             <span className="triage__msg">{issue.message}</span>
-            {issue.command && (
-              <code className="triage__cmd">{issue.command}</code>
-            )}
+            {issue.command && <code className="triage__cmd">{issue.command}</code>}
           </div>
         ))}
       </div>
@@ -124,18 +124,26 @@ function TriageSection({ issues }) {
 
 // ── Phase distribution ────────────────────────────────────────────────────────
 
-const PHASE_LABELS = { 1: 'Requirements', 2: 'Design', 3: 'Tests', 4: 'Implementation', 5: 'Compliance' };
+const PHASE_LABELS = {
+  1: 'Requirements',
+  2: 'Design',
+  3: 'Tests',
+  4: 'Implementation',
+  5: 'Compliance',
+};
 
 function PhaseDistribution({ projects }) {
   const dist = phaseDistribution(projects);
-  const max  = Math.max(...dist.map(d => d.count), 1);
+  const max = Math.max(...dist.map(d => d.count), 1);
   return (
     <div className="phase-dist">
       <div className="phase-dist__header">// phase_distribution</div>
       <div className="phase-dist__bars">
         {dist.map(({ phase, count }) => (
           <div key={phase} className="phase-dist__row">
-            <span className="phase-dist__label">P{phase} {PHASE_LABELS[phase]}</span>
+            <span className="phase-dist__label">
+              P{phase} {PHASE_LABELS[phase]}
+            </span>
             <div className="phase-dist__bar-wrap">
               <div
                 className="phase-dist__bar"
@@ -165,7 +173,9 @@ function HealthScoreRow({ projects }) {
           const grade = scoreGrade(score);
           return (
             <div key={name} className="health-scores__row">
-              <span className="health-scores__grade" style={{ color: grade.color }}>{grade.label}</span>
+              <span className="health-scores__grade" style={{ color: grade.color }}>
+                {grade.label}
+              </span>
               <span className="health-scores__name">{name}</span>
               <div className="health-scores__bar-wrap">
                 <div
@@ -173,7 +183,9 @@ function HealthScoreRow({ projects }) {
                   style={{ width: `${score}%`, background: grade.color }}
                 />
               </div>
-              <span className="health-scores__value" style={{ color: grade.color }}>{score}</span>
+              <span className="health-scores__value" style={{ color: grade.color }}>
+                {score}
+              </span>
             </div>
           );
         })}
@@ -208,7 +220,9 @@ export default function OverviewTab({ projects, loading }) {
   if (loading) {
     return (
       <div className="project-grid">
-        {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
+        {[1, 2, 3].map(i => (
+          <SkeletonCard key={i} />
+        ))}
       </div>
     );
   }
@@ -220,7 +234,9 @@ export default function OverviewTab({ projects, loading }) {
         <p className="empty-state__body">
           Add your first project to start monitoring its pipeline, Git activity, and test health.
         </p>
-        <a className="empty-state__cta" href="/admin">Add your first project</a>
+        <a className="empty-state__cta" href="/admin">
+          Add your first project
+        </a>
         <details className="empty-state__disclosure">
           <summary>What counts as a project?</summary>
           <p>
@@ -233,15 +249,15 @@ export default function OverviewTab({ projects, loading }) {
     );
   }
 
-  const healthy  = projects.filter(p => p.status === 'healthy').length;
-  const warning  = projects.filter(p => p.status === 'warning').length;
-  const error    = projects.filter(p => p.status === 'error' || p.status === 'unreadable').length;
+  const healthy = projects.filter(p => p.status === 'healthy').length;
+  const warning = projects.filter(p => p.status === 'warning').length;
+  const error = projects.filter(p => p.status === 'error' || p.status === 'unreadable').length;
   const pipeline = avgPipelinePct(projects);
 
   const blockingIssues = projects.flatMap(p =>
     (p.alerts ?? [])
       .filter(a => a.severity === 'blocking')
-      .map(a => ({ ...a, projectName: p.name }))
+      .map(a => ({ ...a, projectName: p.name })),
   );
 
   const groups = groupByFolder(projects);
@@ -251,17 +267,15 @@ export default function OverviewTab({ projects, loading }) {
     <div className="overview-tab">
       {/* ── Health summary tiles ── */}
       <div className="overview-stats">
-        <StatTile label="projects"  value={projects.length} colorVar="--text" />
-        <StatTile label="healthy"   value={healthy}         colorVar="--syn-green" />
-        <StatTile label="warning"   value={warning}         colorVar="--syn-yellow" alert={warning > 0} />
-        <StatTile label="blocking"  value={error}           colorVar="--syn-red"    alert={error > 0} />
-        <StatTile label="pipeline"  value={`${pipeline}%`}  colorVar="--syn-teal" />
+        <StatTile label="projects" value={projects.length} colorVar="--text" />
+        <StatTile label="healthy" value={healthy} colorVar="--syn-green" />
+        <StatTile label="warning" value={warning} colorVar="--syn-yellow" alert={warning > 0} />
+        <StatTile label="blocking" value={error} colorVar="--syn-red" alert={error > 0} />
+        <StatTile label="pipeline" value={`${pipeline}%`} colorVar="--syn-teal" />
       </div>
 
       {/* ── Triage — blocking issues only ── */}
-      {blockingIssues.length > 0 && (
-        <TriageSection issues={blockingIssues} />
-      )}
+      {blockingIssues.length > 0 && <TriageSection issues={blockingIssues} />}
 
       {/* ── Phase distribution + Health scores ── */}
       {projects.length > 1 && (

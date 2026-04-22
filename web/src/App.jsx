@@ -13,15 +13,15 @@ import HomeView from './components/HomeView.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import IntegrationAlertBanner from './components/IntegrationAlertBanner.jsx';
 
-const POLL_INTERVAL_MS  = 5_000;
+const POLL_INTERVAL_MS = 5_000;
 const FAILURE_THRESHOLD = 3;
-const DASHBOARD_URL     = '/data/dashboard.json';
+const DASHBOARD_URL = '/data/dashboard.json';
 
 const CONN = Object.freeze({
   CONNECTED: 'connected',
-  RETRYING:  'retrying',
-  FAILED:    'failed',
-  RESTORED:  'restored',
+  RETRYING: 'retrying',
+  FAILED: 'failed',
+  RESTORED: 'restored',
 });
 
 /**
@@ -32,7 +32,9 @@ const CONN = Object.freeze({
 function useRoute() {
   const [route, setRoute] = useState(() => window.location.pathname);
   useEffect(() => {
-    function onPop() { setRoute(window.location.pathname); }
+    function onPop() {
+      setRoute(window.location.pathname);
+    }
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
@@ -45,9 +47,9 @@ function useRoute() {
 export default function App() {
   const route = useRoute();
 
-  const [data,        setData]        = useState(null);
-  const [loading,     setLoading]     = useState(true);
-  const [connStatus,  setConnStatus]  = useState(CONN.CONNECTED);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [connStatus, setConnStatus] = useState(CONN.CONNECTED);
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const failCountRef = useRef(0);
@@ -80,11 +82,11 @@ export default function App() {
     return () => clearInterval(timer);
   }, [fetchData]);
 
-  const projects         = data?.projects ?? [];
+  const projects = data?.projects ?? [];
   const integrationAlert = data?.integrationAlert ?? null;
-  const healthy  = projects.filter(p => p.status === 'healthy').length;
-  const warning  = projects.filter(p => p.status === 'warning').length;
-  const error    = projects.filter(p => p.status === 'error' || p.status === 'unreadable').length;
+  const healthy = projects.filter(p => p.status === 'healthy').length;
+  const warning = projects.filter(p => p.status === 'warning').length;
+  const error = projects.filter(p => p.status === 'error' || p.status === 'unreadable').length;
 
   const isAdmin = route === '/admin' || route.startsWith('/admin');
 
@@ -105,11 +107,7 @@ export default function App() {
       />
 
       <main className="main">
-        {isAdmin ? (
-          <AdminPanel />
-        ) : (
-          <HomeView projects={projects} loading={loading} />
-        )}
+        {isAdmin ? <AdminPanel /> : <HomeView projects={projects} loading={loading} />}
       </main>
     </div>
   );

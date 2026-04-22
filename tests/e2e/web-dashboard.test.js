@@ -24,7 +24,9 @@ test('TC-006h: web dashboard returns HTTP 200', async ({ request }) => {
 
 // ── TC-006e: 768px viewport renders all cards without horizontal scroll ────────
 
-test('TC-006e: 768px viewport — no horizontal scroll, project cards visible', async ({ browser }) => {
+test('TC-006e: 768px viewport — no horizontal scroll, project cards visible', async ({
+  browser,
+}) => {
   const context = await browser.newContext({ viewport: { width: 768, height: 1024 } });
   const page = await context.newPage();
 

@@ -7,7 +7,7 @@
 export default class AitriReporter {
   onTestEnd(test, result) {
     const title = test.title;
-    const icon  = result.status === 'passed' ? '\u2714' : '\u2716';
+    const icon = result.status === 'passed' ? '\u2714' : '\u2716';
     console.log(`${icon} ${title}`);
   }
 

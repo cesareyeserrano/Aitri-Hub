@@ -17,7 +17,7 @@ export default function ConnectionBanner({ status }) {
     retrying: {
       cls: 'banner--retrying',
       level: '[WARN]',
-      msg: "reconnecting to dashboard data… (retrying every 5s)",
+      msg: 'reconnecting to dashboard data… (retrying every 5s)',
     },
     failed: {
       cls: 'banner--failed',
@@ -27,7 +27,7 @@ export default function ConnectionBanner({ status }) {
     restored: {
       cls: 'banner--restored',
       level: '[INFO]',
-      msg: "connection restored.",
+      msg: 'connection restored.',
     },
   };
 

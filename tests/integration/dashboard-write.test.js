@@ -71,7 +71,10 @@ describe('dashboard writeDashboard → readDashboard roundtrip', () => {
   it('second write overwrites first', async () => {
     const { writeDashboard, readDashboard } = await import('../../lib/store/dashboard.js');
     writeDashboard({ ...makeDashboard(), projects: [] });
-    writeDashboard({ ...makeDashboard(), projects: [{ id: 'new', name: 'new-proj', status: 'warning' }] });
+    writeDashboard({
+      ...makeDashboard(),
+      projects: [{ id: 'new', name: 'new-proj', status: 'warning' }],
+    });
     const read = readDashboard();
     assert.equal(read.projects.length, 1);
     assert.equal(read.projects[0].name, 'new-proj');

@@ -20,16 +20,19 @@ describe('TC-019h: readAitriState — lastSession happy path', () => {
   let dir;
   before(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aitri-ls-'));
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 1,
-      approvedPhases: [],
-      lastSession: {
-        at:            '2026-03-31T00:00:00Z',
-        agent:         'claude',
-        event:         'complete requirements',
-        files_touched: ['src/auth.js'],
-      },
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 1,
+        approvedPhases: [],
+        lastSession: {
+          at: '2026-03-31T00:00:00Z',
+          agent: 'claude',
+          event: 'complete requirements',
+          files_touched: ['src/auth.js'],
+        },
+      }),
+    );
   });
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
@@ -38,7 +41,7 @@ describe('TC-019h: readAitriState — lastSession happy path', () => {
     const state = readAitriState(dir);
     assert.ok(state !== null);
     assert.ok(state.lastSession !== null);
-    assert.equal(state.lastSession.at,    '2026-03-31T00:00:00Z');
+    assert.equal(state.lastSession.at, '2026-03-31T00:00:00Z');
     assert.equal(state.lastSession.agent, 'claude');
     assert.equal(state.lastSession.event, 'complete requirements');
     assert.deepEqual(state.lastSession.files_touched, ['src/auth.js']);
@@ -51,10 +54,13 @@ describe('TC-019f: readAitriState — lastSession absent', () => {
   let dir;
   before(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aitri-ls-'));
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 1,
-      approvedPhases: [],
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 1,
+        approvedPhases: [],
+      }),
+    );
   });
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
@@ -72,11 +78,14 @@ describe('TC-019e: readAitriState — lastSession.files_touched absent', () => {
   let dir;
   before(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aitri-ls-'));
-    fs.writeFileSync(path.join(dir, '.aitri'), JSON.stringify({
-      currentPhase: 1,
-      approvedPhases: [],
-      lastSession: { at: '2026-03-31T00:00:00Z', agent: 'claude', event: 'checkpoint' },
-    }));
+    fs.writeFileSync(
+      path.join(dir, '.aitri'),
+      JSON.stringify({
+        currentPhase: 1,
+        approvedPhases: [],
+        lastSession: { at: '2026-03-31T00:00:00Z', agent: 'claude', event: 'checkpoint' },
+      }),
+    );
   });
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
@@ -116,7 +125,7 @@ describe('TC-021h: BugBadge — blocking variant', () => {
     const src = fs.readFileSync(path.join(ROOT, 'web/src/components/ProjectCard.jsx'), 'utf8');
     assert.ok(
       src.includes('lastEvent.phase != null &&'),
-      'ProjectCard must guard the phase segment with `lastEvent.phase != null &&`'
+      'ProjectCard must guard the phase segment with `lastEvent.phase != null &&`',
     );
   });
 });
@@ -129,7 +138,7 @@ describe('TC-021f: BugBadge — null guard', () => {
     const src = fs.readFileSync(path.join(ROOT, 'web/src/components/BugBadge.jsx'), 'utf8');
     assert.ok(
       src.includes('if (!bugsSummary || bugsSummary.open === 0) return null'),
-      'BugBadge must have null guard for bugsSummary'
+      'BugBadge must have null guard for bugsSummary',
     );
   });
 });

@@ -18,24 +18,24 @@ export default function BugBadge({ bugsSummary }) {
   const { open, critical, high } = bugsSummary;
   const isBlocking = critical > 0 || high > 0;
 
-  const color  = isBlocking ? 'var(--syn-red)' : 'var(--syn-yellow)';
-  const icon   = isBlocking ? '✖' : '⚠';
-  const label  = `${open} ${open === 1 ? 'bug' : 'bugs'}`;
+  const color = isBlocking ? 'var(--syn-red)' : 'var(--syn-yellow)';
+  const icon = isBlocking ? '✖' : '⚠';
+  const label = `${open} ${open === 1 ? 'bug' : 'bugs'}`;
 
   return (
     <span
       className="bug-badge"
       style={{
-        display:       'inline-flex',
-        alignItems:    'center',
-        gap:           '3px',
-        fontSize:      '10px',
-        fontFamily:    'var(--font-mono)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '3px',
+        fontSize: '10px',
+        fontFamily: 'var(--font-mono)',
         color,
-        border:        `1px solid ${color}`,
-        borderRadius:  '3px',
-        padding:       '1px 5px',
-        whiteSpace:    'nowrap',
+        border: `1px solid ${color}`,
+        borderRadius: '3px',
+        padding: '1px 5px',
+        whiteSpace: 'nowrap',
       }}
       title={isBlocking ? 'Open blocking bugs' : 'Open bugs'}
     >

@@ -17,11 +17,11 @@ function tmpDir() {
 
 const SAMPLE_BUGS = {
   bugs: [
-    { id: 'BG-001', status: 'open',   severity: 'critical' },
-    { id: 'BG-002', status: 'open',   severity: 'high'     },
-    { id: 'BG-003', status: 'open',   severity: 'medium'   },
-    { id: 'BG-004', status: 'fixed',  severity: 'low'      },
-    { id: 'BG-005', status: 'closed', severity: 'high'     },
+    { id: 'BG-001', status: 'open', severity: 'critical' },
+    { id: 'BG-002', status: 'open', severity: 'high' },
+    { id: 'BG-003', status: 'open', severity: 'medium' },
+    { id: 'BG-004', status: 'fixed', severity: 'low' },
+    { id: 'BG-005', status: 'closed', severity: 'high' },
   ],
 };
 
@@ -39,14 +39,14 @@ describe('TC-017h: readBugsSummary — valid BUGS.json', () => {
     // @aitri-tc TC-017h
     const result = readBugsSummary(dir, '');
     assert.ok(result !== null, 'should not return null');
-    assert.equal(result.open,     3);
-    assert.equal(result.fixed,    1);
+    assert.equal(result.open, 3);
+    assert.equal(result.fixed, 1);
     assert.equal(result.verified, 0);
-    assert.equal(result.closed,   1);
+    assert.equal(result.closed, 1);
     assert.equal(result.critical, 1);
-    assert.equal(result.high,     1);
-    assert.equal(result.medium,   1);
-    assert.equal(result.low,      0);
+    assert.equal(result.high, 1);
+    assert.equal(result.medium, 1);
+    assert.equal(result.low, 0);
     assert.deepEqual(result.openIds, ['BG-001', 'BG-002', 'BG-003']);
   });
 });
@@ -55,7 +55,9 @@ describe('TC-017h: readBugsSummary — valid BUGS.json', () => {
 describe('TC-017f: readBugsSummary — absent BUGS.json', () => {
   // @aitri-tc TC-017f
   let dir;
-  before(() => { dir = tmpDir(); });
+  before(() => {
+    dir = tmpDir();
+  });
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
   it('TC-017f: returns null without throwing', () => {
@@ -90,9 +92,12 @@ describe('TC-017h: readBugsSummary — artifactsDir=spec', () => {
     dir = tmpDir();
     const specDir = path.join(dir, 'spec');
     fs.mkdirSync(specDir);
-    fs.writeFileSync(path.join(specDir, 'BUGS.json'), JSON.stringify({
-      bugs: [{ id: 'BG-001', status: 'open', severity: 'low' }],
-    }));
+    fs.writeFileSync(
+      path.join(specDir, 'BUGS.json'),
+      JSON.stringify({
+        bugs: [{ id: 'BG-001', status: 'open', severity: 'low' }],
+      }),
+    );
   });
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
@@ -101,6 +106,6 @@ describe('TC-017h: readBugsSummary — artifactsDir=spec', () => {
     const result = readBugsSummary(dir, 'spec');
     assert.ok(result !== null);
     assert.equal(result.open, 1);
-    assert.equal(result.low,  1);
+    assert.equal(result.low, 1);
   });
 });

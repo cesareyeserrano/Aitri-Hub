@@ -2,25 +2,25 @@
 
 ## Prerequisites
 
-| Requirement | Version | Notes |
-|---|---|---|
-| Node.js | ≥ 18.0.0 | Required |
-| Git | ≥ 2.30 | Remote project sync |
-| Docker | ≥ 24.0 | Optional — packaged deployment only |
-| Docker Compose | ≥ 2.20 | Optional — packaged deployment only |
+| Requirement    | Version  | Notes                               |
+| -------------- | -------- | ----------------------------------- |
+| Node.js        | ≥ 18.0.0 | Required                            |
+| Git            | ≥ 2.30   | Remote project sync                 |
+| Docker         | ≥ 24.0   | Optional — packaged deployment only |
+| Docker Compose | ≥ 2.20   | Optional — packaged deployment only |
 
 ## Environment Variables
 
 All variables are optional — defaults shown below.
 
-| Variable | Type | Required | Default | Description |
-|---|---|---|---|---|
-| `AITRI_HUB_DIR` | string | optional | `~/.aitri-hub` | State, cache, and log directory |
-| `AITRI_HUB_PORT` | number | optional | `3000` | Dashboard port (bound to 127.0.0.1) |
-| `AITRI_HUB_REFRESH_MS` | number | optional | `5000` | Collector refresh interval (ms) |
-| `AITRI_HUB_GIT_TIMEOUT_MS` | number | optional | `5000` | Git exec timeout (ms) |
-| `AITRI_HUB_MAX_PROJECTS` | number | optional | `50` | Maximum registered projects |
-| `AITRI_HUB_STALE_HOURS` | number | optional | `72` | Stale commit threshold (hours) |
+| Variable                   | Type   | Required | Default        | Description                         |
+| -------------------------- | ------ | -------- | -------------- | ----------------------------------- |
+| `AITRI_HUB_DIR`            | string | optional | `~/.aitri-hub` | State, cache, and log directory     |
+| `AITRI_HUB_PORT`           | number | optional | `3000`         | Dashboard port (bound to 127.0.0.1) |
+| `AITRI_HUB_REFRESH_MS`     | number | optional | `5000`         | Collector refresh interval (ms)     |
+| `AITRI_HUB_GIT_TIMEOUT_MS` | number | optional | `5000`         | Git exec timeout (ms)               |
+| `AITRI_HUB_MAX_PROJECTS`   | number | optional | `50`           | Maximum registered projects         |
+| `AITRI_HUB_STALE_HOURS`    | number | optional | `72`           | Stale commit threshold (hours)      |
 
 Copy `.env.example` to `.env` and set values as needed.
 
@@ -71,12 +71,12 @@ The `~/.aitri-hub/` data directory is never touched by an install — rollback i
 
 ## Data Persistence
 
-| Path | Purpose | Modified by |
-|---|---|---|
-| `~/.aitri-hub/projects.json` | Registered project list | `/api/projects` (admin UI) |
-| `~/.aitri-hub/dashboard.json` | Latest collected metrics | `aitri-hub web` (collector) |
-| `~/.aitri-hub/cache/` | Cloned remote project repos | `aitri-hub web` (collector) |
-| `~/.aitri-hub/logs/aitri-hub.log` | Error log | `aitri-hub web` (collector) |
+| Path                              | Purpose                     | Modified by                 |
+| --------------------------------- | --------------------------- | --------------------------- |
+| `~/.aitri-hub/projects.json`      | Registered project list     | `/api/projects` (admin UI)  |
+| `~/.aitri-hub/dashboard.json`     | Latest collected metrics    | `aitri-hub web` (collector) |
+| `~/.aitri-hub/cache/`             | Cloned remote project repos | `aitri-hub web` (collector) |
+| `~/.aitri-hub/logs/aitri-hub.log` | Error log                   | `aitri-hub web` (collector) |
 
 ## Security Notes
 

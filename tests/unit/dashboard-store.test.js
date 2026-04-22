@@ -105,7 +105,11 @@ describe('TC-009f: writeDashboard — write failure preserves previous dashboard
     const dashPath = path.join(tmpHubDir, 'dashboard.json');
 
     // Write a valid previous dashboard
-    const prevData = { schemaVersion: '1', collectedAt: new Date().toISOString(), projects: [{ name: 'previous-project' }] };
+    const prevData = {
+      schemaVersion: '1',
+      collectedAt: new Date().toISOString(),
+      projects: [{ name: 'previous-project' }],
+    };
     writeDashboard(prevData);
     assert.ok(fs.existsSync(dashPath), 'initial dashboard.json must exist');
 
@@ -118,7 +122,13 @@ describe('TC-009f: writeDashboard — write failure preserves previous dashboard
     };
 
     // writeDashboard must NOT throw
-    assert.doesNotThrow(() => writeDashboard({ schemaVersion: '1', collectedAt: new Date().toISOString(), projects: [{ name: 'new-project' }] }));
+    assert.doesNotThrow(() =>
+      writeDashboard({
+        schemaVersion: '1',
+        collectedAt: new Date().toISOString(),
+        projects: [{ name: 'new-project' }],
+      }),
+    );
 
     // Restore renameSync before reading
     fs.renameSync = origRenameSync;
@@ -126,7 +136,11 @@ describe('TC-009f: writeDashboard — write failure preserves previous dashboard
 
     // Previous content must be intact
     const content = JSON.parse(fs.readFileSync(dashPath, 'utf8'));
-    assert.equal(content.projects[0].name, 'previous-project', 'previous dashboard.json must be preserved on write failure');
+    assert.equal(
+      content.projects[0].name,
+      'previous-project',
+      'previous dashboard.json must be preserved on write failure',
+    );
   });
 });
 

@@ -103,7 +103,9 @@ describe('TC-011h2: readFeaturePipelines — two features, correct aggregation',
 // ── TC-011e1: no features/ dir ────────────────────────────────────────────────
 describe('TC-011e1: readFeaturePipelines — absent features/ directory', () => {
   let projectDir;
-  before(() => { projectDir = tmpDir(); });
+  before(() => {
+    projectDir = tmpDir();
+  });
   after(() => fs.rmSync(projectDir, { recursive: true, force: true }));
 
   it('returns empty featurePipelines array', () => {

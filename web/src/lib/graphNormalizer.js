@@ -16,13 +16,13 @@
  */
 function phaseStatus(phase, aitriState) {
   if (!aitriState) return 'pending';
-  const phaseStr   = String(phase);
-  const approved   = (aitriState.approvedPhases  ?? []).map(String);
-  const drift      = (aitriState.driftPhases      ?? []).map(String);
+  const phaseStr = String(phase);
+  const approved = (aitriState.approvedPhases ?? []).map(String);
+  const drift = (aitriState.driftPhases ?? []).map(String);
 
   if (approved.includes(phaseStr) && drift.includes(phaseStr)) return 'drift';
-  if (approved.includes(phaseStr))                              return 'approved';
-  if (String(aitriState.currentPhase) === phaseStr)            return 'active';
+  if (approved.includes(phaseStr)) return 'approved';
+  if (String(aitriState.currentPhase) === phaseStr) return 'active';
   return 'pending';
 }
 
@@ -43,11 +43,11 @@ export function normalizeSpecArtifacts(specArtifacts, aitriState) {
   for (const fr of specArtifacts.frs ?? []) {
     nodes.push({
       data: {
-        id:       fr.id,
-        label:    fr.id,
-        title:    fr.title,
-        kind:     'fr',
-        status:   phaseStatus('1', aitriState),
+        id: fr.id,
+        label: fr.id,
+        title: fr.title,
+        kind: 'fr',
+        status: phaseStatus('1', aitriState),
         priority: fr.priority ?? null,
       },
     });
@@ -56,10 +56,10 @@ export function normalizeSpecArtifacts(specArtifacts, aitriState) {
   for (const tc of specArtifacts.tcs ?? []) {
     nodes.push({
       data: {
-        id:     tc.id,
-        label:  tc.id,
-        title:  tc.title,
-        kind:   'tc',
+        id: tc.id,
+        label: tc.id,
+        title: tc.title,
+        kind: 'tc',
         status: phaseStatus('3', aitriState),
       },
     });
@@ -67,7 +67,7 @@ export function normalizeSpecArtifacts(specArtifacts, aitriState) {
       if (!frIds.has(frId)) continue; // skip dangling references
       edges.push({
         data: {
-          id:     `${tc.id}→${frId}`,
+          id: `${tc.id}→${frId}`,
           source: tc.id,
           target: frId,
         },
