@@ -89,6 +89,24 @@ describe('FR-032 — extractSection + hashSection', () => {
     }
   });
 
+  it('TC-032h3: extractSection accepts the conventional `v` prefix on version headings', () => {
+    const CHANGELOG_V_PREFIX = [
+      '# Changelog',
+      '',
+      '## v0.1.85 (2026-04-22) — bugfix',
+      '',
+      'Body for v0.1.85.',
+      '',
+      '## v0.1.84',
+      '',
+      'Body for v0.1.84.',
+      '',
+    ].join('\n');
+    const { body } = extractSection(CHANGELOG_V_PREFIX, '0.1.85');
+    assert.ok(body.includes('Body for v0.1.85.'));
+    assert.ok(!body.includes('Body for v0.1.84.'));
+  });
+
   it('TC-032e2: single-character change flips the digest', () => {
     const h1 = hashSection('Paragraph A.');
     const h2 = hashSection('Paragraph A!.');

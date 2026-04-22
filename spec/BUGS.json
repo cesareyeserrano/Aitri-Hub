@@ -59,6 +59,26 @@
       "created_at": "2026-04-20T19:15:43.624Z",
       "updated_at": "2026-04-20T19:15:43.624Z",
       "resolution": null
+    },
+    {
+      "id": "BG-004",
+      "title": "integration-review changelog parser rejects 'v' prefix in version headings",
+      "description": "",
+      "steps_to_reproduce": [],
+      "expected_result": "",
+      "actual_result": "",
+      "environment": null,
+      "severity": "medium",
+      "status": "verified",
+      "fr": "FR-032",
+      "tc_reference": null,
+      "phase_detected": null,
+      "detected_by": "manual",
+      "evidence": null,
+      "reported_by": null,
+      "created_at": "2026-04-22T05:24:24.249Z",
+      "updated_at": "2026-04-22T05:24:27.660Z",
+      "resolution": null
     }
   ]
 }
