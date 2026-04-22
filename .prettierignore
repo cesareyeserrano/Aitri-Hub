@@ -1,0 +1,11 @@
+node_modules
+web/node_modules
+docker/web-dist
+web/dist
+test-results
+web/test-results
+playwright-report
+package-lock.json
+web/package-lock.json
+spec
+features

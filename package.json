@@ -15,7 +15,11 @@
     "test:feature": "npm test && npm run test:web",
     "test:e2e": "npx playwright test tests/e2e/",
     "test:all": "npm test && npm run test:web && npm run test:e2e",
-    "test:with-vitest": "node --test tests/unit/*.test.js tests/integration/*.test.js && npx playwright test tests/e2e/admin-api.test.js && npm --prefix web run test"
+    "test:with-vitest": "node --test tests/unit/*.test.js tests/integration/*.test.js && npx playwright test tests/e2e/admin-api.test.js && npm --prefix web run test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "files": [
     "bin",
@@ -25,7 +29,12 @@
     "README.md"
   ],
   "devDependencies": {
-    "@playwright/test": "^1.43.0"
-  },
-  "dependencies": {}
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.43.0",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^17.5.0",
+    "prettier": "^3.8.3"
+  }
 }
