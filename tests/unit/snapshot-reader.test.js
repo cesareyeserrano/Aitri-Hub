@@ -129,6 +129,48 @@ describe('TC-011h: projectFromSnapshot — aitriState equivalent to legacy reade
     assert.equal(projected.aitriState.verifyPassed, false);
     assert.deepEqual(projected.aitriState.verifySummary, { passed: 0, failed: 0, total: 0 });
   });
+
+  // BG-007 regression: real CLI emits phase.status='passed' without verifyPassed boolean.
+  it("BG-007: verifyPassed is true when verify phase status === 'passed' (no verifyPassed boolean)", () => {
+    const snapshot = {
+      snapshotVersion: 1,
+      project: 'demo',
+      phases: [
+        { key: 1, status: 'approved' },
+        { key: 2, status: 'approved' },
+        { key: 3, status: 'approved' },
+        { key: 4, status: 'approved' },
+        { key: 5, status: 'approved' },
+        {
+          key: 'verify',
+          name: 'Tests',
+          artifact: '04_TEST_RESULTS.json',
+          optional: false,
+          exists: true,
+          status: 'passed',
+          drift: false,
+          verifySummary: { total: 30, passed: 30, failed: 0, skipped: 0 },
+        },
+      ],
+      driftPhases: [],
+    };
+    const projected = projectFromSnapshot(snapshot);
+    assert.equal(projected.aitriState.verifyPassed, true);
+    assert.deepEqual(projected.aitriState.verifySummary, { total: 30, passed: 30, failed: 0, skipped: 0 });
+  });
+
+  it("BG-007: verifyPassed is false when verify phase status === 'failed'", () => {
+    const snapshot = {
+      snapshotVersion: 1,
+      project: 'demo',
+      phases: [
+        { key: 'verify', status: 'failed', verifySummary: { total: 10, passed: 9, failed: 1, skipped: 0 } },
+      ],
+      driftPhases: [],
+    };
+    const projected = projectFromSnapshot(snapshot);
+    assert.equal(projected.aitriState.verifyPassed, false);
+  });
 });
 
 // ── TC-016h: formatLastSessionLine — verbose 'N days ago' shape ─────────────
