@@ -173,6 +173,45 @@ describe('TC-011h: projectFromSnapshot — aitriState equivalent to legacy reade
   });
 });
 
+// ── BG-008: aggregatedTestSummary sourced from CLI tests.totals ─────────────
+
+describe('BG-008: projectFromSnapshot — aggregatedTestSummary from CLI tests.totals', () => {
+  it('BG-008: exposes passed/total from s.tests.totals (canonical CLI aggregate)', () => {
+    const snapshot = {
+      snapshotVersion: 1,
+      project: 'demo',
+      phases: [{ key: 'verify', status: 'passed', verifySummary: { total: 27, passed: 27, failed: 0, skipped: 0 } }],
+      tests: {
+        totals: { passed: 249, failed: 0, skipped: 45, manual: 0, total: 294 },
+        perPipeline: [],
+      },
+      driftPhases: [],
+    };
+    const projected = projectFromSnapshot(snapshot);
+    assert.deepEqual(projected.aggregatedTestSummary, {
+      available: true,
+      passed: 249,
+      failed: 0,
+      skipped: 45,
+      total: 294,
+    });
+    // Main pipeline summary remains independent.
+    assert.equal(projected.testSummary.passed, 27);
+    assert.equal(projected.testSummary.total, 27);
+  });
+
+  it('BG-008: returns null when snapshot has no tests.totals (legacy)', () => {
+    const snapshot = {
+      snapshotVersion: 1,
+      project: 'demo',
+      phases: [{ key: 'verify', status: 'passed', verifySummary: { total: 10, passed: 10, failed: 0, skipped: 0 } }],
+      driftPhases: [],
+    };
+    const projected = projectFromSnapshot(snapshot);
+    assert.equal(projected.aggregatedTestSummary, null);
+  });
+});
+
 // ── TC-016h: formatLastSessionLine — verbose 'N days ago' shape ─────────────
 
 describe('TC-016h: formatLastSessionLine — verbose relative time', () => {

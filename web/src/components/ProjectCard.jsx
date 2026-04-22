@@ -296,9 +296,14 @@ function StalenessIndicators({ staleVerify, audit }) {
 }
 
 function QualitySection({ project }) {
-  const { testSummary, complianceSummary, requirementsSummary, specQuality, aggregatedTcTotal, health, audit } = project;
-  const effectiveTotal = aggregatedTcTotal ?? testSummary?.total ?? 0;
-  const tests = formatTests(testSummary, effectiveTotal);
+  const { testSummary, aggregatedTestSummary, complianceSummary, requirementsSummary, specQuality, aggregatedTcTotal, health, audit } = project;
+  // Prefer the CLI's canonical aggregate (tests.totals) — both numerator and
+  // denominator from the same source. Fall back to the legacy path (main
+  // pipeline numerator, recomputed aggregate denominator) only for snapshots
+  // or legacy projects that don't expose tests.totals.
+  const aggSource = aggregatedTestSummary ?? null;
+  const effectiveTotal = aggSource?.total ?? aggregatedTcTotal ?? testSummary?.total ?? 0;
+  const tests = formatTests(aggSource ?? testSummary, effectiveTotal);
 
   const hasFrCoverage = requirementsSummary?.available;
   const hasCompliance = complianceSummary?.available;

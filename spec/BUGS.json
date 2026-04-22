@@ -139,6 +139,26 @@
       "created_at": "2026-04-22T16:58:06.376Z",
       "updated_at": "2026-04-22T17:05:24.087Z",
       "resolution": null
+    },
+    {
+      "id": "BG-008",
+      "title": "Hub muestra Tests 27/294 (9%) — numerador del pipeline principal con denominador agregado; ignorar campo canónico CLI tests.totals",
+      "description": "",
+      "steps_to_reproduce": [],
+      "expected_result": "",
+      "actual_result": "",
+      "environment": null,
+      "severity": "medium",
+      "status": "verified",
+      "fr": "FR-004",
+      "tc_reference": null,
+      "phase_detected": null,
+      "detected_by": "manual",
+      "evidence": null,
+      "reported_by": null,
+      "created_at": "2026-04-22T17:26:59.279Z",
+      "updated_at": "2026-04-22T17:43:40.175Z",
+      "resolution": null
     }
   ]
 }
