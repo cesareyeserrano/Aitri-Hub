@@ -1,6 +1,6 @@
 {
   "project_name": "Aitri Hub",
-  "project_summary": "Centralized monitoring dashboard for multiple Aitri-managed projects. Provides a single-pane-of-glass view of pipeline progress, test health, Git activity, and alerts across N projects — via CLI terminal dashboard or React web dashboard served through Docker.\n\nProduct Analysis:\n  North Star KPI: Time-to-insight — user sees all project statuses in ≤5 seconds from running `aitri-hub monitor`.\n  JTBD: 'When I have multiple Aitri projects running in parallel, help me instantly know which ones need attention without cd-ing into each repo.'\n  Guardrail metric: Dashboard render time must stay ≤2s for up to 20 registered projects.",
+  "project_summary": "Centralized monitoring dashboard for multiple Aitri-managed projects. Provides a single-pane-of-glass view of pipeline progress, test health, Git activity, and alerts across N projects — via a React web dashboard served by a local Node.js process (Docker optional) at localhost:3000.\n\nProduct Analysis:\n  North Star KPI: Time-to-insight — user sees all project statuses in ≤5 seconds from opening localhost:3000.\n  JTBD: 'When I have multiple Aitri projects running in parallel, help me instantly know which ones need attention without cd-ing into each repo.'\n  Guardrail metric: Dashboard render time must stay ≤2s for up to 20 registered projects.",
 
   "no_go_zone": [
     "No cloud storage or remote sync — all state lives locally under ~/.aitri-hub/; no external API calls to persist data",
@@ -35,16 +35,18 @@
   "functional_requirements": [
     {
       "id": "FR-001",
-      "title": "Project registration via interactive setup",
-      "description": "User can register N projects (local paths or GitHub/GitLab URLs) through `aitri-hub setup` interactive CLI session. Configuration is saved to ~/.aitri-hub/projects.json.",
+      "title": "Project registration via browser admin UI",
+      "description": "User registers N projects (local paths, GitHub/GitLab URLs, or bulk folder scans) through the browser admin UI at localhost:3000/admin. The UI calls the admin HTTP API (POST /api/projects) which persists to ~/.aitri-hub/projects.json. The admin API is guarded localhost-only (loopback peer check) — no auth required, but remote peers are rejected with 403.",
       "priority": "MUST",
       "type": "persistence",
       "acceptance_criteria": [
-        "Setup completes in ≤5 interactive prompts",
-        "~/.aitri-hub/projects.json is created/updated after setup with valid JSON containing registered project entries",
-        "Local path entries are validated to exist on the filesystem before saving",
-        "Remote GitHub/GitLab URLs are stored as-is without requiring the repo to be cloned at setup time",
-        "Re-running setup does not overwrite existing entries unless user explicitly confirms"
+        "/admin renders a form allowing single-project add, bulk folder scan, and remove actions",
+        "POST /api/projects with type='local' and a valid on-disk directory returns 201 and appends a new entry to ~/.aitri-hub/projects.json",
+        "POST /api/projects with type='remote' and a GitHub/GitLab URL stores the URL as-is without cloning",
+        "POST /api/projects with type='folder' scans child directories and adds each that contains package.json or .aitri/",
+        "DELETE /api/projects/:id removes the entry and returns 204",
+        "Non-loopback peers (not 127.0.0.1 / ::1) calling any /api/* route receive HTTP 403",
+        "Persisted projects.json remains valid JSON across crashes (atomic write via temp file + rename)"
       ],
       "implementation_level": "functional"
     },
@@ -93,28 +95,27 @@
     },
     {
       "id": "FR-005",
-      "title": "CLI terminal dashboard — `aitri-hub monitor`",
-      "description": "Render a terminal dashboard showing all registered projects with their pipeline progress, test status, and alerts. Auto-refreshes every 5 seconds.",
+      "title": "Browser-first empty state when no projects are registered",
+      "description": "When projects.json is empty (or missing), the browser dashboard at localhost:3000 renders an onboarding empty state instead of a broken grid or CLI wizard prompt. The empty state has a single primary CTA that routes the user to /admin to register their first project.",
       "priority": "MUST",
       "type": "UX",
       "acceptance_criteria": [
-        "Dashboard renders within ≤2 seconds of running `aitri-hub monitor` for up to 20 projects",
-        "Each project row displays: name, phase progress (e.g. '3/5 phases approved'), verify status, last commit age, and alert count",
-        "Projects with active alerts are visually distinguished from healthy projects (e.g. different prefix character or label)",
-        "Dashboard auto-refreshes every 5 seconds without requiring user input",
-        "Dashboard renders correctly in a terminal with width ≥80 columns",
-        "User can exit the monitor with Ctrl+C without leaving the terminal in a broken state (cursor restored, no orphaned process)"
+        "GET / with zero projects shows an onboarding panel with title 'No projects yet', descriptive body copy, and a primary CTA 'Add your first project'",
+        "Clicking the CTA navigates to /admin and the registration form is visible on arrival",
+        "The empty state includes a disclosure 'What counts as a project?' explaining .aitri/ directory and Aitri snapshot detection",
+        "No terminal-wizard or CLI-command text appears anywhere in the empty-state copy",
+        "Layout of the empty state fits within a single viewport at ≥768px height without vertical scroll"
       ],
       "implementation_level": "functional"
     },
     {
       "id": "FR-006",
-      "title": "Web dashboard — React served via Docker at localhost:3000",
-      "description": "Provide a React web dashboard accessible at localhost:3000 via a single command (`aitri-hub web` or `docker compose up`). Shows the same data as the CLI dashboard in a visual layout with auto-refresh.",
+      "title": "Web dashboard — React served by the Node process at localhost:3000",
+      "description": "Provide a React web dashboard accessible at localhost:3000 via `aitri-hub web` (primary) or `docker compose up` (optional packaged deployment). Renders all registered projects with auto-refresh.",
       "priority": "MUST",
       "type": "UX",
       "acceptance_criteria": [
-        "Running `aitri-hub web` or `docker compose up` makes the dashboard accessible at http://localhost:3000 within 30 seconds on a machine with Docker installed",
+        "Running `aitri-hub web` makes the dashboard accessible at http://localhost:3000 within 5 seconds on a machine with Node.js 18+ installed (Docker path is optional and may take longer on first build)",
         "Dashboard renders all registered projects within ≤2 seconds of page load for up to 20 projects",
         "Each project card displays: name, phase progress, verify pass/fail counts, last commit timestamp, active branch, and alerts",
         "Dashboard auto-refreshes every 5 seconds without a full page reload",
@@ -174,14 +175,14 @@
       "id": "US-001",
       "requirement_id": "FR-001",
       "as_a": "solo developer",
-      "i_want": "to register all my Aitri projects in one setup session",
-      "so_that": "I don't have to configure each project individually every time I use the dashboard",
+      "i_want": "to register all my Aitri projects from the browser admin UI",
+      "so_that": "I can add, remove, and bulk-scan projects visually without memorizing CLI flags",
       "acceptance_criteria": [
         {
           "id": "AC-001",
-          "given": "the user has 3 local Aitri projects and runs `aitri-hub setup`",
-          "when": "they answer ≤5 prompts providing project paths and preferred interface",
-          "then": "~/.aitri-hub/projects.json exists with 3 valid entries and setup exits with code 0"
+          "given": "the user has 3 local Aitri projects and opens localhost:3000/admin",
+          "when": "they submit the add-project form 3 times (or use bulk folder scan once)",
+          "then": "~/.aitri-hub/projects.json contains 3 valid entries and each appears in the dashboard grid without a page reload"
         }
       ]
     },
@@ -245,21 +246,21 @@
     {
       "id": "US-005",
       "requirement_id": "FR-005",
-      "as_a": "solo developer",
-      "i_want": "to run `aitri-hub monitor` and see all projects in the terminal",
-      "so_that": "I can assess the state of all my work in one glance without leaving the terminal",
+      "as_a": "new user with no projects registered",
+      "i_want": "the browser dashboard to guide me to the admin UI instead of showing an empty or broken screen",
+      "so_that": "I can get from zero to my first registered project in one click",
       "acceptance_criteria": [
         {
           "id": "AC-007",
-          "given": "5 registered projects and `aitri-hub monitor` running",
+          "given": "projects.json is empty (or missing) and the user opens localhost:3000",
           "when": "the dashboard first renders",
-          "then": "all 5 projects are visible within 2 seconds, each showing name, phase progress, verify status, last commit age, and alert count"
+          "then": "an onboarding panel is visible with title 'No projects yet' and a primary CTA 'Add your first project'"
         },
         {
           "id": "AC-008",
-          "given": "`aitri-hub monitor` running and one project's .aitri file is updated",
-          "when": "5 seconds elapse",
-          "then": "the dashboard re-renders showing the updated state without user interaction"
+          "given": "the onboarding panel is shown",
+          "when": "the user clicks the primary CTA",
+          "then": "the browser navigates to /admin and the registration form is visible on arrival"
         }
       ]
     },
@@ -344,14 +345,14 @@
     {
       "id": "NFR-003",
       "category": "Usability",
-      "requirement": "Setup must be completable by a developer with no prior aitri-hub knowledge",
-      "acceptance_criteria": "A developer unfamiliar with aitri-hub completes setup in ≤15 minutes using only the prompts shown by `aitri-hub setup`, without consulting external documentation"
+      "requirement": "First-project registration must be completable by a developer with no prior aitri-hub knowledge",
+      "acceptance_criteria": "A developer unfamiliar with aitri-hub runs `aitri-hub web`, opens localhost:3000, clicks the onboarding CTA, and registers their first project through the /admin form in ≤15 minutes without consulting external documentation"
     },
     {
       "id": "NFR-004",
       "category": "Portability",
-      "requirement": "CLI dashboard must work on macOS, Linux, and Windows (WSL2) with Node.js 18+",
-      "acceptance_criteria": "`aitri-hub monitor` produces correct output on macOS 13+, Ubuntu 22.04+, and Windows 11 WSL2 with Node.js ≥18.0.0 installed"
+      "requirement": "Web dashboard must work on macOS, Linux, and Windows (WSL2) with Node.js 18+",
+      "acceptance_criteria": "`aitri-hub web` serves localhost:3000 correctly on macOS 13+, Ubuntu 22.04+, and Windows 11 WSL2 with Node.js ≥18.0.0 installed"
     },
     {
       "id": "NFR-005",
@@ -362,14 +363,15 @@
   ],
 
   "constraints": [
-    "Node.js 18+ for CLI; Docker required for web dashboard",
-    "Zero npm runtime dependencies for CLI — Node.js built-ins only (mirrors Aitri's design principle)",
-    "All persistent data written under ~/.aitri-hub/ — no writes to project directories"
+    "Node.js 18+ for the web dashboard; Docker is optional (packaged deployment only)",
+    "Zero npm runtime dependencies for the Node server — Node.js built-ins only (mirrors Aitri's design principle)",
+    "All persistent data written under ~/.aitri-hub/ — no writes to project directories",
+    "Admin HTTP API is localhost-only — loopback peer guard on all /api/* routes, no auth"
   ],
 
   "technology_preferences": [
-    "CLI: Node.js (ESM, zero dependencies)",
-    "Web: React (served via Docker)",
-    "Data exchange: JSON files (dashboard.json read by frontend)"
+    "Server: Node.js (ESM, zero runtime dependencies)",
+    "Web: React + Vite, bundled to docker/web-dist/ and served by the Node process",
+    "Data exchange: JSON files under ~/.aitri-hub/ (projects.json, dashboard.json)"
   ]
 }

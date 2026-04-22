@@ -81,6 +81,16 @@
       "problem": "evaluateAlerts aggregates many rules in one function; rule-array refactor would isolate changes and enable per-rule metrics",
       "status": "open",
       "createdAt": "2026-04-20T19:16:04.586Z"
+    },
+    {
+      "id": "BL-011",
+      "title": "Retire parent FR-001 / FR-005 post hub-web-only",
+      "priority": "P2",
+      "problem": "Parent-pipeline FR-001 (cmdSetup interactive setup) and FR-005 (CLI monitor render) are obsolete post hub-web-only feature — the cmdSetup and monitor modules were deleted. Their TCs (TC-001h/e/f, TC-005h/e/f) have zero passing coverage because the behavior no longer exists. Rewrite both FRs to reflect the web-only posture (browser registration at /admin, SPA-rendered dashboard) and cascade the changes through tests/manifest/compliance. Currently blocks aitri verify-complete at parent level.",
+      "status": "closed",
+      "createdAt": "2026-04-21T23:40:23.989Z",
+      "fr_id": "FR-001",
+      "closedAt": "2026-04-22T05:18:18.194Z"
     }
   ]
 }

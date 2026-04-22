@@ -1,142 +1,142 @@
 {
-  "executed_at": "2026-04-21T02:49:50.204Z",
-  "test_runner": "node --test tests/unit/aitri-reader.test.js tests/unit/git-reader.test.js tests/unit/test-reader.test.js tests/unit/alerts-engine.test.js tests/unit/monitor-stub.test.js tests/unit/dashboard-store.test.js tests/unit/web-config.test.js tests/unit/graph-components.test.js tests/unit/spec-reader.test.js tests/unit/graph-normalizer.test.js tests/integration/setup.test.js tests/integration/dashboard-write.test.js tests/integration/remote-collector.test.js",
+  "executed_at": "2026-04-22T05:18:06.501Z",
+  "test_runner": "node --test tests/unit/*.test.js tests/integration/*.test.js",
   "exit_code": 0,
   "results": [
     {
       "tc_id": "TC-001h",
       "status": "pass",
-      "notes": "✔ TC-001h: writeProjects + readProjects — 2 valid local projects (7.547833ms)"
+      "notes": "✔ TC-001h: help lists only the 4 allowed commands (66.101875ms)"
     },
     {
       "tc_id": "TC-001e",
       "status": "pass",
-      "notes": "✔ TC-001e: writeProjects — preserves existing data until explicitly overwritten (3.335959ms)"
+      "notes": "✔ TC-001e: folder scan helper returns only children with a .aitri/ directory (1.887667ms)"
     },
     {
       "tc_id": "TC-001f",
       "status": "pass",
-      "notes": "✔ TC-001f: classifyAndValidate — non-existent path returns valid=false (0.828417ms)"
+      "notes": "✔ TC-001f: monitor exits 1 with 'Unknown command' (62.779042ms)"
     },
     {
       "tc_id": "TC-002h",
       "status": "pass",
-      "notes": "✔ TC-002h: readAitriState — valid .aitri extracts all fields (3.075208ms)"
+      "notes": "✔ TC-002h: readAitriState — valid .aitri extracts all fields (6.558667ms)"
     },
     {
       "tc_id": "TC-002e",
       "status": "pass",
-      "notes": "✔ TC-002e: readAitriState — rejection entry extracted correctly (0.793459ms)"
+      "notes": "✔ TC-002e: readAitriState — rejection entry extracted correctly (1.409042ms)"
     },
     {
       "tc_id": "TC-002f",
       "status": "pass",
-      "notes": "✔ TC-002f: readAitriState — malformed JSON returns null (0.480166ms)"
+      "notes": "✔ TC-002f: setup exits 1 with 'Unknown command' (56.605625ms)"
     },
     {
       "tc_id": "TC-003h",
       "status": "pass",
-      "notes": "✔ TC-003h: readGitMeta — active git repo returns correct metadata (920.795958ms)"
+      "notes": "✔ TC-003h: readGitMeta — active git repo returns correct metadata (955.7875ms)"
     },
     {
       "tc_id": "TC-003e",
       "status": "pass",
-      "notes": "✔ TC-003e: evaluateAlerts — 73h stale commit generates stale alert (0.20875ms)"
+      "notes": "✔ TC-003e: evaluateAlerts — 73h stale commit generates stale alert (0.228375ms)"
     },
     {
       "tc_id": "TC-003f",
       "status": "pass",
-      "notes": "✔ TC-003f: readGitMeta — non-git directory returns null (19.402667ms)"
+      "notes": "✔ TC-003f: init exits 1 within 2s without blocking on stdin (61.750667ms)"
     },
     {
       "tc_id": "TC-004h",
       "status": "pass",
-      "notes": "✔ TC-004h: readTestSummary — valid file returns correct summary (4.1575ms)"
+      "notes": "✔ TC-004h: readTestSummary — valid file returns correct summary (1.995542ms)"
     },
     {
       "tc_id": "TC-004e",
       "status": "pass",
-      "notes": "✔ TC-004e: evaluateAlerts — testSummary.failed=2 generates tests-failing alert (0.136333ms)"
+      "notes": "✔ TC-004e: no args prints usage, exit 0 (58.459ms)"
     },
     {
       "tc_id": "TC-004f",
       "status": "pass",
-      "notes": "✔ TC-004f: readTestSummary — absent file returns null (0.776041ms)"
+      "notes": "✔ TC-004f: readTestSummary — absent file returns null (0.475708ms)"
     },
     {
       "tc_id": "TC-005h",
       "status": "pass",
-      "notes": "✔ TC-005h: aitri-hub monitor — stub exits 0 with notice (99.98825ms)"
+      "notes": "✔ TC-005h: bundled SPA ships onboarding title, CTA and /admin target (0.305208ms)"
     },
     {
       "tc_id": "TC-005e",
       "status": "pass",
-      "notes": "✔ TC-005e: aitri-hub help — monitor is not listed (36.520375ms)"
+      "notes": "✔ TC-005e: --version prints semver, exit 0 (54.889416ms)"
     },
     {
       "tc_id": "TC-005f",
       "status": "pass",
-      "notes": "✔ TC-005f: aitri-hub monitor — no crash in empty environment (36.45825ms)"
+      "notes": "✔ TC-005f: HomeView source renders empty-state onboarding panel when projects is empty (0.123917ms)"
     },
     {
       "tc_id": "TC-006h",
       "status": "pass",
-      "notes": "✔ TC-006h: web dashboard — Docker deployment artifacts are configured (3.0955ms)"
+      "notes": "✔ TC-006h: web dashboard — Docker deployment artifacts are configured (1.837083ms)"
     },
     {
       "tc_id": "TC-006e",
       "status": "pass",
-      "notes": "✔ TC-006e: web dashboard — React app has responsive CSS configuration (2.790458ms)"
+      "notes": "✔ TC-006e: web dashboard — React app has responsive CSS configuration (1.579667ms)"
     },
     {
       "tc_id": "TC-006f",
       "status": "pass",
-      "notes": "✔ TC-006f: web dashboard — error and empty state components are implemented (0.559667ms)"
+      "notes": "✔ TC-006f: web dashboard — error and empty state components are implemented (0.320584ms)"
     },
     {
       "tc_id": "TC-007h",
       "status": "pass",
-      "notes": "✔ TC-007h: evaluateAlerts — healthy project returns empty array (53.754375ms)"
+      "notes": "✔ TC-007h: deleted command modules are absent (0.126167ms)"
     },
     {
       "tc_id": "TC-007e",
       "status": "pass",
-      "notes": "✔ TC-007e: evaluateAlerts — 4 concurrent alerts returned (1.195083ms)"
+      "notes": "✔ TC-007e: evaluateAlerts — 4 concurrent alerts returned (1.466875ms)"
     },
     {
       "tc_id": "TC-007f",
       "status": "pass",
-      "notes": "✔ TC-007f: evaluateAlerts — verifyPassed=false generates verify-failed alert (0.375167ms)"
+      "notes": "✔ TC-007f: evaluateAlerts — verifyPassed=false generates verify-failed alert (0.34ms)"
     },
     {
       "tc_id": "TC-008h",
       "status": "pass",
-      "notes": "✔ TC-008h: collectOne — first run clones remote project to cache (514.037416ms)"
+      "notes": "✔ TC-008h: no source file imports init/setup/monitor commands (4.684459ms)"
     },
     {
       "tc_id": "TC-008e",
       "status": "pass",
-      "notes": "✔ TC-008e: collectOne — subsequent run pulls existing cache (no re-clone) (413.995333ms)"
+      "notes": "✔ TC-008e: collectOne — subsequent run pulls existing cache (no re-clone) (399.537ms)"
     },
     {
       "tc_id": "TC-008f",
       "status": "pass",
-      "notes": "✔ TC-008f: collectOne — unreachable remote shows cache-stale, no crash (57.959917ms)"
+      "notes": "✔ TC-008f: collectOne — unreachable remote shows cache-stale, no crash (59.110084ms)"
     },
     {
       "tc_id": "TC-009h",
       "status": "pass",
-      "notes": "✔ TC-009h: writeDashboard — writes valid JSON dashboard.json (6.130917ms)"
+      "notes": "✔ TC-009h: obsolete test files are absent (0.121917ms)"
     },
     {
       "tc_id": "TC-009e",
       "status": "pass",
-      "notes": "✔ TC-009e: writeDashboard — uses atomic temp+rename pattern (0.79225ms)"
+      "notes": "✔ TC-009e: writeDashboard — uses atomic temp+rename pattern (0.740417ms)"
     },
     {
       "tc_id": "TC-009f",
       "status": "pass",
-      "notes": "✔ TC-009f: previous dashboard.json survives when renameSync throws ENOSPC (0.478042ms)"
+      "notes": "✔ TC-009f: previous dashboard.json survives when renameSync throws ENOSPC (0.80725ms)"
     }
   ],
   "fr_coverage": [

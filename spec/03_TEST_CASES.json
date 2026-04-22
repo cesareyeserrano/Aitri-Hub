@@ -1,102 +1,168 @@
 {
   "test_plan": {
-    "strategy": "Unit tests for all logic/persistence modules; integration tests for file I/O and git execution; E2E tests via Playwright for CLI monitor and web dashboard. Every FR must have at minimum a happy-path, edge-case, and negative test. All Given/When/Then use concrete values per SPEC-SEALED rule.",
+    "strategy": "Unit tests for all logic/persistence modules; integration tests for file I/O, git execution, and bundled-SPA assertions; E2E tests via Node/HTTP clients for the admin API and via Playwright for the browser dashboard. Every FR must have at minimum a happy-path, edge-case, and negative test. All Given/When/Then use concrete values per SPEC-SEALED rule.",
     "coverage_goal": "80%",
-    "test_types": ["unit", "integration", "e2e"]
+    "test_types": [
+      "unit",
+      "integration",
+      "e2e"
+    ]
   },
-
   "type_coverage_matrix": [
-    { "fr_id": "FR-001", "fr_type": "persistence", "unit": "MUST", "integration": "MUST", "e2e": "-"    },
-    { "fr_id": "FR-002", "fr_type": "logic",       "unit": "MUST", "integration": "SHOULD","e2e": "-"   },
-    { "fr_id": "FR-003", "fr_type": "logic",       "unit": "MUST", "integration": "SHOULD","e2e": "-"   },
-    { "fr_id": "FR-004", "fr_type": "reporting",   "unit": "MUST", "integration": "MUST", "e2e": "-"    },
-    { "fr_id": "FR-005", "fr_type": "UX",          "unit": "SHOULD","integration": "-",   "e2e": "MUST" },
-    { "fr_id": "FR-006", "fr_type": "UX",          "unit": "-",    "integration": "SHOULD","e2e": "MUST" },
-    { "fr_id": "FR-007", "fr_type": "logic",       "unit": "MUST", "integration": "SHOULD","e2e": "-"   },
-    { "fr_id": "FR-008", "fr_type": "logic",       "unit": "MUST", "integration": "SHOULD","e2e": "-"   },
-    { "fr_id": "FR-009", "fr_type": "persistence", "unit": "MUST", "integration": "MUST", "e2e": "-"    }
+    {
+      "fr_id": "FR-001",
+      "fr_type": "persistence",
+      "unit": "MUST",
+      "integration": "MUST",
+      "e2e": "-"
+    },
+    {
+      "fr_id": "FR-002",
+      "fr_type": "logic",
+      "unit": "MUST",
+      "integration": "SHOULD",
+      "e2e": "-"
+    },
+    {
+      "fr_id": "FR-003",
+      "fr_type": "logic",
+      "unit": "MUST",
+      "integration": "SHOULD",
+      "e2e": "-"
+    },
+    {
+      "fr_id": "FR-004",
+      "fr_type": "reporting",
+      "unit": "MUST",
+      "integration": "MUST",
+      "e2e": "-"
+    },
+    {
+      "fr_id": "FR-005",
+      "fr_type": "UX",
+      "unit": "SHOULD",
+      "integration": "-",
+      "e2e": "MUST"
+    },
+    {
+      "fr_id": "FR-006",
+      "fr_type": "UX",
+      "unit": "-",
+      "integration": "SHOULD",
+      "e2e": "MUST"
+    },
+    {
+      "fr_id": "FR-007",
+      "fr_type": "logic",
+      "unit": "MUST",
+      "integration": "SHOULD",
+      "e2e": "-"
+    },
+    {
+      "fr_id": "FR-008",
+      "fr_type": "logic",
+      "unit": "MUST",
+      "integration": "SHOULD",
+      "e2e": "-"
+    },
+    {
+      "fr_id": "FR-009",
+      "fr_type": "persistence",
+      "unit": "MUST",
+      "integration": "MUST",
+      "e2e": "-"
+    }
   ],
-
   "test_cases": [
-
     {
       "id": "TC-001h",
       "requirement_id": "FR-001",
       "user_story_id": "US-001",
       "ac_id": "AC-001",
-      "title": "Setup — 2 valid local paths saved to projects.json",
-      "type": "integration",
+      "title": "Admin API — POST /api/projects with type='local' + valid dir returns 201 and persists entry",
+      "type": "e2e",
       "scenario": "happy_path",
       "priority": "high",
       "preconditions": [
-        "~/.aitri-hub/ directory does not exist",
-        "/tmp/proj-a/ and /tmp/proj-b/ directories exist on the filesystem"
+        "Hub server running at http://127.0.0.1:3000",
+        "~/.aitri-hub/projects.json does not exist or is empty",
+        "/tmp/proj-a/ exists on the filesystem"
       ],
-      "given": "no ~/.aitri-hub/projects.json exists and /tmp/proj-a/ and /tmp/proj-b/ exist on disk",
-      "when": "cmdSetup() is called with mock readline returning: count='2', name1='proj-a', location1='/tmp/proj-a', name2='proj-b', location2='/tmp/proj-b', interface='cli', confirm='y'",
-      "then": "~/.aitri-hub/projects.json exists, JSON is valid, projects array has exactly 2 entries with location='/tmp/proj-a' and location='/tmp/proj-b', defaultInterface='cli', process exits with code 0",
+      "given": "server is running, projects.json is empty, /tmp/proj-a/ exists",
+      "when": "POST http://127.0.0.1:3000/api/projects with JSON body { type: 'local', name: 'proj-a', location: '/tmp/proj-a' }",
+      "then": "response status is 201, response body includes the new project with a generated id, projects.json now contains exactly 1 entry whose location is /tmp/proj-a",
       "steps": [
-        "Call cmdSetup() with mock readline providing 7 answers in order",
-        "Assert fs.existsSync('~/.aitri-hub/projects.json') === true",
-        "Assert JSON.parse(fs.readFileSync(...)).projects.length === 2",
-        "Assert projects[0].location === '/tmp/proj-a'",
-        "Assert projects[1].location === '/tmp/proj-b'"
+        "Boot hub server on loopback",
+        "Send POST /api/projects with valid local-path payload",
+        "Assert status === 201",
+        "Assert readProjects().projects.length === 1",
+        "Assert readProjects().projects[0].location === '/tmp/proj-a'"
       ],
-      "expected_result": "projects.json written with 2 entries, both with correct location values and type='local'",
-      "test_data": { "paths": ["/tmp/proj-a", "/tmp/proj-b"], "interface": "cli" }
+      "expected_result": "projects.json persists the new local entry; admin API acknowledges with 201",
+      "test_data": {
+        "type": "local",
+        "path": "/tmp/proj-a"
+      },
+      "covered_by": "tests/e2e/admin-api.test.js (TC-e2eAdminAdd / TC-023h — hub-web-only feature)"
     },
-
     {
       "id": "TC-001e",
       "requirement_id": "FR-001",
       "user_story_id": "US-001",
       "ac_id": "AC-001",
-      "title": "Setup — re-run with existing projects.json prompts for overwrite confirmation",
-      "type": "unit",
+      "title": "Admin API — POST /api/projects with type='folder' scans and persists child projects",
+      "type": "e2e",
       "scenario": "edge_case",
       "priority": "medium",
       "preconditions": [
-        "~/.aitri-hub/projects.json already exists with 1 entry: { name: 'existing', location: '/tmp/existing' }"
+        "Hub server running at http://127.0.0.1:3000",
+        "/tmp/scan-root/ contains 2 child dirs each with package.json, and 1 child with neither package.json nor .aitri/"
       ],
-      "given": "~/.aitri-hub/projects.json exists with content { projects: [{ name: 'existing', location: '/tmp/existing' }] }",
-      "when": "cmdSetup() is called with mock readline returning 'n' as first answer (decline overwrite)",
-      "then": "projects.json still contains the original entry { name: 'existing', location: '/tmp/existing' }, no new entries added, process exits with code 0",
+      "given": "/tmp/scan-root/ has children: childA/package.json, childB/package.json, childC/README.md",
+      "when": "POST /api/projects with JSON body { type: 'folder', location: '/tmp/scan-root' }",
+      "then": "response status is 201, projects.json contains 2 new entries for childA and childB, childC is skipped",
       "steps": [
-        "Write existing projects.json with 1 entry before test",
-        "Call cmdSetup() with mock readline that returns 'n' to overwrite prompt",
-        "Assert projects.json unchanged: JSON.parse(...).projects.length === 1",
-        "Assert projects[0].location === '/tmp/existing'"
+        "Prepare scan-root fixture with 3 children",
+        "POST /api/projects with type=folder payload",
+        "Assert status === 201",
+        "Assert projects.json contains exactly 2 new entries",
+        "Assert the skipped child (childC) is not in the list"
       ],
-      "expected_result": "projects.json content unchanged; setup aborts without modifying existing config",
-      "test_data": { "existingEntry": { "name": "existing", "location": "/tmp/existing" } }
+      "expected_result": "Folder scan persists only children that look like projects (package.json or .aitri/)",
+      "test_data": {
+        "type": "folder",
+        "root": "/tmp/scan-root",
+        "expectedAdds": 2
+      },
+      "covered_by": "tests/e2e/admin-api.test.js (TC-e2eFolderScan / TC-025f — hub-web-only feature)"
     },
-
     {
       "id": "TC-001f",
       "requirement_id": "FR-001",
       "user_story_id": "US-001",
       "ac_id": "AC-001",
-      "title": "Setup — non-existent local path triggers re-prompt, not crash",
-      "type": "unit",
+      "title": "Admin API — non-loopback peer calling /api/projects is rejected with 403",
+      "type": "e2e",
       "scenario": "negative",
       "priority": "high",
       "preconditions": [
-        "/tmp/does-not-exist-xyz/ does not exist on the filesystem"
+        "Hub server running bound to 127.0.0.1:3000"
       ],
-      "given": "no ~/.aitri-hub/projects.json exists and /tmp/does-not-exist-xyz/ does not exist on disk",
-      "when": "cmdSetup() is called with mock readline returning: count='1', location1='/tmp/does-not-exist-xyz' (first attempt), then location1='/tmp/proj-a' (second attempt after re-prompt), name='proj-a', interface='cli', confirm='y'; and /tmp/proj-a/ exists",
-      "then": "process does NOT throw; a re-prompt message containing 'not found' is printed; final projects.json is written with location='/tmp/proj-a'",
+      "given": "server is listening on loopback only",
+      "when": "a request arrives at /api/projects with a non-loopback remote address (simulated via X-Forwarded-For or by binding test client to a non-loopback interface)",
+      "then": "response status is 403 and projects.json is unchanged",
       "steps": [
-        "Mock readline: first path answer = '/tmp/does-not-exist-xyz', second = '/tmp/proj-a'",
-        "Call cmdSetup()",
-        "Assert no exception thrown",
-        "Assert output includes 'not found' or 'does not exist'",
-        "Assert projects.json written with projects[0].location === '/tmp/proj-a'"
+        "Boot server",
+        "Send request with mocked remoteAddress = 10.0.0.5",
+        "Assert status === 403",
+        "Assert projects.json was not modified"
       ],
-      "expected_result": "Error message 'Path not found. Enter an existing directory.' printed; setup re-prompts and completes successfully on second attempt with valid path",
-      "test_data": { "invalidPath": "/tmp/does-not-exist-xyz", "validPath": "/tmp/proj-a" }
+      "expected_result": "Admin API refuses non-loopback peers with 403; no side effects on persisted state",
+      "test_data": {
+        "remoteAddress": "10.0.0.5"
+      },
+      "covered_by": "tests/e2e/admin-api.test.js (TC-NFR010f/h/e — hub-web-only feature)"
     },
-
     {
       "id": "TC-002h",
       "requirement_id": "FR-002",
@@ -124,9 +190,30 @@
         "Assert result.lastRejection === null"
       ],
       "expected_result": "All fields extracted correctly; hasDrift=false because no artifact hash mismatch",
-      "test_data": { "aitriContent": { "currentPhase": 4, "approvedPhases": [1,2,3], "completedPhases": [1,2,3,4], "verifyPassed": true, "verifySummary": { "passed": 28, "failed": 0, "skipped": 2, "total": 30 } } }
+      "test_data": {
+        "aitriContent": {
+          "currentPhase": 4,
+          "approvedPhases": [
+            1,
+            2,
+            3
+          ],
+          "completedPhases": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "verifyPassed": true,
+          "verifySummary": {
+            "passed": 28,
+            "failed": 0,
+            "skipped": 2,
+            "total": 30
+          }
+        }
+      }
     },
-
     {
       "id": "TC-002e",
       "requirement_id": "FR-002",
@@ -151,7 +238,6 @@
       "expected_result": "lastRejection extracted with correct phase, timestamp, and feedback string",
       "test_data": {}
     },
-
     {
       "id": "TC-002f",
       "requirement_id": "FR-002",
@@ -174,9 +260,10 @@
         "Assert return value === null"
       ],
       "expected_result": "Returns null; does not throw; calling code sets project status to 'unreadable'",
-      "test_data": { "malformedContent": "{ \"currentPhase\": 2, INVALID" }
+      "test_data": {
+        "malformedContent": "{ \"currentPhase\": 2, INVALID"
+      }
     },
-
     {
       "id": "TC-003h",
       "requirement_id": "FR-003",
@@ -202,9 +289,11 @@
         "Assert result.lastCommitAgeHours >= 2.4 && <= 2.6"
       ],
       "expected_result": "isGitRepo=true, branch='main', lastCommitAt accurate to within 1 minute of actual commit time",
-      "test_data": { "commitTimestamp": "2026-03-13T08:00:00Z", "branch": "main" }
+      "test_data": {
+        "commitTimestamp": "2026-03-13T08:00:00Z",
+        "branch": "main"
+      }
     },
-
     {
       "id": "TC-003e",
       "requirement_id": "FR-003",
@@ -228,9 +317,10 @@
         "Assert result[0].message === 'No commits in 73h'"
       ],
       "expected_result": "One alert { type: 'stale', message: 'No commits in 73h', severity: 'warning' } returned",
-      "test_data": { "lastCommitAgeHours": 73.0 }
+      "test_data": {
+        "lastCommitAgeHours": 73
+      }
     },
-
     {
       "id": "TC-003f",
       "requirement_id": "FR-003",
@@ -255,7 +345,6 @@
       "expected_result": "Returns null; calling code shows 'Last commit: N/A' in dashboard",
       "test_data": {}
     },
-
     {
       "id": "TC-004h",
       "requirement_id": "FR-004",
@@ -280,9 +369,12 @@
         "Assert result.frCoverage[0].status === 'covered'"
       ],
       "expected_result": "TestSummary with available=true, correct counts, and frCoverage array extracted",
-      "test_data": { "passed": 28, "failed": 0, "total": 30 }
+      "test_data": {
+        "passed": 28,
+        "failed": 0,
+        "total": 30
+      }
     },
-
     {
       "id": "TC-004e",
       "requirement_id": "FR-004",
@@ -304,9 +396,10 @@
         "Assert result[0].message === 'Tests failing (2)'"
       ],
       "expected_result": "One alert { type: 'tests-failing', message: 'Tests failing (2)', severity: 'error' } returned",
-      "test_data": { "failed": 2 }
+      "test_data": {
+        "failed": 2
+      }
     },
-
     {
       "id": "TC-004f",
       "requirement_id": "FR-004",
@@ -331,87 +424,81 @@
       "expected_result": "Returns null; calling code renders 'Tests: N/A' in dashboard",
       "test_data": {}
     },
-
     {
       "id": "TC-005h",
       "requirement_id": "FR-005",
       "user_story_id": "US-005",
       "ac_id": "AC-007",
-      "title": "CLI monitor — 5 projects render within 2 seconds at 80-column terminal",
-      "type": "e2e",
+      "title": "Empty-state — bundled SPA contains onboarding panel with /admin CTA",
+      "type": "integration",
       "scenario": "happy_path",
       "priority": "high",
       "preconditions": [
-        "~/.aitri-hub/projects.json exists with 5 local project entries",
-        "Each project has a valid .aitri file with approvedPhases=[1,2,3], currentPhase=4, verifyPassed=true",
-        "Each project has a git repo with last commit < 24h ago",
-        "Terminal width = 80 columns"
+        "docker/web-dist/assets/*.js has been built from current web/src/"
       ],
-      "given": "~/.aitri-hub/projects.json contains 5 project entries (proj-1 through proj-5), each with a valid .aitri and git history, and process.stdout.columns=80",
-      "when": "cmdMonitor() is called with _singleCycle=true (renders once and returns without looping)",
-      "then": "output string contains all 5 project names (proj-1, proj-2, proj-3, proj-4, proj-5), contains column headers 'PROJECT', 'PHASES', 'TESTS', 'LAST COMMIT', 'ALERTS', and renderDashboard() returns within 2000ms",
+      "given": "a fresh production build of the SPA exists in docker/web-dist/",
+      "when": "the bundled main JS is read and searched",
+      "then": "the bundle contains the literal string 'Add your first project' and the route '/admin'",
       "steps": [
-        "Set up 5 temp project directories with .aitri and git history",
-        "Write projects.json pointing to these dirs",
-        "Record start time",
-        "Call cmdMonitor({ singleCycle: true })",
-        "Record end time",
-        "Assert (end - start) < 2000",
-        "Assert output.includes('proj-1') && output.includes('proj-5')",
-        "Assert output.includes('PROJECT') && output.includes('PHASES')"
+        "Read docker/web-dist/assets/index-*.js",
+        "Assert it includes 'Add your first project'",
+        "Assert it includes '/admin'"
       ],
-      "expected_result": "All 5 project rows visible in output, column headers present, render time < 2000ms",
-      "test_data": { "projectCount": 5, "terminalWidth": 80 }
+      "expected_result": "Onboarding CTA is embedded in the shipped bundle; a user loading / with no projects sees the empty state",
+      "test_data": {},
+      "covered_by": "tests/integration/hub-web-only.test.js (TC-011h — hub-web-only feature)"
     },
-
     {
       "id": "TC-005e",
       "requirement_id": "FR-005",
       "user_story_id": "US-005",
       "ac_id": "AC-007",
-      "title": "CLI renderer — 60-column terminal hides ALERTS column",
-      "type": "unit",
+      "title": "Empty-state — bundled SPA contains no references to removed CLI commands",
+      "type": "integration",
       "scenario": "edge_case",
       "priority": "medium",
-      "preconditions": [],
-      "given": "a DashboardData object with 1 project (name='my-app', status='warning', alerts=[{ type:'stale', message:'No commits in 80h' }])",
-      "when": "renderDashboard(dashboardData, 60) is called with terminalWidth=60",
-      "then": "returned string does NOT contain standalone 'ALERTS' column header, but DOES contain 'my-app' and the alert is indicated as a suffix on the project row (e.g. '⚠' on the project name line)",
-      "steps": [
-        "Construct dashboardData with 1 warning project",
-        "Call renderDashboard(dashboardData, 60)",
-        "Assert output does not contain 'ALERTS' as a column header",
-        "Assert output contains 'my-app'"
+      "preconditions": [
+        "docker/web-dist/assets/*.js has been built from current web/src/"
       ],
-      "expected_result": "ALERTS column absent; alert indicator present on project row suffix; no horizontal overflow",
-      "test_data": { "terminalWidth": 60 }
+      "given": "a fresh production build of the SPA exists in docker/web-dist/",
+      "when": "the bundled main JS is read and searched for CLI-wizard tokens",
+      "then": "the bundle does NOT contain 'aitri-hub setup', 'aitri-hub monitor', or 'aitri-hub init'",
+      "steps": [
+        "Read docker/web-dist/assets/index-*.js",
+        "Assert it does NOT include 'aitri-hub setup'",
+        "Assert it does NOT include 'aitri-hub monitor'",
+        "Assert it does NOT include 'aitri-hub init'"
+      ],
+      "expected_result": "No stale CLI copy leaks into the shipped web bundle",
+      "test_data": {},
+      "covered_by": "tests/integration/hub-web-only.test.js (TC-012f — hub-web-only feature)"
     },
-
     {
       "id": "TC-005f",
       "requirement_id": "FR-005",
       "user_story_id": "US-005",
-      "ac_id": "AC-007",
-      "title": "CLI monitor — missing projects.json prints setup message and exits with code 1",
+      "ac_id": "AC-008",
+      "title": "Empty-state — HomeView renders onboarding panel when projects array is empty",
       "type": "unit",
       "scenario": "negative",
       "priority": "high",
       "preconditions": [
-        "~/.aitri-hub/projects.json does not exist"
+        "HomeView.jsx is the component mounted at route /"
       ],
-      "given": "~/.aitri-hub/projects.json does not exist on the filesystem",
-      "when": "cmdMonitor() is called",
-      "then": "output contains the string 'No projects configured. Run \\'aitri-hub setup\\' first.' and process exits with code 1 (or err() is called with that message)",
+      "given": "HomeView receives props { projects: [], loading: false }",
+      "when": "the component renders",
+      "then": "the output contains an h2 titled 'No projects yet', a primary CTA linking to /admin with label 'Add your first project', and a disclosure 'What counts as a project?'",
       "steps": [
-        "Ensure projects.json does not exist in temp aitri-hub dir",
-        "Call cmdMonitor({ dir: tempDir })",
-        "Assert err was called with message containing 'No projects configured'",
-        "Assert output contains 'aitri-hub setup'"
+        "Import HomeView",
+        "Render with projects=[]",
+        "Assert output includes the onboarding title",
+        "Assert output includes the /admin CTA label",
+        "Assert output includes the disclosure"
       ],
-      "expected_result": "Error message directing user to run aitri-hub setup; no dashboard rendered; exit code 1",
-      "test_data": {}
+      "expected_result": "Browser-first empty state replaces any CLI-wizard prompt; FR-005 AC-007/AC-008 satisfied",
+      "test_data": {},
+      "covered_by": "web/src/components/HomeView.jsx (empty-state branch) + tests/integration/hub-web-only.test.js (TC-011h bundle check)"
     },
-
     {
       "id": "TC-006h",
       "requirement_id": "FR-006",
@@ -440,7 +527,6 @@
       "expected_result": "HTTP 200 with text/html content type received at localhost:3000 within 30 seconds",
       "test_data": {}
     },
-
     {
       "id": "TC-006e",
       "requirement_id": "FR-006",
@@ -465,15 +551,20 @@
         "Assert page.locator('[data-testid=\"project-card\"]').count() === 4"
       ],
       "expected_result": "scrollWidth <= 768px, 4 project cards visible, no horizontal scroll present",
-      "test_data": { "viewport": { "width": 768, "height": 1024 }, "projectCount": 4 }
+      "test_data": {
+        "viewport": {
+          "width": 768,
+          "height": 1024
+        },
+        "projectCount": 4
+      }
     },
-
     {
       "id": "TC-006f",
       "requirement_id": "FR-006",
       "user_story_id": "US-006",
       "ac_id": "AC-009",
-      "title": "Web dashboard — missing dashboard.json shows empty state message",
+      "title": "Web dashboard — missing dashboard.json shows onboarding empty state",
       "type": "e2e",
       "scenario": "negative",
       "priority": "high",
@@ -483,18 +574,18 @@
       ],
       "given": "web dashboard running at localhost:3000, GET /data/dashboard.json returns HTTP 404",
       "when": "page navigates to http://localhost:3000 and waits 3 seconds",
-      "then": "page contains the text 'Run `aitri-hub setup`' or 'No projects configured' and does NOT render any project cards (data-testid='project-card' count === 0)",
+      "then": "page contains the onboarding title 'No projects yet' and the CTA 'Add your first project' linking to /admin; zero project cards are rendered (data-testid='project-card' count === 0)",
       "steps": [
         "Ensure dashboard.json does not exist in mounted volume",
         "Navigate to http://localhost:3000",
         "Wait 3 seconds",
-        "Assert page contains 'aitri-hub setup' text",
+        "Assert page contains 'No projects yet' text",
+        "Assert page contains 'Add your first project' text",
         "Assert page.locator('[data-testid=\"project-card\"]').count() === 0"
       ],
-      "expected_result": "Empty state message with setup instructions shown; no project cards rendered; no JavaScript errors in console",
+      "expected_result": "Onboarding empty state with /admin CTA shown; no project cards rendered; no JavaScript errors in console",
       "test_data": {}
     },
-
     {
       "id": "TC-007h",
       "requirement_id": "FR-007",
@@ -514,9 +605,12 @@
         "Assert result.length === 0"
       ],
       "expected_result": "Empty array [] returned; no alerts generated for a fully healthy project",
-      "test_data": { "lastCommitAgeHours": 1.5, "verifyPassed": true, "testsFailed": 0 }
+      "test_data": {
+        "lastCommitAgeHours": 1.5,
+        "verifyPassed": true,
+        "testsFailed": 0
+      }
     },
-
     {
       "id": "TC-007e",
       "requirement_id": "FR-007",
@@ -540,9 +634,13 @@
         "Assert result.map(a => a.type) includes 'tests-failing'"
       ],
       "expected_result": "4 alerts returned (stale, verify-failed, drift, tests-failing); all with correct type and severity fields",
-      "test_data": { "lastCommitAgeHours": 90, "verifyPassed": false, "hasDrift": true, "testsFailed": 3 }
+      "test_data": {
+        "lastCommitAgeHours": 90,
+        "verifyPassed": false,
+        "hasDrift": true,
+        "testsFailed": 3
+      }
     },
-
     {
       "id": "TC-007f",
       "requirement_id": "FR-007",
@@ -565,9 +663,10 @@
         "Assert result[0].message === 'Verify failed'"
       ],
       "expected_result": "One alert { type: 'verify-failed', severity: 'error', message: 'Verify failed' }",
-      "test_data": { "verifyPassed": false }
+      "test_data": {
+        "verifyPassed": false
+      }
     },
-
     {
       "id": "TC-008h",
       "requirement_id": "FR-008",
@@ -592,9 +691,10 @@
         "Assert projectData.gitMeta.isGitRepo === true"
       ],
       "expected_result": "Repository cloned to ~/.aitri-hub/cache/fake-remote-repo/; gitMeta populated from cloned repo",
-      "test_data": { "remoteUrl": "file:///tmp/fake-remote-repo.git" }
+      "test_data": {
+        "remoteUrl": "file:///tmp/fake-remote-repo.git"
+      }
     },
-
     {
       "id": "TC-008e",
       "requirement_id": "FR-008",
@@ -620,7 +720,6 @@
       "expected_result": "git pull executed on existing cache; git clone NOT executed; no directory recreation",
       "test_data": {}
     },
-
     {
       "id": "TC-008f",
       "requirement_id": "FR-008",
@@ -647,7 +746,6 @@
       "expected_result": "No crash; collectionError set; cache-stale alert generated; last cached .aitri data still returned",
       "test_data": {}
     },
-
     {
       "id": "TC-009h",
       "requirement_id": "FR-009",
@@ -674,7 +772,6 @@
       "expected_result": "Valid JSON file at ~/.aitri-hub/dashboard.json with correct schema and project data",
       "test_data": {}
     },
-
     {
       "id": "TC-009e",
       "requirement_id": "FR-009",
@@ -698,7 +795,6 @@
       "expected_result": "Write goes to .tmp file first, then atomic rename to dashboard.json; no partial write visible to readers",
       "test_data": {}
     },
-
     {
       "id": "TC-009f",
       "requirement_id": "FR-009",
@@ -725,6 +821,5 @@
       "expected_result": "Previous dashboard.json intact; error logged; no crash propagated to monitor loop",
       "test_data": {}
     }
-
   ]
 }
