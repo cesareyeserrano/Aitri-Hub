@@ -109,6 +109,16 @@ describe('TC-021h: BugBadge — blocking variant', () => {
     assert.ok(src.includes('QUALITY'), 'ProjectCard must include QUALITY section');
     assert.ok(src.includes('GIT'), 'ProjectCard must include GIT section');
   });
+
+  it('BG-006: last-event line guards against events with no phase (e.g. normalize-resolved)', () => {
+    // normalize-resolved events have no `phase` field. The last-event row must not
+    // render the literal string "phase undefined" when phase is null/undefined.
+    const src = fs.readFileSync(path.join(ROOT, 'web/src/components/ProjectCard.jsx'), 'utf8');
+    assert.ok(
+      src.includes('lastEvent.phase != null &&'),
+      'ProjectCard must guard the phase segment with `lastEvent.phase != null &&`'
+    );
+  });
 });
 
 // ── TC-021f: BugBadge returns null when bugsSummary is null ─────────────────

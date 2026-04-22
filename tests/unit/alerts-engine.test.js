@@ -222,6 +222,52 @@ describe('TC-014e3: evaluateAlerts — cached version reused across 20 calls', (
 
 // ── deriveStatus ──────────────────────────────────────────────────────────────
 
+// ── BG-005: REJECTION_RECENT fires when the .aitri event uses `event` (current schema) ──
+
+describe('BG-005: evaluateAlerts — REJECTION_RECENT fires for `event: "rejected"` in last 7 days', () => {
+  const recentISO = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+  const data = makeData({
+    aitriState: {
+      verifyPassed: true,
+      verifySummary: { failed: 0 },
+      hasDrift: false,
+      events: [{ event: 'rejected', at: recentISO, phase: 2 }],
+    },
+  });
+
+  it('returns an alert with type rejection-recent', () => {
+    const result = evaluateAlerts(data);
+    assert.ok(result.some(a => a.type === 'rejection-recent'));
+  });
+
+  it('does not fire for rejections older than 7 days', () => {
+    const oldISO = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+    const old = makeData({
+      aitriState: {
+        verifyPassed: true,
+        verifySummary: { failed: 0 },
+        hasDrift: false,
+        events: [{ event: 'rejected', at: oldISO, phase: 2 }],
+      },
+    });
+    const result = evaluateAlerts(old);
+    assert.ok(!result.some(a => a.type === 'rejection-recent'));
+  });
+
+  it('still fires when a legacy snapshot uses `type: "rejected"` with `timestamp`', () => {
+    const legacy = makeData({
+      aitriState: {
+        verifyPassed: true,
+        verifySummary: { failed: 0 },
+        hasDrift: false,
+        events: [{ type: 'rejected', timestamp: recentISO, phase: 2 }],
+      },
+    });
+    const result = evaluateAlerts(legacy);
+    assert.ok(result.some(a => a.type === 'rejection-recent'));
+  });
+});
+
 describe('deriveStatus()', () => {
   it('returns "healthy" for empty alerts array', () => {
     assert.equal(deriveStatus([]), 'healthy');

@@ -242,7 +242,7 @@ function PipelineSection({ aitriState, lastSession }) {
               {lastEvent.event}
             </span>
             <span style={{ color: 'var(--text-dim)', fontSize: '11px', marginLeft: '4px' }}>
-              phase {lastEvent.phase} · {relTime(lastEvent.at)}
+              {lastEvent.phase != null && `phase ${lastEvent.phase} · `}{relTime(lastEvent.at)}
             </span>
           </div>
         )}
