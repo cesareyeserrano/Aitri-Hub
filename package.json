@@ -7,7 +7,7 @@
     "aitri-hub": "bin/aitri-hub.js"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "scripts": {
     "test": "node --test tests/unit/*.test.js tests/integration/*.test.js && npx playwright test tests/e2e/admin-api.test.js",
