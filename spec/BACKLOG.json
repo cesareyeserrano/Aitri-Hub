@@ -55,32 +55,36 @@
       "title": "resolve realpath before /data path-traversal check",
       "priority": "P2",
       "problem": "startsWith guard on joined path does not catch symlink escapes from ~/.aitri-hub/",
-      "status": "open",
-      "createdAt": "2026-04-20T19:15:49.347Z"
+      "status": "closed",
+      "createdAt": "2026-04-20T19:15:49.347Z",
+      "closedAt": "2026-04-23T01:12:42.747Z"
     },
     {
       "id": "BL-008",
       "title": "validate numeric env vars at boot",
       "priority": "P2",
       "problem": "parseInt silently produces NaN for invalid input, breaking setInterval/timeouts; add Number.isFinite guards with fallback to defaults",
-      "status": "open",
-      "createdAt": "2026-04-20T19:15:53.948Z"
+      "status": "closed",
+      "createdAt": "2026-04-20T19:15:53.948Z",
+      "closedAt": "2026-04-23T01:12:42.779Z"
     },
     {
       "id": "BL-009",
       "title": "add ESLint + Prettier with lint gate in CI",
       "priority": "P3",
       "problem": "no root .eslintrc/.prettierrc; CI runs tests only; style drift not detected",
-      "status": "open",
-      "createdAt": "2026-04-20T19:16:00.089Z"
+      "status": "closed",
+      "createdAt": "2026-04-20T19:16:00.089Z",
+      "closedAt": "2026-04-23T01:12:42.811Z"
     },
     {
       "id": "BL-010",
       "title": "extract alerts engine to rule-registry pattern",
       "priority": "P3",
       "problem": "evaluateAlerts aggregates many rules in one function; rule-array refactor would isolate changes and enable per-rule metrics",
-      "status": "open",
-      "createdAt": "2026-04-20T19:16:04.586Z"
+      "status": "closed",
+      "createdAt": "2026-04-20T19:16:04.586Z",
+      "closedAt": "2026-04-23T01:12:42.844Z"
     },
     {
       "id": "BL-011",
@@ -91,6 +95,38 @@
       "createdAt": "2026-04-21T23:40:23.989Z",
       "fr_id": "FR-001",
       "closedAt": "2026-04-22T05:18:18.194Z"
+    },
+    {
+      "id": "BL-012",
+      "title": "Raise Node floor to >=20.0.0, drop Node 18 from CI matrix",
+      "priority": "P2",
+      "problem": "Node 18 EOL 2025-04-30 — package.json and .github/workflows/ci.yml still target it. Update engines and remove '18' from the CI matrix; keep 20 + add 22.",
+      "status": "open",
+      "createdAt": "2026-04-23T01:00:04.922Z"
+    },
+    {
+      "id": "BL-013",
+      "title": "Refresh Aitri CLI version cache in alerts engine on a TTL",
+      "priority": "P2",
+      "problem": "lib/alerts/engine.js:18-30 caches installed CLI version for process lifetime. Long-running aitri-hub web stays stale after a CLI upgrade. Add a 5-minute TTL or expose _resetVersionCache on a signal.",
+      "status": "open",
+      "createdAt": "2026-04-23T01:00:10.784Z"
+    },
+    {
+      "id": "BL-014",
+      "title": "Replace substring '..' check in validateLocation with realpath containment",
+      "priority": "P3",
+      "problem": "lib/commands/web.js:140 — location.includes('..') rejects legitimate directory names. Use fs.realpathSync + startsWith(allowedRoot) or path.resolve-based segment check instead.",
+      "status": "open",
+      "createdAt": "2026-04-23T01:00:15.429Z"
+    },
+    {
+      "id": "BL-015",
+      "title": "Add eviction/ceiling to github-poller _state Map",
+      "priority": "P3",
+      "problem": "lib/collector/github-poller.js:22 _state has no cap and no eviction on project removal. Prune entries that no longer appear in the current projects list, or cap at N and evict LRU.",
+      "status": "open",
+      "createdAt": "2026-04-23T01:00:21.383Z"
     }
   ]
 }
