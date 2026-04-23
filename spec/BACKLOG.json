@@ -15,8 +15,9 @@
       "title": "Remove redundant CLI gestiones — Hub should be 100% web-managed",
       "priority": "P2",
       "problem": "Hub mission: dashboard 100% web. Current CLI surface in bin/aitri-hub.js exposes: init (bootstrap), setup (add/edit projects), web (start server), monitor (stub). The setup command duplicates the admin panel added by hub-mvp-web feature (AdminAddForm/AdminProjectList → POST/DELETE /api/projects). The monitor command is a deprecation stub that should be removed entirely (not just print a notice). Action: (1) Remove monitor case from bin/aitri-hub.js + delete lib/commands/monitor.js + remove from USAGE help text; (2) Decide on setup — either remove (forcing all project mgmt via web admin panel) or keep as parity (CLI users can still use it). User intent suggests removal. Need to verify no tests/docs depend on these commands. Keep init (first-run wizard for hub dir layout) and web (bootstrap). Should route via aitri feature init when implementing — affects user-facing surface.",
-      "status": "open",
-      "createdAt": "2026-04-18T02:26:34.778Z"
+      "status": "closed",
+      "createdAt": "2026-04-18T02:26:34.778Z",
+      "closedAt": "2026-04-23T01:39:22.395Z"
     },
     {
       "id": "BL-003",
