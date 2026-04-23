@@ -62,7 +62,7 @@ test('TC-001e: folder scan helper returns only children with a .aitri/ directory
     mkdirSync(join(root, 'childC'));
     writeFileSync(join(root, 'childC', 'README.md'), 'just docs');
 
-    const { scanFolder } = await import('../../lib/utils/scan.js');
+    const { scanFolder } = await import('../../lib/collector/folder-scanner.js');
     const found = scanFolder(root);
     const names = found.map(c => c.name).sort();
     assert.deepEqual(names, ['childA', 'childB']);
