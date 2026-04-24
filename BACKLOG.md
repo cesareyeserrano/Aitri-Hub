@@ -163,6 +163,88 @@
   - Do NOT modify this backlog entry during implementation — use the feature's own artifacts. Mark as `[x] *(implemented)*` only after Phase 5 approval and move content to CHANGELOG.md.
   - Author verification (2026-04-21): no changes required to Aitri Core repo at `/Users/cesareyeserrano/Documents/PROJECTS/AITRI`.
 
+- [ ] P1 — **Integration banner: auto-silence additive upgrades + user-friendly wording for breaking** — Today the banner fires on any `semverGt(detectedAitri, reviewedUpTo)`, regardless of whether the changes between those two versions are additive (safe for Hub readers) or breaking (require Hub update). The current message `"Aitri X detected — Hub integration not reviewed past Y"` is also written in maintainer vocabulary that external Hub users cannot act on — the only way to clear it is to run `aitri-hub integration review`, a command users neither have nor should have.
+
+  Problem / Why:
+  1. **False positives on additive upgrades.** Aitri v2.0.0-alpha.1 / alpha.2 / alpha.3 all shipped additive-only changes (new events, new optional fields, new CLI commands). Hub's readers tolerate unknown fields/events by design — nothing broke. But the banner fired, creating user anxiety and training users to ignore it (banner fatigue).
+  2. **No user-actionable path.** A real Hub user sees "integration not reviewed past X" and has no idea what to do. Updating Aitri makes the banner worse (the gap grows). Running `aitri-hub integration review` is a maintainer-only command. Result: the banner is permanent noise for end users until the maintainer cuts a new Hub release.
+  3. **Aitri now publishes machine-parseable markers.** As of Aitri commit `4ec105b` (`docs(integrations): formalize additive/breaking marker convention`), every versioned entry in `docs/integrations/CHANGELOG.md` ends with exactly `— additive` or `— breaking`. All 21 historical entries were backfilled. A release-sync test lint enforces the marker on every new entry. Hub can now decide automatically whether the gap between `reviewedUpTo` and detected is safe.
+
+  Files:
+  - `lib/collector/changelog.js` — new export `extractUpgradeClassification(changelog, fromVersion, toVersion)` returning `'additive' | 'breaking' | 'unknown'` by parsing `## v<x>` heading markers. `'unknown'` when any entry in the range lacks the marker (defensive default — treat as breaking for safety).
+  - `lib/collector/integration-guard.js` — call the classifier before emitting an alert; when classification is `'additive'`, return `null` (no alert). When `'breaking'` or `'unknown'`, emit the alert with the new wording.
+  - Banner message string: replace `"Aitri X detected — Hub integration not reviewed past Y"` with `"Your Aitri CLI ({detected}) is newer than this Hub build was tested against ({reviewedUpTo}). {N} breaking change(s) since the last review — update Hub to restore full compatibility."` plus a link to Hub's GitHub releases. When classification is `'unknown'`, wording: `"Integration review pending for Aitri {detected}. Some dashboard data may be incomplete."`
+  - `web/` — surface the message text change; remove or downgrade the "View CHANGELOG.md →" link (CHANGELOG is maintainer-facing; users want "Update Hub").
+  - `tests/unit/integration-guard.test.js` — add cases for additive-only range (expect no alert), breaking range (expect alert with new wording), mixed range (expect alert — breaking wins), unknown marker (expect alert with `unknown` wording).
+
+  Behavior:
+  - **Drift check unchanged**: if `changelogHash` was stored at review time and the current hash of that same section differs, fire a drift alert regardless of marker (the reviewed body itself moved — re-review required). That path was already FR-036 and stays.
+  - **Version gap check**: `semverGt(detected, reviewedUpTo) === true` no longer auto-alerts. Classify the range first. Only alert when the range contains at least one `breaking` or `unknown` entry.
+  - **Marker parser**: regex `/^##\s+v[\d.]+(?:-[\w.]+)?\b.*\s—\s*(additive|breaking)\s*$/` on each heading line between `fromVersion` (exclusive) and `toVersion` (inclusive). If `fromVersion` is not present in the CHANGELOG (legacy project), treat all earlier entries as `additive` (pre-convention — safe default since Hub survived them).
+
+  Decisions:
+  - **Default on missing marker = `unknown`, not `additive`.** Safety tilts toward alerting. A missing marker means someone wrote an entry without following the convention; surfacing it is cheaper than hiding a breaking change.
+  - **Changelog source of truth stays at Aitri.** Hub reads `docs/integrations/CHANGELOG.md` from the installed Aitri CLI (via `resolveChangelogPath` already implemented for FR-031). No copy in Hub.
+  - **Link target changes to Hub releases, not Aitri CHANGELOG.** End users don't need Aitri's maintainer-level record; they need "is there a newer Hub?". The CHANGELOG link can remain as a secondary detail ("See what changed in Aitri →") but the primary call-to-action is Hub update.
+
+  Risks & mitigations:
+  - **Parser false-positive matching** — a body-text line that happens to match the heading regex could confuse the classifier. Mitigation: anchor regex to `^##\s` (start-of-line + `##` + space) — ordinary body text does not start with that.
+  - **Missing marker during transition** — if a future Aitri release forgets the marker, Hub will fall back to `unknown` and still alert. Not a regression (today every gap alerts). The release-sync test in Aitri prevents this upstream.
+  - **Pre-release semver comparison** — today `semverGt` strips pre-release tags. Alpha/beta/rc releases within the same X.Y.Z will compare equal. For classification between e.g. `2.0.0-alpha.1` and `2.0.0-alpha.3`, this means the range will include both entries if we parse by heading text match. Accept as behavior: range expansion favors catching more entries (safer). Precision improvement is tracked as a separate backlog item below.
+
+  Acceptance:
+  - Given `reviewedUpTo = "0.1.89"` and detected `2.0.0-alpha.3`, when all CHANGELOG entries between them carry `— additive`, then `evaluateIntegrationAlert` returns `null` (no banner).
+  - Given the same range, when any single entry carries `— breaking`, then the alert is emitted with the new user-facing message (no "not reviewed past" phrasing).
+  - Given the same range, when any entry is missing the marker, then the alert is emitted with the `unknown` wording.
+  - Given drift detected (stored hash ≠ current hash), the drift alert fires regardless of classification — classification does not override drift.
+  - Unit tests cover all four paths above.
+  - Manual verification on this repo: after implementation, the banner currently shown for `0.1.89 → 2.0.0-alpha.3` (all additive) must disappear without any manifest bump required. That is the canary for success.
+
+  Implementation notes:
+  - Follow Hub's AGENTS.md: run `aitri feature init integration-smart-trigger` and drive Phases 1-5 through the pipeline.
+  - Cross-reference: Aitri commit `4ec105b` documents the marker convention and the `test/release-sync.test.js` linter that enforces it. No Aitri changes are needed for this feature.
+  - **Dependency**: the pre-release semver backlog item below is a soft dependency — it improves precision but this feature works correctly without it (range is wider than strictly necessary; still correct).
+
+- [ ] P2 — **Pre-release semver support in manifest validator, version detector, and compare** — Today three regexes in Hub's integration layer only accept stable `X.Y.Z` semver. Aitri is shipping pre-release tags (`2.0.0-alpha.1`, `-alpha.2`, `-alpha.3`, and eventually `-beta.N`, `-rc.N`). Hub's current behavior is to silently truncate pre-release tags, collapsing all pre-releases within the same stable version to a single point. Correct-ish but imprecise.
+
+  Problem / Why:
+  1. **`lib/store/compat-manifest.js::SEMVER_RE = /^\d+\.\d+\.\d+$/`** — rejects `reviewedUpTo: "2.0.0-alpha.3"` as invalid. Today's workaround: the operator writes bare `"2.0.0"` in the manifest (loses precision — can't distinguish "reviewed alpha.3 readers" from "reviewed stable 2.0.0 readers").
+  2. **`lib/collector/aitri-version-reader.js::VERSION_REGEX = /(\d+\.\d+\.\d+)/`** — captures `"2.0.0"` from `"Aitri v2.0.0-alpha.3"`, silently dropping the pre-release tag. Downstream drift checks for section `## v2.0.0` (which doesn't exist — sections carry pre-release suffixes), so drift check always misses on pre-release projects.
+  3. **`lib/collector/integration-guard.js::semverGt`** — parses numeric parts only, unaware of pre-release ordering. `semverGt("2.0.0-alpha.1", "2.0.0-alpha.3")` returns false (both have same numeric parts), losing the information that alpha.3 is newer than alpha.1.
+
+  Files:
+  - `lib/store/compat-manifest.js` — widen `SEMVER_RE` to `/^\d+\.\d+\.\d+(?:-[\w.]+)?$/`. Update error message + docstring. Update validator test cases.
+  - `lib/collector/aitri-version-reader.js` — widen `VERSION_REGEX` to capture the full version including pre-release: `/(\d+\.\d+\.\d+(?:-[\w.]+)?)/`. Test with mocked `aitri --version` output.
+  - `lib/collector/integration-guard.js` — replace `semverGt` with a full SemVer 2.0 comparator that understands pre-release ordering per the spec (alpha < beta < rc < stable). Small helper, no external dep (zero-dep constraint preserved). Reference: `https://semver.org/#spec-item-11`.
+  - `tests/unit/integration-guard.test.js` — add cases covering pre-release comparison (alpha.3 > alpha.1, 2.0.0 > 2.0.0-rc.1, etc.).
+  - `tests/unit/compat-manifest.test.js` — add valid-manifest case with `reviewedUpTo: "2.0.0-alpha.3"`.
+
+  Behavior:
+  - Operator can run `aitri-hub integration review 2.0.0-alpha.3` and the validator accepts it.
+  - `detectAitriVersion()` on a CLI reporting `Aitri v2.0.0-alpha.3` returns the string `"2.0.0-alpha.3"`, not `"2.0.0"`.
+  - `semverGt("2.0.0-alpha.3", "2.0.0-alpha.1")` === `true`. `semverGt("2.0.0", "2.0.0-alpha.9")` === `true` (stable > any pre-release of same X.Y.Z).
+  - Drift-check section hash now matches the actual section heading format (`## v2.0.0-alpha.3`).
+
+  Decisions:
+  - **Keep the `integration review` command spelling stable.** The CLI's positional arg accepts the new format via the widened validator; no flag changes.
+  - **No external SemVer library.** Hub is zero-dep (mirroring Aitri). Inline comparator is ~30 LOC.
+  - **Pre-release precedence**: follows SemVer 2.0 — pre-release versions have lower precedence than the associated normal version, and precedence within pre-releases compares identifiers in ASCII numeric/alphabetic order per spec §11.
+
+  Risks & mitigations:
+  - **Existing manifests with bare `reviewedUpTo: "2.0.0"`** — continue to validate (regex is strictly additive). No migration required.
+  - **Backward compat on the classification parser** — see the P1 item above; range expansion when pre-releases collapse is already correct behavior, this change only tightens precision.
+
+  Acceptance:
+  - Given `aitri --version` outputs `"Aitri v2.0.0-alpha.3"`, `detectAitriVersion()` returns `"2.0.0-alpha.3"`.
+  - Given `reviewedUpTo: "2.0.0-alpha.3"` in the manifest file, `validate()` returns no error.
+  - Given pre-release inputs, `semverGt` sorts them correctly per SemVer 2.0 spec.
+  - Existing tests for stable-version paths continue to pass (backward compat).
+
+  Implementation notes:
+  - Follow Hub's AGENTS.md: `aitri feature init prerelease-semver`.
+  - Ships before or alongside the P1 smart-trigger feature. Not strictly blocking, but improves precision there.
+  - Aitri change required: none. This is entirely Hub-internal.
+
 ---
 
 ## Integration Contract
