@@ -1,7 +1,6 @@
 {
   "project_name": "Aitri Hub",
   "project_summary": "Centralized monitoring dashboard for multiple Aitri-managed projects. Provides a single-pane-of-glass view of pipeline progress, test health, Git activity, and alerts across N projects — via a React web dashboard served by a local Node.js process (Docker optional) at localhost:3000.\n\nProduct Analysis:\n  North Star KPI: Time-to-insight — user sees all project statuses in ≤5 seconds from opening localhost:3000.\n  JTBD: 'When I have multiple Aitri projects running in parallel, help me instantly know which ones need attention without cd-ing into each repo.'\n  Guardrail metric: Dashboard render time must stay ≤2s for up to 20 registered projects.",
-
   "no_go_zone": [
     "No cloud storage or remote sync — all state lives locally under ~/.aitri-hub/; no external API calls to persist data",
     "No authentication or user accounts — no login, no sessions, no multi-user access control in v1",
@@ -10,7 +9,6 @@
     "No code editing or test execution — dashboard is read-only; it observes, never modifies project files",
     "No mobile native build — web interface is browser-only via localhost; no iOS/Android app"
   ],
-
   "user_personas": [
     {
       "role": "Solo Developer",
@@ -31,7 +29,6 @@
       "pain_point": "No visibility into pipeline health across teams; relies on manual status updates in Slack or email"
     }
   ],
-
   "functional_requirements": [
     {
       "id": "FR-001",
@@ -169,7 +166,6 @@
       "implementation_level": "functional"
     }
   ],
-
   "user_stories": [
     {
       "id": "US-001",
@@ -328,7 +324,6 @@
       ]
     }
   ],
-
   "non_functional_requirements": [
     {
       "id": "NFR-001",
@@ -361,17 +356,16 @@
       "acceptance_criteria": "Network traffic analysis during a full monitor session shows zero outbound connections except git pull for remote-registered projects"
     }
   ],
-
   "constraints": [
     "Node.js 18+ for the web dashboard; Docker is optional (packaged deployment only)",
     "Zero npm runtime dependencies for the Node server — Node.js built-ins only (mirrors Aitri's design principle)",
     "All persistent data written under ~/.aitri-hub/ — no writes to project directories",
     "Admin HTTP API is localhost-only — loopback peer guard on all /api/* routes, no auth"
   ],
-
   "technology_preferences": [
     "Server: Node.js (ESM, zero runtime dependencies)",
     "Web: React + Vite, bundled to docker/web-dist/ and served by the Node process",
     "Data exchange: JSON files under ~/.aitri-hub/ (projects.json, dashboard.json)"
-  ]
+  ],
+  "original_brief": "# Project Idea\n\n## Problem\n\nDevelopers managing multiple Aitri projects have no centralized view of their progress and health.\nThey must inspect each project individually — opening repos one by one — with no global picture,\nno cross-project alerts, and no way to spot stagnant or at-risk pipelines at a glance.\n\n## Target Users\n\nDevelopers and team leads actively running Aitri pipelines across multiple projects. Ranges from\nsolo developers wanting a morning overview, to team leads sharing a local dashboard with their\nteam, to companies overseeing a portfolio of Aitri-managed projects.\n\n## Current Pain / Baseline\n\nChecking N projects today means: cd into project → aitri status → cd into next project → repeat.\nNo unified view, no cross-project alerts, no shared team visibility.\n\n## Business Rules\n\n- System must provide a local web dashboard: a single Node.js process (`aitri-hub web`) that\n  serves a React SPA and runs the collector, accessible only at `http://127.0.0.1:3000`\n- Dashboard must auto-refresh the collected metrics with a default interval of 5 seconds\n- The dashboard must be startable with a single command (`aitri-hub web`) with no interactive setup\n- System must read each project's .aitri state file to extract: phase progress (approvedPhases,\n  completedPhases), verify results (verifySummary), rejection history, and artifact drift warnings\n- System must read 04_TEST_RESULTS.json (when present) for per-FR test coverage metrics\n- System must collect Git metadata: last commit timestamp, commit velocity (commits/week), active branch\n- System must surface alerts: no commits > 72h, verify failed, artifact drift detected, vulnerable dependencies\n- System must support both local project paths and remote GitHub/GitLab URLs (clone + cache)\n- All data must be stored locally under `~/.aitri-hub/` — no cloud, no external services\n- Project registration (add / edit / remove / folder scan) happens entirely through the `/admin`\n  page in the browser — no CLI wizard, no interactive prompts\n\n## Success Criteria\n\n- Given no registered projects, when the user runs `aitri-hub web` and opens `localhost:3000`,\n  then the empty-state panel presents a single call-to-action that links to `/admin` within the\n  first rendered viewport — no terminal steps are required\n- Given a user visits `/admin` for the first time, when they register their first project via\n  the web form, then the project appears in the dashboard within one collector refresh cycle\n- Given a project with verify failures or artifact drift, when the dashboard refreshes, then a\n  visible alert is shown without manual action\n- Given N registered projects, when the user opens `localhost:3000`, then all pipeline states\n  appear on one screen in under 5 seconds\n\n## Out of Scope\n\n- Cloud storage or syncing of any project data (v1)\n- Monitoring non-Aitri projects (no .aitri file)\n- Triggering aitri commands (run-phase, approve) from the dashboard\n- Authentication or multi-user access control (v1)\n- Code editing or test execution from the dashboard\n- A terminal-resident dashboard or interactive CLI setup wizard\n"
 }
