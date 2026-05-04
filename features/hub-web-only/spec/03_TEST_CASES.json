@@ -390,22 +390,22 @@
       "requirement_id": "FR-004",
       "user_story_id": "US-004",
       "ac_id": "AC-007",
-      "title": "README / DEPLOYMENT / IDEA contain no residual CLI references",
+      "title": "README / DEPLOYMENT contain no residual CLI references",
       "type": "unit",
       "scenario": "happy_path",
       "priority": "high",
       "preconditions": [],
-      "given": "the post-feature README.md, DEPLOYMENT.md, and IDEA.md at the repo root",
+      "given": "the post-feature README.md and DEPLOYMENT.md at the repo root",
       "when": "each file is read and the regex /aitri-hub (monitor|setup|init)(?!\\-)/ is evaluated over its content",
-      "then": "for each file, regex.test(content) === false (zero matches across all three files combined)",
+      "then": "for each file, regex.test(content) === false (zero matches across both files combined)",
       "steps": [
-        "for each of ['README.md','DEPLOYMENT.md','IDEA.md']:",
+        "for each of ['README.md','DEPLOYMENT.md']:",
         "  read file content",
         "  assert /aitri-hub (monitor|setup|init)(?!\\-)/.test(content) === false"
       ],
       "expected_result": "Zero occurrences of deprecated CLI commands in primary docs",
       "test_data": {
-        "files": ["README.md", "DEPLOYMENT.md", "IDEA.md"]
+        "files": ["README.md", "DEPLOYMENT.md"]
       }
     },
     {
@@ -463,20 +463,20 @@
       "requirement_id": "FR-004",
       "user_story_id": "US-004",
       "ac_id": "AC-008",
-      "title": "IDEA.md Business Rules no longer describe a CLI dashboard mode",
+      "title": "README no longer describes a CLI dashboard mode",
       "type": "unit",
       "scenario": "negative",
       "priority": "medium",
       "preconditions": [],
-      "given": "IDEA.md at the repo root",
+      "given": "README.md at the repo root",
       "when": "the file is read and searched for the substrings 'CLI terminal dashboard' and 'aitri-hub monitor' (case-sensitive)",
       "then": "both .indexOf calls return -1",
       "steps": [
-        "read IDEA.md",
+        "read README.md",
         "assert content.indexOf('CLI terminal dashboard') === -1",
         "assert content.indexOf('aitri-hub monitor') === -1"
       ],
-      "expected_result": "IDEA.md contains neither phrase",
+      "expected_result": "README.md contains neither phrase",
       "test_data": {}
     },
 

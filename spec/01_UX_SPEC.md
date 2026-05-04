@@ -9,7 +9,8 @@ developer mental model, monospace for pipeline data.
 ## Design Tokens
 
 Derived from archetype defaults and the "developer dashboard" aesthetic explicitly described in
-IDEA.md (terminal-style output, data-dense cards, muted accent colors).
+the project brief (now archived as `01_REQUIREMENTS.json#original_brief`): terminal-style output,
+data-dense cards, muted accent colors.
 
 ### Color Roles
 

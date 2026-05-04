@@ -152,9 +152,9 @@ test('TC-012f: bundled SPA does not mention removed CLI commands', () => {
 // ─ FR-004 (docs) ─────────────────────────────────────────────────────────────
 
 /** @aitri-tc TC-015h FR-004 */
-test('TC-015h: README/DEPLOYMENT/IDEA contain no deprecated CLI commands', () => {
+test('TC-015h: README/DEPLOYMENT contain no deprecated CLI commands', () => {
   const re = /aitri-hub (monitor|setup|init)(?!-)/;
-  for (const f of ['README.md', 'DEPLOYMENT.md', 'IDEA.md']) {
+  for (const f of ['README.md', 'DEPLOYMENT.md']) {
     const content = readFileSync(join(REPO_ROOT, f), 'utf8');
     assert.equal(re.test(content), false, `${f} contains deprecated CLI reference`);
   }
@@ -189,8 +189,8 @@ test('TC-017h: DEPLOYMENT.md wraps Docker under an Optional heading', () => {
 });
 
 /** @aitri-tc TC-018f FR-004 */
-test('TC-018f: IDEA.md does not describe a CLI dashboard mode', () => {
-  const content = readFileSync(join(REPO_ROOT, 'IDEA.md'), 'utf8');
+test('TC-018f: README does not describe a CLI dashboard mode', () => {
+  const content = readFileSync(join(REPO_ROOT, 'README.md'), 'utf8');
   assert.equal(content.indexOf('CLI terminal dashboard'), -1);
   assert.equal(content.indexOf('aitri-hub monitor'), -1);
 });

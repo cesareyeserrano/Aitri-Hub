@@ -656,7 +656,31 @@ failure (network error, auth failure) is caught and shown as "Cache stale" in UI
 
 ---
 
-### Traceability Checklist
+## Technical Risk Flags
+
+[RISK] Loopback-only admin API guard relies on socket peer address
+Conflict: FR-001 requires the admin HTTP API to reject non-loopback peers without authentication. The guard inspects `req.socket.remoteAddress` and accepts only `127.0.0.1` / `::1`. If `aitri-hub web` is ever placed behind a reverse proxy that rewrites the source address (nginx `proxy_pass`, Cloudflare Tunnel, ngrok), the loopback check passes for remote callers and the admin API is effectively unauthenticated to the world.
+Mitigation: Documentation in `DEPLOYMENT.md` flags the admin API as localhost-only; no_go_zone forbids cloud sync and remote auth. The guard does not honour `X-Forwarded-For` headers. Server operators who tunnel the port are on notice via the readme. A future hardening could require an explicit `AITRI_HUB_ADMIN_PUBLIC=1` env to disable the guard rather than letting reverse proxies silently bypass it.
+Severity: **medium** — only triggered by an operator deliberately exposing the port; default deployment is safe.
+
+[RISK] 5-second git exec timeout produces false `unreadable` on slow networks
+Conflict: NFR-001 requires dashboard render ≤2s for 20 projects; the 5s git timeout is the budget multiplier. On corporate VPN or remote SSH-clone projects, `git pull` over a high-latency link can exceed 5s and the project is reported as `unreadable` even though it is healthy.
+Mitigation: Cached clones at `~/.aitri-hub/cache/` short-circuit subsequent collection cycles. The UI shows `collectionError` text so the user can distinguish "slow remote" from "broken state". A future `AITRI_HUB_GIT_TIMEOUT_MS` env var could let users tune this per environment.
+Severity: **low** — false negative is annoying but never silently corrupts state; user can re-run collector.
+
+[RISK] Drift detection by SHA-256 of artifact bytes is whitespace-sensitive
+Conflict: FR-002 requires a `hasDrift` flag when an approved artifact is modified post-approval. The hash is computed over raw file bytes. Editor-driven cosmetic changes (line-ending conversion CRLF↔LF, trailing-whitespace strip, EOF newline) flip the hash and produce a false drift even though no semantic change occurred.
+Mitigation: `aitri normalize` workflow surfaces drift to the operator before it cascades; cosmetic-only diffs can be classified as `refactor` and resolved with `--resolve`. Editor configs (`.editorconfig` at repo root) keep line endings consistent. Trade-off accepted: false positives are visible and recoverable; false negatives (missing real drift) would be worse.
+Severity: **low** — drift is a guard rail, not a hard gate; operator-in-the-loop catches false positives in seconds.
+
+[RISK] Atomic-write rename assumes single filesystem
+Conflict: NFR-002 requires `dashboard.json` to remain valid JSON across crashes. The implementation writes to a `.tmp` sibling then renames over the target. If `~/.aitri-hub/` is symlinked across filesystems (e.g. user mounts a separate volume mid-tree), `rename(2)` fails with `EXDEV` and the writer falls back to a non-atomic copy — a crash mid-copy leaves a partial file.
+Mitigation: Default install keeps `~/.aitri-hub/` on the user's home filesystem; no documented case of cross-FS layout. Code paths log the failure; downstream readers tolerate malformed JSON (return null, surface "unreadable"). A future hardening could detect EXDEV and refuse to write rather than fall back.
+Severity: **low** — exotic deployment shape; default users never hit this; readers are defensive.
+
+---
+
+## Traceability Checklist
 
 - [x] FR-001 (setup) — `lib/commands/setup.js`, `lib/store/projects.js`, Data Model: projects.json
 - [x] FR-002 (aitri state) — `lib/collector/aitri-reader.js`, dashboard.json schema

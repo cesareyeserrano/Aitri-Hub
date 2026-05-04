@@ -1,112 +1,112 @@
 {
-  "executed_at": "2026-04-21T23:06:53.312Z",
+  "executed_at": "2026-05-04T00:08:36.689Z",
   "test_runner": "npm test",
   "exit_code": 0,
   "results": [
     {
       "tc_id": "TC-001h",
       "status": "pass",
-      "notes": "✔ TC-001h: help lists only the 4 allowed commands (68.032875ms)"
+      "notes": "✔ TC-001h: help lists only the 4 allowed commands (66.68075ms)"
     },
     {
       "tc_id": "TC-001f",
       "status": "pass",
-      "notes": "✔ TC-001f: monitor exits 1 with 'Unknown command' (54.880792ms)"
+      "notes": "✔ TC-001f: monitor exits 1 with 'Unknown command' (61.782625ms)"
     },
     {
       "tc_id": "TC-002f",
       "status": "pass",
-      "notes": "✔ TC-002f: setup exits 1 with 'Unknown command' (60.640416ms)"
+      "notes": "✔ TC-002f: setup exits 1 with 'Unknown command' (70.769958ms)"
     },
     {
       "tc_id": "TC-003f",
       "status": "pass",
-      "notes": "✔ TC-003f: init exits 1 within 2s without blocking on stdin (76.359417ms)"
+      "notes": "✔ TC-003f: init exits 1 within 2s without blocking on stdin (68.803833ms)"
     },
     {
       "tc_id": "TC-004e",
       "status": "pass",
-      "notes": "✔ TC-004e: no args prints usage, exit 0 (65.511292ms)"
+      "notes": "✔ TC-004e: no args prints usage, exit 0 (64.940667ms)"
     },
     {
       "tc_id": "TC-005e",
       "status": "pass",
-      "notes": "✔ TC-005e: --version prints semver, exit 0 (75.210666ms)"
+      "notes": "✔ TC-005e: --version prints semver, exit 0 (56.93925ms)"
     },
     {
       "tc_id": "TC-006h",
       "status": "pass",
-      "notes": "✔ TC-006h: web dashboard — Docker deployment artifacts are configured (2.175917ms)"
+      "notes": "✔ TC-006h: web dashboard — Docker deployment artifacts are configured (1.400458ms)"
     },
     {
       "tc_id": "TC-006f",
       "status": "pass",
-      "notes": "✔ TC-006f: web dashboard — error and empty state components are implemented (0.53ms)"
+      "notes": "✔ TC-006f: web dashboard — error and empty state components are implemented (0.294209ms)"
     },
     {
       "tc_id": "TC-007h",
       "status": "pass",
-      "notes": "✔ TC-007h: deleted command modules are absent (0.219375ms)"
+      "notes": "✔ TC-007h: deleted command modules are absent (0.129417ms)"
     },
     {
       "tc_id": "TC-008h",
       "status": "pass",
-      "notes": "✔ TC-008h: no source file imports init/setup/monitor commands (5.802959ms)"
+      "notes": "✔ TC-008h: no source file imports init/setup/monitor commands (3.102916ms)"
     },
     {
       "tc_id": "TC-009h",
       "status": "pass",
-      "notes": "✔ TC-009h: obsolete test files are absent (0.146666ms)"
+      "notes": "✔ TC-009h: obsolete test files are absent (0.098416ms)"
     },
     {
       "tc_id": "TC-010f",
       "status": "pass",
-      "notes": "✔ TC-010f: bin/aitri-hub.js has no cmdInit/cmdSetup/cmdMonitor references (0.130333ms)"
+      "notes": "✔ TC-010f: bin/aitri-hub.js has no cmdInit/cmdSetup/cmdMonitor references (0.091167ms)"
     },
     {
       "tc_id": "TC-011h",
       "status": "pass",
-      "notes": "✔ TC-011h: bundled SPA contains /admin CTA with correct label (0.805375ms)"
+      "notes": "✔ TC-011h: bundled SPA contains /admin CTA with correct label (0.255458ms)"
     },
     {
       "tc_id": "TC-012f",
       "status": "pass",
-      "notes": "✔ TC-012f: bundled SPA does not mention removed CLI commands (0.313292ms)"
+      "notes": "✔ TC-012f: bundled SPA does not mention removed CLI commands (0.295542ms)"
     },
     {
       "tc_id": "TC-013e",
       "status": "pass",
-      "notes": "✔ TC-013e: detectDrift — approved phase with no stored hash is NOT counted as drifted (0.356458ms)"
+      "notes": "✔ TC-013e: detectDrift — approved phase with no stored hash is NOT counted as drifted (0.284125ms)"
     },
     {
       "tc_id": "TC-014h",
       "status": "pass",
-      "notes": "✔ TC-014h: writeDashboard — writes featurePipelines and aggregatedTcTotal (5.061125ms)"
+      "notes": "✔ TC-014h: writeDashboard — writes featurePipelines and aggregatedTcTotal (2.559333ms)"
     },
     {
       "tc_id": "TC-015h",
       "status": "pass",
-      "notes": "✔ TC-015h: README/DEPLOYMENT/IDEA contain no deprecated CLI commands (0.163667ms)"
+      "notes": "✔ TC-015h: README/DEPLOYMENT contain no deprecated CLI commands (0.111792ms)"
     },
     {
       "tc_id": "TC-016h",
       "status": "pass",
-      "notes": "✔ TC-016h: README Quick Start lists npm install then aitri-hub web (0.12625ms)"
+      "notes": "✔ TC-016h: README Quick Start lists npm install then aitri-hub web (0.108125ms)"
     },
     {
       "tc_id": "TC-017h",
       "status": "pass",
-      "notes": "✔ TC-017h: DEPLOYMENT.md wraps Docker under an Optional heading (0.189791ms)"
+      "notes": "✔ TC-017h: DEPLOYMENT.md wraps Docker under an Optional heading (0.177834ms)"
     },
     {
       "tc_id": "TC-018f",
       "status": "pass",
-      "notes": "✔ TC-018f: IDEA.md does not describe a CLI dashboard mode (0.048209ms)"
+      "notes": "✔ TC-018f: README does not describe a CLI dashboard mode (0.0525ms)"
     },
     {
       "tc_id": "TC-019h",
       "status": "pass",
-      "notes": "✔ TC-019h: legacy projects.json (with defaultInterface) reads unchanged (2.744792ms)"
+      "notes": "✔ TC-019h: legacy projects.json (with defaultInterface) reads unchanged (2.755916ms)"
     },
     {
       "tc_id": "TC-020h",
@@ -116,12 +116,12 @@
     {
       "tc_id": "TC-021e",
       "status": "pass",
-      "notes": "✔ TC-021e: projects.json without version field reads correctly (0.356542ms)"
+      "notes": "✔ TC-021e: projects.json without version field reads correctly (0.374458ms)"
     },
     {
       "tc_id": "TC-022f",
       "status": "pass",
-      "notes": "✔ TC-022f: scanFolder — child without package.json or .aitri is skipped (0.310584ms)"
+      "notes": "✔ TC-022f: scanFolder — child without package.json or .aitri is skipped (0.300459ms)"
     },
     {
       "tc_id": "TC-023h",
@@ -136,7 +136,7 @@
     {
       "tc_id": "TC-025f",
       "status": "pass",
-      "notes": "✔ TC-025f: isValidProject — does not add parentFolder (pure scan only) (0.347333ms)"
+      "notes": "✔ TC-025f: isValidProject — does not add parentFolder (pure scan only) (0.390833ms)"
     },
     {
       "tc_id": "TC-026f",
@@ -151,7 +151,7 @@
     {
       "tc_id": "TC-028h",
       "status": "pass",
-      "notes": "✔ TC-028h: help does not mention Docker as a requirement (46.293958ms)"
+      "notes": "✔ TC-028h: help does not mention Docker as a requirement (40.236375ms)"
     },
     {
       "tc_id": "TC-029h",
@@ -161,7 +161,7 @@
     {
       "tc_id": "TC-030h",
       "status": "pass",
-      "notes": "✔ TC-030h: valid manifest round-trips and is consumed by readManifest (2.035459ms)"
+      "notes": "✔ TC-030h: valid manifest round-trips and is consumed by readManifest (1.81ms)"
     }
   ],
   "fr_coverage": [

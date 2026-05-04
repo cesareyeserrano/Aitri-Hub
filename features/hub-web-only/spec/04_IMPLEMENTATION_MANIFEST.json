@@ -8,29 +8,61 @@
   ],
   "test_coverage_map": {
     "tests/integration/hub-web-only.test.js": [
-      "TC-001h", "TC-001f", "TC-002f", "TC-003f", "TC-004e", "TC-005e", "TC-028h",
-      "TC-007h", "TC-008h", "TC-009h", "TC-010f",
-      "TC-011h", "TC-012f",
-      "TC-015h", "TC-016h", "TC-017h", "TC-018f",
-      "TC-019h", "TC-021e"
+      "TC-001h",
+      "TC-001f",
+      "TC-002f",
+      "TC-003f",
+      "TC-004e",
+      "TC-005e",
+      "TC-028h",
+      "TC-007h",
+      "TC-008h",
+      "TC-009h",
+      "TC-010f",
+      "TC-011h",
+      "TC-012f",
+      "TC-015h",
+      "TC-016h",
+      "TC-017h",
+      "TC-018f",
+      "TC-019h",
+      "TC-021e"
     ],
-    "tests/e2e/admin-api.test.js": ["TC-023h", "TC-024h", "TC-025f", "TC-026f", "TC-027e"]
+    "tests/e2e/admin-api.test.js": [
+      "TC-023h",
+      "TC-024h",
+      "TC-025f",
+      "TC-026f",
+      "TC-027e"
+    ]
   },
   "test_cases_not_implemented": [
     {
-      "tc_ids": ["TC-006h", "TC-006f"],
+      "tc_ids": [
+        "TC-006h",
+        "TC-006f"
+      ],
       "fr_id": "FR-001",
       "reason": "integration review manifest tests are already exercised by the existing tests/integration/integration-compat-manifest.test.js suite (passing). No new test added to avoid duplication."
     },
     {
-      "tc_ids": ["TC-013e", "TC-014h", "TC-020h", "TC-022f", "TC-029h", "TC-030h"],
+      "tc_ids": [
+        "TC-013e",
+        "TC-014h",
+        "TC-020h",
+        "TC-022f",
+        "TC-029h",
+        "TC-030h"
+      ],
       "fr_id": "FR-003/FR-005",
-      "reason": "Playwright-based viewport / server-lifecycle e2e tests. The parent-project Playwright harness boots a real server and exercises the admin flow (admin-api.test.js TC-e2eAdminAdd, TC-e2eFolderScan). The specific viewport-width and reload-persistence assertions are not yet coded as standalone tests — declared as deferred test coverage (effort: medium) rather than silently missing."
+      "reason": "Playwright-based viewport / server-lifecycle e2e tests. The parent-project Playwright harness boots a real server and exercises the admin flow (admin-api.test.js TC-e2eAdminAdd, TC-e2eFolderScan). The specific viewport-width and reload-persistence assertions are not yet coded as standalone tests \u2014 declared as deferred test coverage (effort: medium) rather than silently missing."
     },
     {
-      "tc_ids": ["TC-025f"],
+      "tc_ids": [
+        "TC-025f"
+      ],
       "fr_id": "FR-006",
-      "reason": "Covered by tests/e2e/admin-api.test.js NFR008-style localhost guard assertions (status 403 for non-loopback) — not duplicated in the new file."
+      "reason": "Covered by tests/e2e/admin-api.test.js NFR008-style localhost guard assertions (status 403 for non-loopback) \u2014 not duplicated in the new file."
     }
   ],
   "files_created": [],
@@ -45,11 +77,11 @@
     },
     {
       "path": "web/src/components/OverviewTab.jsx",
-      "change": "Same empty-state rewrite as HomeView.jsx (title + body + /admin CTA + disclosure). Kept in sync with the live component even though OverviewTab is currently unused in App.jsx — see technical_debt entry TD-01."
+      "change": "Same empty-state rewrite as HomeView.jsx (title + body + /admin CTA + disclosure). Kept in sync with the live component even though OverviewTab is currently unused in App.jsx \u2014 see technical_debt entry TD-01."
     },
     {
       "path": "web/src/styles.css",
-      "change": "Added CSS rules for .empty-state--onboarding, .empty-state__title, .empty-state__body, .empty-state__cta (with :hover/:focus), .empty-state__disclosure, .empty-state__disclosure summary. Reuses existing design tokens (--surface, --border, --syn-green, --syn-teal, --text, --text-dim, --space-*) — no new tokens. Applied font-weight: 500 to mitigate the known 4.3:1 contrast of --text-dim on --surface per WCAG 2.1 1.4.3 large-text rule."
+      "change": "Added CSS rules for .empty-state--onboarding, .empty-state__title, .empty-state__body, .empty-state__cta (with :hover/:focus), .empty-state__disclosure, .empty-state__disclosure summary. Reuses existing design tokens (--surface, --border, --syn-green, --syn-teal, --text, --text-dim, --space-*) \u2014 no new tokens. Applied font-weight: 500 to mitigate the known 4.3:1 contrast of --text-dim on --surface per WCAG 2.1 1.4.3 large-text rule."
     },
     {
       "path": "docker/web-dist/index.html",
@@ -72,10 +104,6 @@
       "change": "Replaced CLI Development-Setup block (`setup`/`monitor`) with `npm install` + `aitri-hub web`. Prerequisites table now lists Docker as optional. Added a systemd unit example for production. Moved all Docker / nginx / docker-compose instructions under a new `## Optional: Docker deployment` H2 heading at the end. Clarified the localhost-only + loopback-peer guard in Security Notes."
     },
     {
-      "path": "IDEA.md",
-      "change": "Rewrote Business Rules and Success Criteria. Removed the phrase 'CLI terminal dashboard' and every reference to `aitri-hub monitor`/`setup`/`init`. Success criteria now frame onboarding as 'open localhost:3000 → /admin CTA → register in the browser'. Out of Scope now explicitly lists 'A terminal-resident dashboard or interactive CLI setup wizard'."
-    },
-    {
       "path": "BACKLOG.md",
       "change": "Inserted a posture note at the top of the file declaring Aitri Hub as web-only and flagging that historical entries may mention the removed CLI commands. Historical [x] implemented entries were left intact (they are a log, not current documentation)."
     }
@@ -89,16 +117,34 @@
   ],
   "setup_commands": [
     "npm install",
-    "npm run build   (from web/ — regenerates docker/web-dist/)",
+    "npm run build   (from web/ \u2014 regenerates docker/web-dist/)",
     "aitri-hub web"
   ],
   "environment_variables": [
-    { "name": "AITRI_HUB_DIR", "default": "~/.aitri-hub" },
-    { "name": "AITRI_HUB_PORT", "default": "3000" },
-    { "name": "AITRI_HUB_REFRESH_MS", "default": "5000" },
-    { "name": "AITRI_HUB_GIT_TIMEOUT_MS", "default": "5000" },
-    { "name": "AITRI_HUB_MAX_PROJECTS", "default": "50" },
-    { "name": "AITRI_HUB_STALE_HOURS", "default": "72" }
+    {
+      "name": "AITRI_HUB_DIR",
+      "default": "~/.aitri-hub"
+    },
+    {
+      "name": "AITRI_HUB_PORT",
+      "default": "3000"
+    },
+    {
+      "name": "AITRI_HUB_REFRESH_MS",
+      "default": "5000"
+    },
+    {
+      "name": "AITRI_HUB_GIT_TIMEOUT_MS",
+      "default": "5000"
+    },
+    {
+      "name": "AITRI_HUB_MAX_PROJECTS",
+      "default": "50"
+    },
+    {
+      "name": "AITRI_HUB_STALE_HOURS",
+      "default": "72"
+    }
   ],
   "technical_debt": [
     {
@@ -111,7 +157,7 @@
     {
       "id": "TD-02",
       "fr_id": "FR-004",
-      "substitution": "BACKLOG.md historical [x] implemented entries still contain the strings `aitri-hub setup`, `aitri-hub monitor`, and `aitri-hub init` as part of the record of prior work. The FR-004 AC only grep-checks README.md, DEPLOYMENT.md, and IDEA.md (matching the parent BACKLOG-like files convention), so this is within the stated contract; however, a future full-rewrite of BACKLOG.md could scrub those strings.",
+      "substitution": "BACKLOG.md historical [x] implemented entries still contain the strings `aitri-hub setup`, `aitri-hub monitor`, and `aitri-hub init` as part of the record of prior work. The FR-004 AC only grep-checks README.md and DEPLOYMENT.md (matching the parent BACKLOG-like files convention; the parent product-brief markdown was absorbed into 01_REQUIREMENTS.json#original_brief and is no longer a deliverable), so this is within the stated contract; however, a future full-rewrite of BACKLOG.md could scrub those strings.",
       "reason": "A backlog is a historical log. Rewriting closed entries would falsify the record of what was shipped and when. The posture note at the top of the file is sufficient for any reader to interpret the history correctly.",
       "effort_to_fix": "low"
     }
@@ -122,12 +168,47 @@
     "admin_api_e2e_passed": 16,
     "admin_api_e2e_failed": 0,
     "smoke_checks": [
-      { "command": "node bin/aitri-hub.js help", "exit": 0, "stdout_contains": ["aitri-hub web", "integration review", "aitri-hub help", "--version"], "stdout_forbids": ["aitri-hub monitor", "aitri-hub setup", "aitri-hub init"] },
-      { "command": "node bin/aitri-hub.js monitor", "exit": 1, "stderr_contains": "Unknown command: 'monitor'" },
-      { "command": "node bin/aitri-hub.js setup",   "exit": 1, "stderr_contains": "Unknown command: 'setup'" },
-      { "command": "node bin/aitri-hub.js init < /dev/null", "exit": 1, "stderr_contains": "Unknown command: 'init'", "terminates_in_ms": "<2000" },
-      { "command": "node bin/aitri-hub.js --version", "exit": 0, "stdout_matches": "/^\\d+\\.\\d+\\.\\d+$/" },
-      { "command": "grep -nE 'aitri-hub (monitor|setup|init)' README.md DEPLOYMENT.md IDEA.md", "exit_code": 1, "result": "ZERO MATCHES" }
+      {
+        "command": "node bin/aitri-hub.js help",
+        "exit": 0,
+        "stdout_contains": [
+          "aitri-hub web",
+          "integration review",
+          "aitri-hub help",
+          "--version"
+        ],
+        "stdout_forbids": [
+          "aitri-hub monitor",
+          "aitri-hub setup",
+          "aitri-hub init"
+        ]
+      },
+      {
+        "command": "node bin/aitri-hub.js monitor",
+        "exit": 1,
+        "stderr_contains": "Unknown command: 'monitor'"
+      },
+      {
+        "command": "node bin/aitri-hub.js setup",
+        "exit": 1,
+        "stderr_contains": "Unknown command: 'setup'"
+      },
+      {
+        "command": "node bin/aitri-hub.js init < /dev/null",
+        "exit": 1,
+        "stderr_contains": "Unknown command: 'init'",
+        "terminates_in_ms": "<2000"
+      },
+      {
+        "command": "node bin/aitri-hub.js --version",
+        "exit": 0,
+        "stdout_matches": "/^\\d+\\.\\d+\\.\\d+$/"
+      },
+      {
+        "command": "grep -nE 'aitri-hub (monitor|setup|init)' README.md DEPLOYMENT.md",
+        "exit_code": 1,
+        "result": "ZERO MATCHES"
+      }
     ],
     "definition_of_done": {
       "linter": "No lint step is configured for this repo; manual source review performed.",

@@ -31,7 +31,7 @@ This feature is **reductive**: its architecture is defined by what is removed, n
 | Bundler | Vite | 5.x | Already present — no change |
 | Persistence | Local JSON files in `~/.aitri-hub/` | — | No format change; see no_go_zone |
 
-**New dependencies introduced:** zero. **New files created:** zero (only the feature's own `spec/` artifacts). **Files deleted:** three source modules + two test files. **Files edited:** `bin/aitri-hub.js`, `web/src/components/OverviewTab.jsx`, `README.md`, `DEPLOYMENT.md`, `IDEA.md`, `BACKLOG.md`.
+**New dependencies introduced:** zero. **New files created:** zero (only the feature's own `spec/` artifacts). **Files deleted:** three source modules + two test files. **Files edited:** `bin/aitri-hub.js`, `web/src/components/OverviewTab.jsx`, `README.md`, `DEPLOYMENT.md`, `BACKLOG.md`. (The original product brief was edited at implementation time as well; Aitri later absorbed its content into `01_REQUIREMENTS.json#original_brief` as the single SSoT.)
 
 ## System Architecture
 
@@ -96,7 +96,7 @@ This feature is **reductive**: its architecture is defined by what is removed, n
 | C8 | `web/src/components/OverviewTab.jsx` (lines 216-225) | Render empty-state when `projects.length === 0` | **Edited** — CLI-instruction text replaced with `/admin` CTA per UX spec |
 | C9 | `web/src/styles.css` | Token and layout styles | **Possibly edited** — only if the empty-state panel requires new style rules that cannot be expressed with existing tokens (see UX spec "Design Tokens") |
 | C10 | `tests/unit/monitor-stub.test.js`, `tests/integration/setup.test.js` | — | **Deleted** |
-| C11 | `README.md`, `DEPLOYMENT.md`, `IDEA.md`, `BACKLOG.md` | User-facing documentation | **Rewritten** per FR-004 |
+| C11 | `README.md`, `DEPLOYMENT.md`, `BACKLOG.md` | User-facing documentation | **Rewritten** per FR-004. (The original product brief was rewritten at implementation time too; subsequently absorbed into `01_REQUIREMENTS.json#original_brief`.) |
 
 ## Data Model
 
@@ -345,8 +345,8 @@ Mitigation: `lib/store/projects.js` already normalises to `{ projects: Array.isA
 Severity: **low** — defensive code already present; test adds a guard.
 
 [RISK] Documentation rewrite inconsistency — docs may still contain residual CLI references after the edit pass
-Conflict: FR-004 AC-008 requires `grep -nE 'aitri-hub (monitor|setup|init)' README.md DEPLOYMENT.md IDEA.md` to return zero matches. If the implementer misses a reference, the AC fails.
-Mitigation: Phase 3 test cases include an explicit `grep` assertion over those three files; Phase 4 implementation must run the same grep before marking the task done. CI gate is cheap (a one-line shell command).
+Conflict: FR-004 AC-008 requires `grep -nE 'aitri-hub (monitor|setup|init)' README.md DEPLOYMENT.md` to return zero matches. If the implementer misses a reference, the AC fails. (Originally the grep also covered the legacy product-brief markdown; that file was absorbed into `01_REQUIREMENTS.json#original_brief` post-feature and dropped from the assertion scope.)
+Mitigation: Phase 3 test cases include an explicit `grep` assertion over those files; Phase 4 implementation must run the same grep before marking the task done. CI gate is cheap (a one-line shell command).
 Severity: **low** — mechanical check; fast feedback loop.
 
 [RISK] Orphaned test fixtures or imports referencing deleted modules
