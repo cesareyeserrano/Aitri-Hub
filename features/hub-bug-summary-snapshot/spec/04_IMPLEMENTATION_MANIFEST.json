@@ -1,0 +1,17 @@
+{
+  "summary": "Hub now projects the canonical Aitri snapshot bugs contract with total, open, resolved, blocking, active severity buckets, and open IDs while preserving active severity aliases for existing alert rules.",
+  "files_created": [
+    "features/hub-bug-summary-snapshot/tests/bug-summary-snapshot.test.js",
+    "features/hub-bug-summary-snapshot/run-tests.sh",
+    "tests/e2e/bug-summary-snapshot.test.js"
+  ],
+  "files_modified": [
+    "lib/collector/snapshot-reader.js"
+  ],
+  "test_runner": "./run-tests.sh",
+  "test_files": [
+    "tests/bug-summary-snapshot.test.js",
+    "../../tests/e2e/bug-summary-snapshot.test.js"
+  ],
+  "technical_debt": []
+}

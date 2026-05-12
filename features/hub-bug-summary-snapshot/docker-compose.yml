@@ -1,0 +1,22 @@
+services:
+  aitri-hub:
+    build:
+      context: ../..
+      dockerfile: features/hub-bug-summary-snapshot/Dockerfile
+    image: aitri-hub:hub-bug-summary-snapshot
+    environment:
+      AITRI_HUB_DIR: ${AITRI_HUB_DIR:-/data}
+      AITRI_HUB_PORT: ${AITRI_HUB_PORT:-3000}
+      AITRI_HUB_REFRESH_MS: ${AITRI_HUB_REFRESH_MS:-5000}
+      AITRI_HUB_SCAN_DIR: ${AITRI_HUB_SCAN_DIR:-}
+    ports:
+      - '${AITRI_HUB_PORT:-3000}:3000'
+    volumes:
+      - '${AITRI_HUB_DATA_DIR:-./data}:/data'
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1:3000/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

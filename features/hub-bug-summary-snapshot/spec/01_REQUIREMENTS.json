@@ -1,0 +1,243 @@
+{
+  "project_name": "Aitri Hub — Feature: hub-bug-summary-snapshot",
+  "project_summary": {
+    "summary": "Adapt Hub's snapshot bug projection to Aitri Core's current bugs shape so dashboard data preserves registered bug totals, active bug counts, derived resolved counts, blocking counts, active severity buckets, and active IDs without implying unavailable historical status or severity breakdowns.",
+    "idea_gaps": [],
+    "product_analysis": {
+      "north_star_kpi": "For a snapshot with bugs.total=12 and bugs.open=0, Hub dashboard data exposes bugsSummary.total=12 and bugsSummary.resolved=12 after one collection cycle.",
+      "jtbd": "When reviewing project health in Hub, help a developer distinguish 'no bugs registered' from 'bugs exist historically but none are open'.",
+      "guardrail_metric": "Existing open-bug alert behavior remains unchanged: a snapshot with one active high or critical bug still produces a blocking open-bugs alert."
+    },
+    "depth_protocol": {
+      "screens_surfaces": [
+        "Project card bug/alert surfaces backed by dashboard.json",
+        "dashboard.json project entry consumed by the React dashboard"
+      ],
+      "user_actions": [
+        "Open Hub dashboard",
+        "Inspect a project card's bug/alert state"
+      ],
+      "system_states": [
+        "Snapshot has total bugs and zero open bugs",
+        "Snapshot has open blocking bugs",
+        "Snapshot has missing or malformed bugs object",
+        "Legacy non-snapshot BUGS.json reader path remains compatible"
+      ],
+      "auth_permissions": [
+        "No new permissions; Hub remains local read-only dashboard"
+      ],
+      "async_operations": [
+        "Collector cycle projects snapshot data into dashboard.json"
+      ],
+      "edge_cases": [
+        "bugs.total lower than bugs.open clamps resolved to 0",
+        "bugs.bySeverity missing defaults active severity buckets to 0",
+        "bugs.openIds missing defaults to []"
+      ]
+    }
+  },
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "title": "Project current Aitri snapshot bug totals into Hub bugsSummary",
+      "description": "When Hub consumes `aitri status --json` snapshot data, it must preserve `bugs.total`, `bugs.open`, `bugs.blocking`, `bugs.bySeverity`, and `bugs.openIds` in the projected project `bugsSummary` using Hub-facing field names.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given snapshot bugs {total:12, open:0, blocking:0, bySeverity:{critical:0, high:0, medium:0, low:0}, openIds:[]}, when projectFromSnapshot projects the snapshot, then bugsSummary.total=12, bugsSummary.open=0, bugsSummary.blocking=0, bugsSummary.bySeverityActive.high=0, and bugsSummary.openIds=[]",
+        "Given snapshot bugs {total:5, open:2, blocking:1, bySeverity:{critical:0, high:1, medium:1, low:0}, openIds:['BG-1','BG-2']}, when projected, then bugsSummary.total=5, bugsSummary.open=2, bugsSummary.blocking=1, bugsSummary.bySeverityActive.high=1, bugsSummary.bySeverityActive.medium=1, and bugsSummary.openIds has length 2"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-002",
+      "title": "Derive resolved bug count from total minus open",
+      "description": "Hub must expose a `resolved` bug count for snapshot-derived data calculated from the canonical Aitri fields instead of expecting historical status fields from the snapshot.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given bugs.total=12 and bugs.open=0, when projected, then bugsSummary.resolved=12",
+        "Given bugs.total=5 and bugs.open=2, when projected, then bugsSummary.resolved=3",
+        "Given bugs.total=1 and bugs.open=3, when projected, then bugsSummary.resolved=0"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-003",
+      "title": "Maintain compatibility for existing active severity consumers",
+      "description": "Existing code that checks `bugsSummary.critical`, `bugsSummary.high`, `bugsSummary.medium`, and `bugsSummary.low` must continue to receive active severity counts so current alert behavior does not regress.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given snapshot bugs.bySeverity.high=1 and bugs.open=1, when projected, then bugsSummary.high=1 and evaluateAlerts emits an open-bugs blocking alert",
+        "Given snapshot bugs.bySeverity.medium=1, bugs.bySeverity.high=0, bugs.bySeverity.critical=0, and bugs.open=1, when projected, then bugsSummary.medium=1 and evaluateAlerts emits an open-bugs warning alert"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-004",
+      "title": "Avoid promising unavailable historical status breakdowns",
+      "description": "Snapshot-derived `bugsSummary` must not fabricate `fixed`, `verified`, or `closed` counts from fields that Aitri Core does not emit in the current snapshot bug shape.",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "Given a snapshot with bugs.total=12 and bugs.open=0 but no fixed/verified/closed fields, when projected, then bugsSummary.resolved=12 and no acceptance test requires bugsSummary.verified=12",
+        "Given snapshot bugs lacks fixed, verified, and closed, when projected, then Hub does not infer historical status-specific counts from total"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-005",
+      "title": "Preserve legacy BUGS.json reader behavior",
+      "description": "The existing non-snapshot path that reads `BUGS.json` directly must keep its current open/fixed/verified/closed severity summary shape so older or fallback collection remains compatible.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given BUGS.json contains one open critical bug and one verified bug, when readBugsSummary reads the file, then it still returns open=1, critical=1, verified=1, and openIds contains the open bug ID",
+        "Given BUGS.json is absent, when readBugsSummary runs, then it still returns null without throwing"
+      ],
+      "implementation_level": "functional"
+    }
+  ],
+  "user_personas": [
+    {
+      "role": "Hub Operator",
+      "tech_level": "high",
+      "goal": "Use Hub to inspect project health and know whether bugs are currently open or only historical.",
+      "pain_point": "Current snapshot projection makes projects with historical verified bugs look the same as projects with no registered bugs."
+    },
+    {
+      "role": "Aitri Core Maintainer",
+      "tech_level": "high",
+      "goal": "Keep Aitri Core's snapshot bug contract stable while Hub adapts its projection correctly.",
+      "pain_point": "Incorrect Hub assumptions can create pressure for unnecessary Aitri Core schema changes."
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US-001",
+      "requirement_id": "FR-001",
+      "as_a": "Hub Operator",
+      "i_want": "Hub to preserve total and active bug counts from the Aitri snapshot",
+      "so_that": "I can tell whether a project has bug history even when nothing is currently open.",
+      "acceptance_criteria": [
+        {
+          "id": "AC-001",
+          "given": "a project snapshot with bugs.total=12, bugs.open=0, bugs.blocking=0, bugs.bySeverity all zero, and bugs.openIds=[]",
+          "when": "Hub projects the snapshot into dashboard data",
+          "then": "the project bugsSummary has total=12, open=0, resolved=12, blocking=0, bySeverityActive.high=0, and openIds=[]"
+        }
+      ]
+    },
+    {
+      "id": "US-002",
+      "requirement_id": "FR-002",
+      "as_a": "Hub Operator",
+      "i_want": "Hub to derive resolved bug count from total minus open",
+      "so_that": "I can see that historical bugs exist without requiring Aitri Core to expose status-specific history.",
+      "acceptance_criteria": [
+        {
+          "id": "AC-002",
+          "given": "bugs.total=5 and bugs.open=2 in the snapshot",
+          "when": "Hub projects bugsSummary",
+          "then": "bugsSummary.resolved equals 3"
+        }
+      ]
+    },
+    {
+      "id": "US-003",
+      "requirement_id": "FR-003",
+      "as_a": "Hub Operator",
+      "i_want": "existing active bug alerts to keep working",
+      "so_that": "critical or high open bugs remain visible as blocking health issues.",
+      "acceptance_criteria": [
+        {
+          "id": "AC-003",
+          "given": "bugs.open=1 and bugs.bySeverity.high=1 in the snapshot",
+          "when": "Hub projects bugsSummary and evaluates alerts",
+          "then": "an open-bugs alert with severity blocking is generated"
+        }
+      ]
+    },
+    {
+      "id": "US-004",
+      "requirement_id": "FR-004",
+      "as_a": "Aitri Core Maintainer",
+      "i_want": "Hub not to infer status-specific historical bug fields that Core does not emit",
+      "so_that": "the Hub/Core contract remains semantically correct.",
+      "acceptance_criteria": [
+        {
+          "id": "AC-004",
+          "given": "a snapshot emits bugs.total and bugs.open but no verified/fixed/closed fields",
+          "when": "Hub projects bugsSummary",
+          "then": "Hub exposes resolved but does not require verified/fixed/closed counts from the snapshot"
+        }
+      ]
+    },
+    {
+      "id": "US-005",
+      "requirement_id": "FR-005",
+      "as_a": "Hub Operator",
+      "i_want": "legacy BUGS.json fallback behavior to remain unchanged",
+      "so_that": "older or degraded projects still report bug summaries as before.",
+      "acceptance_criteria": [
+        {
+          "id": "AC-005",
+          "given": "a legacy project is read through BUGS.json fallback",
+          "when": "readBugsSummary runs",
+          "then": "it still returns open, fixed, verified, closed, active severity counts, and openIds using the existing behavior"
+        }
+      ]
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-001",
+      "category": "Reliability",
+      "requirement": "Snapshot bug projection must tolerate missing or partial bugs objects without crashing collection.",
+      "acceptance_criteria": "Given bugs is null, undefined, or missing bySeverity/openIds, projectFromSnapshot returns null or zero/default bug fields without throwing."
+    },
+    {
+      "id": "NFR-002",
+      "category": "Performance",
+      "requirement": "Bug projection must remain constant time relative to the number of historical bug records because the snapshot already provides aggregates.",
+      "acceptance_criteria": "Projection reads only aggregate fields from bugs and completes in less than 1ms in a unit test loop of 1000 projections on a local machine."
+    },
+    {
+      "id": "NFR-003",
+      "category": "CI/CD",
+      "requirement": "The feature must include automated tests covering snapshot projection and alert compatibility.",
+      "acceptance_criteria": "Feature verify-run includes unit tests for projectFromSnapshot bug projection and evaluateAlerts active severity compatibility."
+    },
+    {
+      "id": "NFR-004",
+      "category": "Observability",
+      "requirement": "No new daemon, HTTP route, or request logging behavior is introduced.",
+      "acceptance_criteria": "The implementation modifies only in-process projection/alert data shape and does not add new HTTP endpoints or background jobs."
+    },
+    {
+      "id": "NFR-005",
+      "category": "Security",
+      "requirement": "No new filesystem, network, command execution, or user input surface is introduced.",
+      "acceptance_criteria": "Code review confirms the change only maps already-loaded snapshot fields and does not add fs, network, child_process, or user input parsing calls."
+    }
+  ],
+  "no_go_zone": [
+    "No Aitri Core changes — current Core snapshot fields are sufficient.",
+    "No redesign of Aitri Core aggregateBugs — Hub adapts to the existing aggregate shape.",
+    "No historical severity or status breakdown beyond total/open/resolved — Core does not emit those semantics.",
+    "No new bug-management UI — this feature only fixes projection and data shape.",
+    "No changes to project registration, collector scheduling, or dashboard refresh behavior."
+  ],
+  "constraints": [
+    "Use current Aitri snapshot fields: bugs.total, bugs.open, bugs.blocking, bugs.bySeverity, bugs.openIds.",
+    "Keep existing alert consumers compatible with bugsSummary.critical/high/medium/low.",
+    "Do not change readBugsSummary legacy BUGS.json behavior."
+  ],
+  "technology_preferences": [
+    "Node.js ESM",
+    "Existing unit tests under node:test",
+    "No new runtime dependencies"
+  ],
+  "original_brief": "## Feature\nAdapt Aitri Hub's snapshot bug projection to the current `aitri status --json` bug summary shape.\n\n## Problem / Why\nHub currently projects snapshot bugs as if Aitri emitted historical status fields (`fixed`, `verified`, `closed`) and top-level severity fields (`critical`, `high`, `medium`, `low`). Aitri Core currently emits `bugs.total`, `bugs.open`, `bugs.blocking`, `bugs.bySeverity`, and `bugs.openIds`.\n\nAs a result, Hub correctly shows no open bugs when `bugs.open = 0`, but it drops the historical total. For example, AITRI-HUB has 12 registered bugs, all verified, and Aitri emits `bugs.total = 12`, but Hub's `bugsSummary` in `dashboard.json` shows only zeroed historical fields.\n\n## Target Users\nHub users reviewing project health who need to distinguish \"no bugs registered\" from \"bugs exist historically, but none are open.\"\n\n## New Behavior\n- Hub must preserve the current Aitri snapshot bug summary fields in its projected `bugsSummary`.\n- Hub must expose `total`, `open`, `resolved`, `blocking`, `bySeverityActive`, and `openIds` for snapshot-derived bug data.\n- `resolved` must equal `max(total - open, 0)`.\n- Active severity counts must come from `bugs.bySeverity` and must not be presented as historical severity counts.\n- Existing open-bug alert behavior must continue to work for critical/high active bugs.\n\n## Success Criteria\n- Given a snapshot with `bugs.total = 12`, `bugs.open = 0`, `bugs.blocking = 0`, and empty active severities, when Hub projects the snapshot, then `bugsSummary.total = 12`, `bugsSummary.open = 0`, `bugsSummary.resolved = 12`, and `bugsSummary.blocking = 0`.\n- Given a snapshot with `bugs.total = 5`, `bugs.open = 2`, `bugs.blocking = 1`, `bugs.bySeverity.high = 1`, and `bugs.openIds = [\"BG-1\", \"BG-2\"]`, when Hub projects the snapshot, then `bugsSummary.open = 2`, `bugsSummary.resolved = 3`, `bugsSummary.bySeverityActive.high = 1`, and `bugsSummary.openIds` preserves both IDs.\n- Given existing consumers that check `bugsSummary.open`, `critical`, `high`, `medium`, or `low`, when the new projection is used, then open-bug blocking/warning alert behavior remains compatible.\n\n## Out of Scope\n- No Aitri Core changes.\n- No redesign of Aitri Core `aggregateBugs`.\n- No historical severity or status breakdown beyond `total`, `open`, and derived `resolved`.\n- No new bug-management UI.\n"
+}

@@ -1,0 +1,144 @@
+{
+  "executed_at": "2026-05-12T23:46:31.173Z",
+  "test_runner": "./run-tests.sh",
+  "exit_code": 0,
+  "results": [
+    {
+      "tc_id": "TC-001h",
+      "status": "pass",
+      "notes": "✔ TC-001h Snapshot bugs preserves 12 total and zero active bugs (1.411417ms)"
+    },
+    {
+      "tc_id": "TC-001e",
+      "status": "pass",
+      "notes": "✔ TC-001e Snapshot bugs preserves active severity buckets and IDs (0.163083ms)"
+    },
+    {
+      "tc_id": "TC-001f",
+      "status": "pass",
+      "notes": "✔ TC-001f Snapshot bugs missing bugs object returns null summary (0.097541ms)"
+    },
+    {
+      "tc_id": "TC-002h",
+      "status": "pass",
+      "notes": "✔ TC-002h Resolved bugs total 5 minus open 2 equals 3 (0.100625ms)"
+    },
+    {
+      "tc_id": "TC-002e",
+      "status": "pass",
+      "notes": "✔ TC-002e Resolved bugs total 12 minus open 0 equals 12 (0.10825ms)"
+    },
+    {
+      "tc_id": "TC-002f",
+      "status": "pass",
+      "notes": "✔ TC-002f Resolved bugs open greater than total clamps to zero (0.088083ms)"
+    },
+    {
+      "tc_id": "TC-003h",
+      "status": "pass",
+      "notes": "✔ TC-003h Active high bug compatibility alias triggers blocking alert (62.942083ms)"
+    },
+    {
+      "tc_id": "TC-003e",
+      "status": "pass",
+      "notes": "✔ TC-003e Active medium bug compatibility alias triggers warning alert (0.185084ms)"
+    },
+    {
+      "tc_id": "TC-003f",
+      "status": "pass",
+      "notes": "✔ TC-003f No active bugs aliases remain zero and no bug alert appears (0.773333ms)"
+    },
+    {
+      "tc_id": "TC-004h",
+      "status": "pass",
+      "notes": "✔ TC-004h Snapshot history exposes resolved without requiring verified (0.196208ms)"
+    },
+    {
+      "tc_id": "TC-004e",
+      "status": "pass",
+      "notes": "✔ TC-004e Snapshot history fixed and closed are not fabricated (0.106417ms)"
+    },
+    {
+      "tc_id": "TC-004f",
+      "status": "pass",
+      "notes": "✔ TC-004f Snapshot history invalid historical fields are ignored (0.089042ms)"
+    },
+    {
+      "tc_id": "TC-005h",
+      "status": "pass",
+      "notes": "✔ TC-005h Legacy BUGS json existing status breakdown remains intact (1.58275ms)"
+    },
+    {
+      "tc_id": "TC-005e",
+      "status": "pass",
+      "notes": "✔ TC-005e Legacy BUGS json artifactsDir spec still works (0.749416ms)"
+    },
+    {
+      "tc_id": "TC-005f",
+      "status": "pass",
+      "notes": "✔ TC-005f Legacy BUGS json absent file returns null (0.29ms)"
+    },
+    {
+      "tc_id": "TC-E2E-001h",
+      "status": "pass",
+      "notes": "✔ TC-E2E-001h Collector-facing snapshot projection produces dashboard-ready summary"
+    },
+    {
+      "tc_id": "TC-E2E-005h",
+      "status": "pass",
+      "notes": "✔ TC-E2E-005h Legacy fallback flow BUGS json summary remains available"
+    }
+  ],
+  "fr_coverage": [
+    {
+      "fr_id": "FR-001",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-002",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-003",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-004",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-005",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    }
+  ],
+  "summary": {
+    "total": 17,
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 0,
+    "manual": 0,
+    "manual_verified": 0
+  }
+}

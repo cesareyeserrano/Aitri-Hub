@@ -1,0 +1,69 @@
+{
+  "project": "Aitri Hub — Feature: hub-bug-summary-snapshot",
+  "version": "1.0.0",
+  "phases_completed": [1, 2, 3, 4, 5],
+  "overall_status": "partial",
+  "requirement_compliance": [
+    {
+      "id": "FR-001",
+      "title": "Project current Aitri snapshot bug totals into Hub bugsSummary",
+      "level": "production_ready",
+      "evidence": "4/4 tests passing. TC-001h/e/f verify snapshot total/open/blocking/bySeverity/openIds projection and null behavior; TC-E2E-001h verifies dashboard-ready total/open/resolved fields through the collector-facing projection. Zero technical debt."
+    },
+    {
+      "id": "FR-002",
+      "title": "Derive resolved bug count from total minus open",
+      "level": "production_ready",
+      "evidence": "3/3 tests passing. TC-002h verifies 5 total minus 2 open equals 3; TC-002e verifies 12 total minus 0 open equals 12; TC-002f verifies invalid open > total clamps resolved to zero. Zero technical debt."
+    },
+    {
+      "id": "FR-003",
+      "title": "Maintain compatibility for existing active severity consumers",
+      "level": "production_ready",
+      "evidence": "3/3 tests passing. TC-003h verifies high active bug aliases trigger blocking alert; TC-003e verifies medium active bug aliases trigger warning alert; TC-003f verifies zero active bugs produce no open-bugs alert. Zero technical debt."
+    },
+    {
+      "id": "FR-004",
+      "title": "Avoid promising unavailable historical status breakdowns",
+      "level": "production_ready",
+      "evidence": "3/3 tests passing. TC-004h/e/f verify snapshot-derived summaries expose resolved while not fabricating verified, fixed, or closed fields. Zero technical debt."
+    },
+    {
+      "id": "FR-005",
+      "title": "Preserve legacy BUGS.json reader behavior",
+      "level": "production_ready",
+      "evidence": "4/4 tests passing. TC-005h/e/f verify legacy BUGS.json status and severity breakdown behavior, artifactsDir=spec support, and absent-file null behavior; TC-E2E-005h verifies fallback summary remains available. Zero technical debt."
+    },
+    {
+      "id": "NFR-001",
+      "title": "Snapshot bug projection must tolerate missing or partial bugs objects without crashing collection",
+      "level": "production_ready",
+      "evidence": "TC-001f verifies missing bugs returns null without throwing. Projection validates field shape and defaults invalid counts to zero."
+    },
+    {
+      "id": "NFR-002",
+      "title": "Bug projection must remain constant time relative to historical bug record count",
+      "level": "production_ready",
+      "evidence": "Implementation reads aggregate fields only: total, open, blocking, bySeverity, and openIds. It does not iterate historical bug records."
+    },
+    {
+      "id": "NFR-003",
+      "title": "The feature must include automated tests covering snapshot projection and alert compatibility",
+      "level": "partial",
+      "evidence": "Automated tests exist and pass through ./run-tests.sh: 15 node:test cases and 2 targeted Playwright E2E cases. Existing CI triggers on push/pull_request to main, installs dependencies, runs npm test, and runs npm run test:e2e, but it does not run the exact feature runner ./run-tests.sh or include the feature node:test file in package scripts."
+    },
+    {
+      "id": "NFR-004",
+      "title": "No new daemon, HTTP route, or request logging behavior is introduced",
+      "level": "production_ready",
+      "evidence": "Only lib/collector/snapshot-reader.js projection logic changed. No server, route, scheduler, daemon, or logging file was modified."
+    },
+    {
+      "id": "NFR-005",
+      "title": "No new filesystem, network, command execution, or user input surface is introduced",
+      "level": "production_ready",
+      "evidence": "The runtime change is a pure in-memory projection of an already parsed snapshot object. Legacy BUGS.json reader behavior is unchanged."
+    }
+  ],
+  "technical_debt_inherited": []
+}

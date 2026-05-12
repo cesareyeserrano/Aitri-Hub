@@ -1,0 +1,476 @@
+{
+  "test_plan": {
+    "strategy": "Unit tests prove the snapshot bug projection logic and alert compatibility because this feature is an in-process data-shape correction. Integration tests prove the projected shape survives collector/dashboard-style use and legacy BUGS.json fallback remains unchanged. Two e2e-labelled collector-flow tests validate the end-to-end data contract from snapshot-shaped input to Hub-facing project summary without adding UI scope.",
+    "coverage_goal": "80%",
+    "test_types": [
+      "unit",
+      "integration",
+      "e2e"
+    ]
+  },
+  "type_coverage_matrix": {
+    "FR-001": {
+      "unit": "MUST",
+      "integration": "SHOULD",
+      "e2e": "SHOULD"
+    },
+    "FR-002": {
+      "unit": "MUST",
+      "integration": "-",
+      "e2e": "-"
+    },
+    "FR-003": {
+      "unit": "MUST",
+      "integration": "SHOULD",
+      "e2e": "-"
+    },
+    "FR-004": {
+      "unit": "MUST",
+      "integration": "SHOULD",
+      "e2e": "-"
+    },
+    "FR-005": {
+      "unit": "MUST",
+      "integration": "MUST",
+      "e2e": "SHOULD"
+    }
+  },
+  "test_cases": [
+    {
+      "id": "TC-001h",
+      "requirement_id": "FR-001",
+      "user_story_id": "US-001",
+      "ac_id": "AC-001",
+      "title": "Snapshot bugs — preserves 12 total and zero active bugs",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "projectFromSnapshot is imported from lib/collector/snapshot-reader.js"
+      ],
+      "given": "snapshot={snapshotVersion:1, project:'AITRI-HUB', bugs:{total:12, open:0, blocking:0, bySeverity:{critical:0, high:0, medium:0, low:0}, openIds:[]}}",
+      "when": "projectFromSnapshot(snapshot) is called",
+      "then": "result.bugsSummary has total=12, open=0, resolved=12, blocking=0, bySeverityActive.high=0, and openIds=[]",
+      "steps": [
+        "Call projectFromSnapshot with the concrete snapshot",
+        "Read result.bugsSummary"
+      ],
+      "expected_result": "bugsSummary.total === 12; open === 0; resolved === 12; blocking === 0; bySeverityActive.high === 0; openIds.length === 0",
+      "test_data": {
+        "bugs": {
+          "total": 12,
+          "open": 0,
+          "blocking": 0,
+          "bySeverity": {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0
+          },
+          "openIds": []
+        }
+      }
+    },
+    {
+      "id": "TC-001e",
+      "requirement_id": "FR-001",
+      "user_story_id": "US-001",
+      "ac_id": "AC-001",
+      "title": "Snapshot bugs — preserves active severity buckets and IDs",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "projectFromSnapshot is imported"
+      ],
+      "given": "snapshot bugs={total:5, open:2, blocking:1, bySeverity:{critical:0, high:1, medium:1, low:0}, openIds:['BG-1','BG-2']}",
+      "when": "projectFromSnapshot(snapshot) is called",
+      "then": "bugsSummary.total=5, open=2, blocking=1, bySeverityActive.high=1, bySeverityActive.medium=1, and openIds=['BG-1','BG-2']",
+      "steps": [
+        "Call projectFromSnapshot",
+        "Assert active severity buckets and IDs"
+      ],
+      "expected_result": "bugsSummary.bySeverityActive.high === 1; medium === 1; openIds deep-equals ['BG-1','BG-2']",
+      "test_data": {
+        "openIds": [
+          "BG-1",
+          "BG-2"
+        ]
+      }
+    },
+    {
+      "id": "TC-001f",
+      "requirement_id": "FR-001",
+      "user_story_id": "US-001",
+      "ac_id": "AC-001",
+      "title": "Snapshot bugs — missing bugs object returns null summary",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": [
+        "projectFromSnapshot is imported"
+      ],
+      "given": "snapshot={snapshotVersion:1, project:'NO-BUGS'} with no bugs field",
+      "when": "projectFromSnapshot(snapshot) is called",
+      "then": "result.bugsSummary === null and no exception is thrown",
+      "steps": [
+        "Call projectFromSnapshot with no bugs field"
+      ],
+      "expected_result": "bugsSummary is exactly null",
+      "test_data": {}
+    },
+    {
+      "id": "TC-002h",
+      "requirement_id": "FR-002",
+      "user_story_id": "US-002",
+      "ac_id": "AC-002",
+      "title": "Resolved bugs — total 5 minus open 2 equals 3",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "projectFromSnapshot is imported"
+      ],
+      "given": "snapshot bugs={total:5, open:2, blocking:0, bySeverity:{critical:0, high:0, medium:0, low:0}, openIds:['BG-1','BG-2']}",
+      "when": "projectFromSnapshot(snapshot) is called",
+      "then": "bugsSummary.resolved === 3",
+      "steps": [
+        "Project snapshot",
+        "Assert resolved count"
+      ],
+      "expected_result": "resolved === 3",
+      "test_data": {
+        "total": 5,
+        "open": 2
+      }
+    },
+    {
+      "id": "TC-002e",
+      "requirement_id": "FR-002",
+      "user_story_id": "US-002",
+      "ac_id": "AC-002",
+      "title": "Resolved bugs — total 12 minus open 0 equals 12",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "projectFromSnapshot is imported"
+      ],
+      "given": "snapshot bugs={total:12, open:0, blocking:0, bySeverity:{critical:0, high:0, medium:0, low:0}, openIds:[]}",
+      "when": "projectFromSnapshot(snapshot) is called",
+      "then": "bugsSummary.resolved === 12",
+      "steps": [
+        "Project snapshot",
+        "Assert resolved count"
+      ],
+      "expected_result": "resolved === 12",
+      "test_data": {
+        "total": 12,
+        "open": 0
+      }
+    },
+    {
+      "id": "TC-002f",
+      "requirement_id": "FR-002",
+      "user_story_id": "US-002",
+      "ac_id": "AC-002",
+      "title": "Resolved bugs — open greater than total clamps to zero",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": [
+        "projectFromSnapshot is imported"
+      ],
+      "given": "snapshot bugs={total:1, open:3, blocking:0, bySeverity:{critical:0, high:0, medium:0, low:0}, openIds:['BG-1','BG-2','BG-3']}",
+      "when": "projectFromSnapshot(snapshot) is called",
+      "then": "bugsSummary.resolved === 0",
+      "steps": [
+        "Project snapshot",
+        "Assert resolved clamps to zero"
+      ],
+      "expected_result": "resolved === 0",
+      "test_data": {
+        "total": 1,
+        "open": 3
+      }
+    },
+    {
+      "id": "TC-003h",
+      "requirement_id": "FR-003",
+      "user_story_id": "US-003",
+      "ac_id": "AC-003",
+      "title": "Active high bug — compatibility alias triggers blocking alert",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "projectFromSnapshot is imported",
+        "evaluateAlerts is imported from lib/alerts/engine.js"
+      ],
+      "given": "snapshot bugs={total:1, open:1, blocking:1, bySeverity:{critical:0, high:1, medium:0, low:0}, openIds:['BG-9']}",
+      "when": "projectFromSnapshot(snapshot).bugsSummary is passed into evaluateAlerts as project.bugsSummary",
+      "then": "evaluateAlerts returns one open-bugs alert with severity='blocking'",
+      "steps": [
+        "Project snapshot",
+        "Create project data with bugsSummary",
+        "Call evaluateAlerts",
+        "Filter alerts where type includes open bugs"
+      ],
+      "expected_result": "At least one bug alert has severity === 'blocking'",
+      "test_data": {
+        "openIds": [
+          "BG-9"
+        ]
+      }
+    },
+    {
+      "id": "TC-003e",
+      "requirement_id": "FR-003",
+      "user_story_id": "US-003",
+      "ac_id": "AC-003",
+      "title": "Active medium bug — compatibility alias triggers warning alert",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "projectFromSnapshot and evaluateAlerts are imported"
+      ],
+      "given": "snapshot bugs={total:1, open:1, blocking:0, bySeverity:{critical:0, high:0, medium:1, low:0}, openIds:['BG-10']}",
+      "when": "projected bugsSummary is evaluated by evaluateAlerts",
+      "then": "evaluateAlerts returns one open-bugs alert with severity='warning'",
+      "steps": [
+        "Project snapshot",
+        "Evaluate alerts"
+      ],
+      "expected_result": "At least one bug alert has severity === 'warning'",
+      "test_data": {
+        "openIds": [
+          "BG-10"
+        ]
+      }
+    },
+    {
+      "id": "TC-003f",
+      "requirement_id": "FR-003",
+      "user_story_id": "US-003",
+      "ac_id": "AC-003",
+      "title": "No active bugs — compatibility aliases remain zero and no bug alert appears",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": [
+        "projectFromSnapshot and evaluateAlerts are imported"
+      ],
+      "given": "snapshot bugs={total:12, open:0, blocking:0, bySeverity:{critical:0, high:0, medium:0, low:0}, openIds:[]}",
+      "when": "projected bugsSummary is evaluated by evaluateAlerts",
+      "then": "bugsSummary.high=0, bugsSummary.critical=0, and evaluateAlerts returns zero open-bugs alerts",
+      "steps": [
+        "Project snapshot",
+        "Evaluate alerts"
+      ],
+      "expected_result": "No alert with type='open-bugs' is returned",
+      "test_data": {
+        "total": 12,
+        "open": 0
+      }
+    },
+    {
+      "id": "TC-004h",
+      "requirement_id": "FR-004",
+      "user_story_id": "US-004",
+      "ac_id": "AC-004",
+      "title": "Snapshot history — exposes resolved without requiring verified",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "projectFromSnapshot is imported"
+      ],
+      "given": "snapshot bugs={total:12, open:0, blocking:0, bySeverity:{critical:0, high:0, medium:0, low:0}, openIds:[]} and no bugs.verified field",
+      "when": "projectFromSnapshot(snapshot) is called",
+      "then": "bugsSummary.resolved=12 and bugsSummary.verified is undefined",
+      "steps": [
+        "Project snapshot",
+        "Check resolved and verified fields"
+      ],
+      "expected_result": "resolved === 12; Object.hasOwn(bugsSummary, 'verified') === false",
+      "test_data": {}
+    },
+    {
+      "id": "TC-004e",
+      "requirement_id": "FR-004",
+      "user_story_id": "US-004",
+      "ac_id": "AC-004",
+      "title": "Snapshot history — fixed and closed are not fabricated",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "projectFromSnapshot is imported"
+      ],
+      "given": "snapshot bugs={total:7, open:2, blocking:0, bySeverity:{critical:0, high:0, medium:2, low:0}, openIds:['BG-2','BG-3']} and no fixed or closed fields",
+      "when": "projectFromSnapshot(snapshot) is called",
+      "then": "bugsSummary.resolved=5 and bugsSummary.fixed and bugsSummary.closed are undefined",
+      "steps": [
+        "Project snapshot",
+        "Check fields"
+      ],
+      "expected_result": "resolved === 5; fixed === undefined; closed === undefined",
+      "test_data": {}
+    },
+    {
+      "id": "TC-004f",
+      "requirement_id": "FR-004",
+      "user_story_id": "US-004",
+      "ac_id": "AC-004",
+      "title": "Snapshot history — invalid historical fields are ignored",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": [
+        "projectFromSnapshot is imported"
+      ],
+      "given": "snapshot bugs={total:4, open:1, verified:99, fixed:88, closed:77, blocking:0, bySeverity:{critical:0, high:0, medium:1, low:0}, openIds:['BG-4']}",
+      "when": "projectFromSnapshot(snapshot) is called",
+      "then": "bugsSummary.resolved=3 and bugsSummary.verified, fixed, and closed are not present",
+      "steps": [
+        "Project snapshot",
+        "Assert status-specific fields are not projected"
+      ],
+      "expected_result": "Object.hasOwn(bugsSummary,'verified') === false; Object.hasOwn(bugsSummary,'fixed') === false; Object.hasOwn(bugsSummary,'closed') === false",
+      "test_data": {}
+    },
+    {
+      "id": "TC-005h",
+      "requirement_id": "FR-005",
+      "user_story_id": "US-005",
+      "ac_id": "AC-005",
+      "title": "Legacy BUGS.json — existing status breakdown remains intact",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "A temp project directory exists under os.tmpdir()",
+        "BUGS.json is written in the temp project root"
+      ],
+      "given": "BUGS.json contains bugs [{id:'BG-1',status:'open',severity:'critical'},{id:'BG-2',status:'verified',severity:'medium'}]",
+      "when": "readBugsSummary(tempDir, '') is called",
+      "then": "summary.open=1, summary.critical=1, summary.verified=1, and summary.openIds=['BG-1']",
+      "steps": [
+        "Create temp dir",
+        "Write BUGS.json",
+        "Call readBugsSummary",
+        "Clean up temp dir"
+      ],
+      "expected_result": "open === 1; critical === 1; verified === 1; openIds deep-equals ['BG-1']",
+      "test_data": {
+        "bugs": [
+          {
+            "id": "BG-1",
+            "status": "open",
+            "severity": "critical"
+          },
+          {
+            "id": "BG-2",
+            "status": "verified",
+            "severity": "medium"
+          }
+        ]
+      }
+    },
+    {
+      "id": "TC-005e",
+      "requirement_id": "FR-005",
+      "user_story_id": "US-005",
+      "ac_id": "AC-005",
+      "title": "Legacy BUGS.json — artifactsDir=spec still works",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [
+        "A temp project directory with spec/ subdirectory exists"
+      ],
+      "given": "spec/BUGS.json contains bugs [{id:'BG-3',status:'open',severity:'low'}]",
+      "when": "readBugsSummary(tempDir, 'spec') is called",
+      "then": "summary.open=1, summary.low=1, and summary.openIds=['BG-3']",
+      "steps": [
+        "Create temp dir and spec subdir",
+        "Write spec/BUGS.json",
+        "Call readBugsSummary(tempDir, 'spec')",
+        "Clean up"
+      ],
+      "expected_result": "open === 1; low === 1; openIds deep-equals ['BG-3']",
+      "test_data": {}
+    },
+    {
+      "id": "TC-005f",
+      "requirement_id": "FR-005",
+      "user_story_id": "US-005",
+      "ac_id": "AC-005",
+      "title": "Legacy BUGS.json — absent file returns null",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": [
+        "A temp project directory exists and contains no BUGS.json"
+      ],
+      "given": "tempDir exists and fs.existsSync(path.join(tempDir,'BUGS.json')) is false",
+      "when": "readBugsSummary(tempDir, '') is called",
+      "then": "the return value is exactly null",
+      "steps": [
+        "Create temp dir without BUGS.json",
+        "Call readBugsSummary",
+        "Clean up"
+      ],
+      "expected_result": "result === null",
+      "test_data": {}
+    },
+    {
+      "id": "TC-E2E-001h",
+      "requirement_id": "FR-001",
+      "user_story_id": "US-001",
+      "ac_id": "AC-001",
+      "title": "Collector-facing snapshot projection — dashboard-ready summary contains total and resolved",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "projectFromSnapshot is available to the collector"
+      ],
+      "given": "snapshot project='AITRI-HUB' with bugs.total=12, bugs.open=0, bugs.blocking=0, bySeverity all zero, and openIds=[]",
+      "when": "projectFromSnapshot(snapshot) produces project data equivalent to the collector snapshot success path",
+      "then": "the projected project data has bugsSummary.total=12, bugsSummary.resolved=12, and bugsSummary.open=0",
+      "steps": [
+        "Build concrete snapshot object",
+        "Call projectFromSnapshot",
+        "Assert dashboard-ready bug fields"
+      ],
+      "expected_result": "bugsSummary.total === 12; resolved === 12; open === 0",
+      "test_data": {}
+    },
+    {
+      "id": "TC-E2E-005h",
+      "requirement_id": "FR-005",
+      "user_story_id": "US-005",
+      "ac_id": "AC-005",
+      "title": "Legacy fallback flow — BUGS.json summary remains available when snapshot is not used",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "medium",
+      "preconditions": [
+        "A temp legacy project is created under os.tmpdir() with BUGS.json"
+      ],
+      "given": "legacy BUGS.json contains [{id:'BG-LEGACY',status:'open',severity:'high'}]",
+      "when": "readBugsSummary(tempDir, '') is used as the fallback bug source",
+      "then": "the fallback summary has open=1, high=1, and openIds=['BG-LEGACY']",
+      "steps": [
+        "Create temp project",
+        "Write BUGS.json",
+        "Call readBugsSummary",
+        "Clean up temp project"
+      ],
+      "expected_result": "open === 1; high === 1; openIds deep-equals ['BG-LEGACY']",
+      "test_data": {}
+    }
+  ]
+}
