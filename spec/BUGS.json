@@ -239,6 +239,28 @@
       "created_at": "2026-04-23T00:59:59.682Z",
       "updated_at": "2026-04-23T01:30:51.650Z",
       "resolution": null
+    },
+    {
+      "id": "BG-013",
+      "title": "Hub snapshot bug summary drops historical totals",
+      "description": "",
+      "steps_to_reproduce": [],
+      "expected_result": "Hub projects bugs.total into bugsSummary.total and derives bugsSummary.resolved",
+      "actual_result": "Hub projected missing historical fields and lost bugs.total from the Aitri snapshot",
+      "environment": "normalize after hub-bug-summary-snapshot feature",
+      "severity": "medium",
+      "status": "verified",
+      "fr": null,
+      "tc_reference": null,
+      "phase_detected": null,
+      "detected_by": "manual",
+      "evidence": null,
+      "reported_by": "codex",
+      "created_at": "2026-05-13T00:13:04.887Z",
+      "updated_at": "2026-05-13T00:13:10.459Z",
+      "resolution": null,
+      "fix_commit_sha": "300a5b36b4b68bde3d486a9ec22499409b0c5f7e",
+      "fix_at": "2026-05-13T00:13:07.624Z"
     }
   ]
 }
