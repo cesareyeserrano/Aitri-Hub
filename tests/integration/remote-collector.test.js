@@ -101,6 +101,45 @@ describe('TC-008h: collectOne — first run clones remote project to cache', () 
       `Expected gitMeta.isGitRepo=true or non-unreadable status, got status=${result.status}`,
     );
   });
+
+  it('uses separate cache directories for remotes with the same basename', async () => {
+    const { collectOne } = await import('../../lib/collector/index.js');
+    const parentA = path.join(tmpHubDir, 'remote-a');
+    const parentB = path.join(tmpHubDir, 'remote-b');
+    fs.mkdirSync(parentA, { recursive: true });
+    fs.mkdirSync(parentB, { recursive: true });
+    const remoteA = path.join(parentA, 'same-name.git');
+    const remoteB = path.join(parentB, 'same-name.git');
+    createFakeRemote(remoteA);
+    createFakeRemote(remoteB);
+
+    await collectOne({
+      id: 'same0001',
+      name: 'same-a',
+      location: `file://${remoteA}`,
+      type: 'remote',
+      addedAt: new Date().toISOString(),
+    });
+    await collectOne({
+      id: 'same0002',
+      name: 'same-b',
+      location: `file://${remoteB}`,
+      type: 'remote',
+      addedAt: new Date().toISOString(),
+    });
+
+    const cacheDirs = fs.readdirSync(path.join(tmpHubDir, 'cache')).sort();
+    assert.ok(
+      cacheDirs.includes('same-name-same0001'),
+      `Expected cache dir for first remote, got ${cacheDirs.join(', ')}`,
+    );
+    assert.ok(
+      cacheDirs.includes('same-name-same0002'),
+      `Expected cache dir for second remote, got ${cacheDirs.join(', ')}`,
+    );
+    assert.ok(fs.existsSync(path.join(tmpHubDir, 'cache', 'same-name-same0001', '.git')));
+    assert.ok(fs.existsSync(path.join(tmpHubDir, 'cache', 'same-name-same0002', '.git')));
+  });
 });
 
 // ── TC-008e: second run uses git pull on existing cache ───────────────────────

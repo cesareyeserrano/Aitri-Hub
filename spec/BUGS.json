@@ -261,6 +261,28 @@
       "resolution": null,
       "fix_commit_sha": "300a5b36b4b68bde3d486a9ec22499409b0c5f7e",
       "fix_at": "2026-05-13T00:13:07.624Z"
+    },
+    {
+      "id": "BG-014",
+      "title": "Remote cache directory collides for repositories with the same basename",
+      "description": "",
+      "steps_to_reproduce": [],
+      "expected_result": "",
+      "actual_result": "",
+      "environment": null,
+      "severity": "high",
+      "status": "verified",
+      "fr": null,
+      "tc_reference": null,
+      "phase_detected": null,
+      "detected_by": "manual",
+      "evidence": null,
+      "reported_by": null,
+      "created_at": "2026-05-22T22:10:36.084Z",
+      "updated_at": "2026-05-22T22:11:55.831Z",
+      "resolution": null,
+      "fix_commit_sha": "0f0cb9ddf8f13de96c3f725650d1e32884b1f48e",
+      "fix_at": "2026-05-22T22:11:53.294Z"
     }
   ]
 }
