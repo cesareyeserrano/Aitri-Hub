@@ -43,7 +43,7 @@
     }
   ],
   "files_deleted": [],
-  "test_runner": "node --test",
+  "test_runner": "./run-tests.sh",
   "test_files": [
     "tests/unit/snapshot-reader.test.js",
     "tests/integration/snapshot-fallback.test.js"

@@ -55,19 +55,19 @@ function writeTestResults(dir, artifactsDir, summary) {
 describe('TC-E2E-001: full collector cycle — integrationAlert in dashboard.json when version mismatch', () => {
   let hubTmpDir;
   let projectDir;
-  const savedOverride = process.env.AITRI_HUB_DIR_OVERRIDE;
+  const savedOverride = process.env.AITRI_HUB_DIR;
 
   before(() => {
     hubTmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-e2e-001-'));
     projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'e2e-proj-001-'));
-    process.env.AITRI_HUB_DIR_OVERRIDE = hubTmpDir;
+    process.env.AITRI_HUB_DIR = hubTmpDir;
 
     writeAitri(projectDir, {});
     writeTestResults(projectDir, 'spec', { passed: 30, failed: 0, skipped: 0, total: 30 });
   });
 
   after(() => {
-    process.env.AITRI_HUB_DIR_OVERRIDE = savedOverride ?? '';
+    process.env.AITRI_HUB_DIR = savedOverride ?? '';
     fs.rmSync(hubTmpDir, { recursive: true, force: true });
     fs.rmSync(projectDir, { recursive: true, force: true });
   });
@@ -151,12 +151,12 @@ describe('TC-E2E-001: full collector cycle — integrationAlert in dashboard.jso
 describe('TC-E2E-002: full collector cycle — aggregatedTcTotal with feature sub-pipelines', () => {
   let hubTmpDir;
   let projectDir;
-  const savedOverride = process.env.AITRI_HUB_DIR_OVERRIDE;
+  const savedOverride = process.env.AITRI_HUB_DIR;
 
   before(() => {
     hubTmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-e2e-002-'));
     projectDir = fs.mkdtempSync(path.join(os.tmpdir(), 'e2e-proj-002-'));
-    process.env.AITRI_HUB_DIR_OVERRIDE = hubTmpDir;
+    process.env.AITRI_HUB_DIR = hubTmpDir;
 
     // Main project: .aitri + spec/04_TEST_RESULTS.json (30 TCs)
     writeAitri(projectDir, {});
@@ -179,7 +179,7 @@ describe('TC-E2E-002: full collector cycle — aggregatedTcTotal with feature su
   });
 
   after(() => {
-    process.env.AITRI_HUB_DIR_OVERRIDE = savedOverride ?? '';
+    process.env.AITRI_HUB_DIR = savedOverride ?? '';
     fs.rmSync(hubTmpDir, { recursive: true, force: true });
     fs.rmSync(projectDir, { recursive: true, force: true });
   });

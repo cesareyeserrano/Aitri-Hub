@@ -68,10 +68,9 @@
     }
   ],
   "files_deleted": [],
-  "test_runner": "node --test",
+  "test_runner": "node --test ../../tests/integration/integration-compat-manifest.test.js",
   "test_files": [
-    "tests/unit/integration-guard.test.js",
-    "tests/integration/e2e-collector-cycle.test.js"
+    "tests/integration/integration-compat-manifest.test.js"
   ],
   "test_results": {
     "suite": "node --test tests/unit/*.test.js tests/integration/*.test.js",
@@ -82,8 +81,7 @@
   },
   "setup_commands": [],
   "environment_variables": [
-    "AITRI_HUB_DIR (existing, optional override of ~/.aitri-hub — used by manifest read/write)",
-    "AITRI_HUB_DIR_OVERRIDE (existing, test-only alias consumed by dashboard store)"
+    "AITRI_HUB_DIR (existing, optional override of ~/.aitri-hub — used by manifest read/write and test isolation)"
   ],
   "technical_debt": [
     {

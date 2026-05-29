@@ -1,22 +1,22 @@
 {
-  "executed_at": "2026-04-18T01:21:26.108Z",
+  "executed_at": "2026-05-29T22:26:37.016Z",
   "test_runner": "./run-tests.sh",
   "exit_code": 0,
   "results": [
     {
       "tc_id": "TC-010h",
       "status": "pass",
-      "notes": "✔ TC-010h: passes cwd=projectDir, shell=false, command=aitri, args=[status,--json] (2.315292ms)"
+      "notes": "✔ TC-010h: passes cwd=projectDir, shell=false, command=aitri, args=[status,--json] (4.47425ms)"
     },
     {
       "tc_id": "TC-010f",
       "status": "pass",
-      "notes": "✔ TC-010f: returns ok:false reason=spawn_failed, detail contains stderr (0.578708ms)"
+      "notes": "✔ TC-010f: returns ok:false reason=spawn_failed, detail contains stderr (1.067959ms)"
     },
     {
       "tc_id": "TC-010e1",
       "status": "pass",
-      "notes": "✔ TC-010e1: kills child once and returns reason=timeout with durationMs in [timeout, timeout+1000) (101.758625ms)"
+      "notes": "✔ TC-010e1: kills child once and returns reason=timeout with durationMs in [timeout, timeout+1000) (102.246083ms)"
     },
     {
       "tc_id": "TC-010e2",
@@ -31,12 +31,12 @@
     {
       "tc_id": "TC-011h",
       "status": "pass",
-      "notes": "✔ TC-011h: approvedPhases, currentPhase, verifyPassed, verifySummary match legacy shape (0.4305ms)"
+      "notes": "✔ TC-011h: approvedPhases, currentPhase, verifyPassed, verifySummary match legacy shape (0.606791ms)"
     },
     {
       "tc_id": "TC-011f",
       "status": "pass",
-      "notes": "✔ TC-011f: does not invoke readAitriState/readTestSummary/readComplianceSummary/readRequirementsSummary/readBugsSummary on success (151.018459ms)"
+      "notes": "✔ TC-011f: does not invoke readAitriState/readTestSummary/readComplianceSummary/readRequirementsSummary/readBugsSummary on success (261.122333ms)"
     },
     {
       "tc_id": "TC-011e",
@@ -121,7 +121,7 @@
     {
       "tc_id": "TC-016h",
       "status": "pass",
-      "notes": "✔ TC-016h: returns 'last: phase 3 approved by claude · 2 days ago' for delta=2d (0.158583ms)"
+      "notes": "✔ TC-016h: returns 'last: phase 3 approved by claude · 2 days ago' for delta=2d (0.160459ms)"
     },
     {
       "tc_id": "TC-016f",
@@ -131,7 +131,7 @@
     {
       "tc_id": "TC-016e1",
       "status": "pass",
-      "notes": "✔ TC-016e1: delta=59000ms → 'just now' (0.862208ms)"
+      "notes": "✔ TC-016e1: delta=59000ms → 'just now' (0.992958ms)"
     },
     {
       "tc_id": "TC-017h",
@@ -146,12 +146,12 @@
     {
       "tc_id": "TC-017e1",
       "status": "pass",
-      "notes": "✔ TC-017e1: sets degradationReason=version_too_old and aitriState is non-null from legacy path (184.140667ms)"
+      "notes": "✔ TC-017e1: sets degradationReason=version_too_old and aitriState is non-null from legacy path (389.148958ms)"
     },
     {
       "tc_id": "TC-017e2",
       "status": "pass",
-      "notes": "✔ TC-017e2: appends a JSON-parseable line with project, reason, durationMs (149.617458ms)"
+      "notes": "✔ TC-017e2: appends a JSON-parseable line with project, reason, durationMs (272.017667ms)"
     },
     {
       "tc_id": "TC-S001",
@@ -249,5 +249,6 @@
     "skipped_no_marker": 4,
     "manual": 0,
     "manual_verified": 0
-  }
+  },
+  "low_confidence_tcs": []
 }

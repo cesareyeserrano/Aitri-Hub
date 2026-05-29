@@ -10,12 +10,12 @@ import os from 'node:os';
 import path from 'node:path';
 
 // Override hubDir to use tmpDir for tests
-process.env.AITRI_HUB_DIR_OVERRIDE = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-dash-schema-'));
+process.env.AITRI_HUB_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-dash-schema-'));
 
 const { writeDashboard, dashboardFilePath } = await import('../../lib/store/dashboard.js');
 
 after(() => {
-  const dir = process.env.AITRI_HUB_DIR_OVERRIDE;
+  const dir = process.env.AITRI_HUB_DIR;
   if (dir) fs.rmSync(dir, { recursive: true, force: true });
 });
 

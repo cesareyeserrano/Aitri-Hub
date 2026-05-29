@@ -1,82 +1,82 @@
 {
-  "executed_at": "2026-05-12T23:46:31.173Z",
+  "executed_at": "2026-05-29T19:28:56.755Z",
   "test_runner": "./run-tests.sh",
   "exit_code": 0,
   "results": [
     {
       "tc_id": "TC-001h",
       "status": "pass",
-      "notes": "✔ TC-001h Snapshot bugs preserves 12 total and zero active bugs (1.411417ms)"
+      "notes": "✔ TC-001h Snapshot bugs preserves 12 total and zero active bugs (1.870292ms)"
     },
     {
       "tc_id": "TC-001e",
       "status": "pass",
-      "notes": "✔ TC-001e Snapshot bugs preserves active severity buckets and IDs (0.163083ms)"
+      "notes": "✔ TC-001e Snapshot bugs preserves active severity buckets and IDs (0.176209ms)"
     },
     {
       "tc_id": "TC-001f",
       "status": "pass",
-      "notes": "✔ TC-001f Snapshot bugs missing bugs object returns null summary (0.097541ms)"
+      "notes": "✔ TC-001f Snapshot bugs missing bugs object returns null summary (0.098125ms)"
     },
     {
       "tc_id": "TC-002h",
       "status": "pass",
-      "notes": "✔ TC-002h Resolved bugs total 5 minus open 2 equals 3 (0.100625ms)"
+      "notes": "✔ TC-002h Resolved bugs total 5 minus open 2 equals 3 (0.106167ms)"
     },
     {
       "tc_id": "TC-002e",
       "status": "pass",
-      "notes": "✔ TC-002e Resolved bugs total 12 minus open 0 equals 12 (0.10825ms)"
+      "notes": "✔ TC-002e Resolved bugs total 12 minus open 0 equals 12 (0.107958ms)"
     },
     {
       "tc_id": "TC-002f",
       "status": "pass",
-      "notes": "✔ TC-002f Resolved bugs open greater than total clamps to zero (0.088083ms)"
+      "notes": "✔ TC-002f Resolved bugs open greater than total clamps to zero (0.089042ms)"
     },
     {
       "tc_id": "TC-003h",
       "status": "pass",
-      "notes": "✔ TC-003h Active high bug compatibility alias triggers blocking alert (62.942083ms)"
+      "notes": "✔ TC-003h Active high bug compatibility alias triggers blocking alert (69.434834ms)"
     },
     {
       "tc_id": "TC-003e",
       "status": "pass",
-      "notes": "✔ TC-003e Active medium bug compatibility alias triggers warning alert (0.185084ms)"
+      "notes": "✔ TC-003e Active medium bug compatibility alias triggers warning alert (0.171917ms)"
     },
     {
       "tc_id": "TC-003f",
       "status": "pass",
-      "notes": "✔ TC-003f No active bugs aliases remain zero and no bug alert appears (0.773333ms)"
+      "notes": "✔ TC-003f No active bugs aliases remain zero and no bug alert appears (0.697708ms)"
     },
     {
       "tc_id": "TC-004h",
       "status": "pass",
-      "notes": "✔ TC-004h Snapshot history exposes resolved without requiring verified (0.196208ms)"
+      "notes": "✔ TC-004h Snapshot history exposes resolved without requiring verified (0.181167ms)"
     },
     {
       "tc_id": "TC-004e",
       "status": "pass",
-      "notes": "✔ TC-004e Snapshot history fixed and closed are not fabricated (0.106417ms)"
+      "notes": "✔ TC-004e Snapshot history fixed and closed are not fabricated (0.102375ms)"
     },
     {
       "tc_id": "TC-004f",
       "status": "pass",
-      "notes": "✔ TC-004f Snapshot history invalid historical fields are ignored (0.089042ms)"
+      "notes": "✔ TC-004f Snapshot history invalid historical fields are ignored (0.08675ms)"
     },
     {
       "tc_id": "TC-005h",
       "status": "pass",
-      "notes": "✔ TC-005h Legacy BUGS json existing status breakdown remains intact (1.58275ms)"
+      "notes": "✔ TC-005h Legacy BUGS json existing status breakdown remains intact (0.986833ms)"
     },
     {
       "tc_id": "TC-005e",
       "status": "pass",
-      "notes": "✔ TC-005e Legacy BUGS json artifactsDir spec still works (0.749416ms)"
+      "notes": "✔ TC-005e Legacy BUGS json artifactsDir spec still works (0.646833ms)"
     },
     {
       "tc_id": "TC-005f",
       "status": "pass",
-      "notes": "✔ TC-005f Legacy BUGS json absent file returns null (0.29ms)"
+      "notes": "✔ TC-005f Legacy BUGS json absent file returns null (0.254958ms)"
     },
     {
       "tc_id": "TC-E2E-001h",
@@ -140,5 +140,6 @@
     "skipped_no_marker": 0,
     "manual": 0,
     "manual_verified": 0
-  }
+  },
+  "low_confidence_tcs": []
 }

@@ -1,62 +1,62 @@
 {
-  "executed_at": "2026-04-18T02:04:23.930Z",
+  "executed_at": "2026-05-29T20:39:36.768Z",
   "test_runner": "npm run test:with-vitest",
   "exit_code": 0,
   "results": [
     {
       "tc_id": "TC-020h",
       "status": "pass",
-      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-020h: AdminAddForm — folder option appears in type select 14ms"
+      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-020h: AdminAddForm — folder option appears in type select 36ms"
     },
     {
       "tc_id": "TC-020e",
       "status": "pass",
-      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-020e: AdminAddForm — switching folder→local hides helper text and restores path label 5ms"
+      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-020e: AdminAddForm — switching folder→local hides helper text and restores path label 11ms"
     },
     {
       "tc_id": "TC-020n",
       "status": "pass",
-      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-020n: AdminAddForm — submitting folder type calls onSubmit with type=folder 5ms"
+      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-020n: AdminAddForm — submitting folder type calls onSubmit with type=folder 12ms"
     },
     {
       "tc_id": "TC-020f",
       "status": "pass",
-      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-020f: AdminAddForm — location input has required attribute when type=folder 2ms"
+      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-020f: AdminAddForm — location input has required attribute when type=folder 5ms"
     },
     {
       "tc_id": "TC-021h",
       "status": "pass",
-      "notes": "✔ TC-021h: scanFolder — returns multiple valid children (1.602458ms)"
+      "notes": "✔ TC-021h: scanFolder — returns multiple valid children (3.941375ms)"
     },
     {
       "tc_id": "TC-021e",
       "status": "pass",
-      "notes": "✔ TC-021e: scanFolder — parent folder location is not in child entries (0.744417ms)"
+      "notes": "✔ TC-021e: projects.json without version field reads correctly (0.613833ms)"
     },
     {
       "tc_id": "TC-021f",
       "status": "pass",
-      "notes": "✔ TC-021f: scanFolder — 0 valid children returns empty array (0.586334ms)"
+      "notes": "✔ TC-021f: scanFolder — 0 valid children returns empty array (2.379542ms)"
     },
     {
       "tc_id": "TC-022h",
       "status": "pass",
-      "notes": "✔ TC-022h: scanFolder — child with package.json is included (1.395875ms)"
+      "notes": "✔ TC-022h: scanFolder — child with package.json is included (2.701208ms)"
     },
     {
       "tc_id": "TC-022e",
       "status": "pass",
-      "notes": "✔ TC-022e: scanFolder — child with .aitri directory is included (0.650666ms)"
+      "notes": "✔ TC-022e: scanFolder — child with .aitri directory is included (0.801792ms)"
     },
     {
       "tc_id": "TC-022f",
       "status": "pass",
-      "notes": "✔ TC-022f: scanFolder — child without package.json or .aitri is skipped (0.3625ms)"
+      "notes": "✔ TC-022f: scanFolder — child without package.json or .aitri is skipped (2.754625ms)"
     },
     {
       "tc_id": "TC-022g",
       "status": "pass",
-      "notes": "✔ TC-022g: scanFolder — files at root level are skipped (0.253333ms)"
+      "notes": "✔ TC-022g: scanFolder — files at root level are skipped (2.202958ms)"
     },
     {
       "tc_id": "TC-023h",
@@ -76,42 +76,42 @@
     {
       "tc_id": "TC-024h",
       "status": "pass",
-      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-024h: AdminAddForm — helper text visible when type=folder is selected 2ms"
+      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-024h: AdminAddForm — helper text visible when type=folder is selected 4ms"
     },
     {
       "tc_id": "TC-024f",
       "status": "pass",
-      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-024f: AdminAddForm — helper text NOT visible when type=local is selected 1ms"
+      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-024f: AdminAddForm — helper text NOT visible when type=local is selected 2ms"
     },
     {
       "tc_id": "TC-024e",
       "status": "pass",
-      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-024e: AdminAddForm — location label reads \"folder path\" when type=folder 4ms"
+      "notes": "✓ src/__tests__/AdminAddForm.test.jsx > TC-024e: AdminAddForm — location label reads \"folder path\" when type=folder 10ms"
     },
     {
       "tc_id": "TC-025h",
       "status": "pass",
-      "notes": "✔ TC-025h: scanFolder — child entries include parentFolder field (0.789167ms)"
+      "notes": "✔ TC-025h: scanFolder — child entries include parentFolder field (1.242541ms)"
     },
     {
       "tc_id": "TC-025f",
       "status": "pass",
-      "notes": "✔ TC-025f: isValidProject — does not add parentFolder (pure scan only) (0.690958ms)"
+      "notes": "✔ TC-025f: isValidProject — does not add parentFolder (pure scan only) (0.639125ms)"
     },
     {
       "tc_id": "TC-025e",
       "status": "pass",
-      "notes": "✔ TC-025e: scanFolder — parentFolder uses exact input path string (0.757791ms)"
+      "notes": "✔ TC-025e: scanFolder — parentFolder uses exact input path string (1.038708ms)"
     },
     {
       "tc_id": "TC-NFR021h",
       "status": "pass",
-      "notes": "✔ TC-NFR021h: scanFolder — non-existent path returns [] without throwing (0.198375ms)"
+      "notes": "✔ TC-NFR021h: scanFolder — non-existent path returns [] without throwing (0.18075ms)"
     },
     {
       "tc_id": "TC-NFR022h",
       "status": "pass",
-      "notes": "✔ TC-NFR022h: scanFolder — symlinks are not followed (0.647666ms)"
+      "notes": "✔ TC-NFR022h: scanFolder — symlinks are not followed (0.686708ms)"
     },
     {
       "tc_id": "TC-e2eFolderScan",
@@ -183,5 +183,6 @@
     "skipped_no_marker": 0,
     "manual": 0,
     "manual_verified": 0
-  }
+  },
+  "low_confidence_tcs": []
 }
