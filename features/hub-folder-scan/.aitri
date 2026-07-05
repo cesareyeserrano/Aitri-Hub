@@ -1,0 +1,211 @@
+{
+  "currentPhase": 5,
+  "approvedPhases": [
+    1,
+    "ux",
+    2,
+    3,
+    4,
+    5
+  ],
+  "completedPhases": [
+    1,
+    "ux",
+    2,
+    3,
+    4,
+    5
+  ],
+  "projectName": "hub-folder-scan",
+  "createdAt": "2026-04-17T03:27:48.680Z",
+  "artifactsDir": "spec",
+  "updatedAt": "2026-05-29T20:39:43.510Z",
+  "driftPhases": [],
+  "events": [
+    {
+      "at": "2026-04-17T04:08:48.218Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 24,
+      "failed": 0
+    },
+    {
+      "at": "2026-04-17T04:08:50.526Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-17T04:11:38.585Z",
+      "event": "completed",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-17T04:11:41.057Z",
+      "event": "approved",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-17T20:49:23.486Z",
+      "event": "approved",
+      "phase": 4,
+      "afterDrift": true
+    },
+    {
+      "at": "2026-04-18T01:55:00.278Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 12,
+      "failed": 0,
+      "skipped": 12,
+      "manual": 0
+    },
+    {
+      "at": "2026-04-18T01:55:22.749Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 12,
+      "failed": 0,
+      "skipped": 12,
+      "manual": 0
+    },
+    {
+      "at": "2026-04-18T01:56:59.672Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0,
+      "manual": 0
+    },
+    {
+      "at": "2026-04-18T01:57:17.503Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0,
+      "manual": 0
+    },
+    {
+      "at": "2026-04-18T02:04:23.932Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0,
+      "manual": 0
+    },
+    {
+      "at": "2026-04-18T02:04:28.389Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 24,
+      "failed": 0
+    },
+    {
+      "at": "2026-04-18T02:04:31.514Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-18T02:04:34.129Z",
+      "event": "completed",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-18T02:04:34.174Z",
+      "event": "approved",
+      "phase": 5
+    },
+    {
+      "at": "2026-05-12T23:03:48.809Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 13,
+      "failed": 0,
+      "skipped": 11,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-29T19:29:20.149Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 13,
+      "failed": 0,
+      "skipped": 11,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-29T20:03:24.930Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 20,
+      "failed": 0,
+      "skipped": 4,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-29T20:09:21.689Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 20,
+      "failed": 0,
+      "skipped": 4,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-29T20:39:36.770Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-29T20:39:43.486Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 24,
+      "failed": 0
+    }
+  ],
+  "artifactHashes": {
+    "1": "9c5ffb100d79ca8cf94fdb1fbcd2c94878b323d5cbd3ec3a12ffdadc77815483",
+    "2": "d4ff12b9cb6b4273e22553c1490deb50f48f8eb3ac061f70ec08285e23246c1f",
+    "3": "17052d13f3fa111d2550ea5f6af36f8a7bb602268eb5631a937cb8433d05f048",
+    "4": "a8a4482696d16f6efdf69c17abddd6c9eab73eb823edb3c94771fea1fd878488",
+    "5": "be83d2bc59d8b5e37171b0cf0b198ba0b9e527779399635fea6c7296e6d09272",
+    "ux": "251445534e4ba11dec3e92674b9f4957c8c9f34d50eabc599a9c0b41f6a22b75"
+  },
+  "lastSession": {
+    "at": "2026-05-29T20:39:43.509Z",
+    "agent": "unknown",
+    "event": "verify-complete",
+    "files_touched": [
+      "features/hub-bug-summary-snapshot/spec/04_TEST_RESULTS.json",
+      "features/hub-folder-scan/spec/04_TEST_RESULTS.json",
+      "tests/integration/dashboard-feature-schema.test.js",
+      "tests/integration/e2e-collector-cycle.test.js"
+    ]
+  },
+  "verifyPassed": true,
+  "verifyTimestamp": "2026-04-17T04:08:48.218Z",
+  "normalizeState": {
+    "baseRef": "37102df960883d1d2c33ed2f2f7526d4a2de912c",
+    "method": "git",
+    "status": "resolved",
+    "lastRun": "2026-04-17T20:49:23.486Z"
+  },
+  "verifyRanAt": "2026-05-29T20:39:36.770Z",
+  "verifySummary": {
+    "total": 24,
+    "passed": 24,
+    "failed": 0,
+    "skipped": 0,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 0,
+    "manual": 0,
+    "manual_verified": 0
+  }
+}

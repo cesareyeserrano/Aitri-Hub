@@ -1,0 +1,177 @@
+{
+  "currentPhase": 5,
+  "approvedPhases": [
+    1,
+    "ux",
+    2,
+    3,
+    4,
+    5
+  ],
+  "completedPhases": [
+    1,
+    "ux",
+    2,
+    3,
+    4,
+    5
+  ],
+  "projectName": "hub_integration_update",
+  "createdAt": "2026-03-31T23:17:14.666Z",
+  "artifactsDir": "spec",
+  "updatedAt": "2026-04-01T00:44:46.470Z",
+  "driftPhases": [],
+  "events": [
+    {
+      "at": "2026-03-31T23:54:07.119Z",
+      "event": "started",
+      "phase": 2
+    },
+    {
+      "at": "2026-03-31T23:59:08.086Z",
+      "event": "completed",
+      "phase": 2
+    },
+    {
+      "at": "2026-03-31T23:59:08.132Z",
+      "event": "approved",
+      "phase": 2
+    },
+    {
+      "at": "2026-03-31T23:59:10.962Z",
+      "event": "started",
+      "phase": 3
+    },
+    {
+      "at": "2026-04-01T00:18:58.011Z",
+      "event": "completed",
+      "phase": 3
+    },
+    {
+      "at": "2026-04-01T00:18:58.055Z",
+      "event": "approved",
+      "phase": 3
+    },
+    {
+      "at": "2026-04-01T00:19:44.985Z",
+      "event": "started",
+      "phase": 4
+    },
+    {
+      "at": "2026-04-01T00:35:39.583Z",
+      "event": "completed",
+      "phase": 4
+    },
+    {
+      "at": "2026-04-01T00:39:26.641Z",
+      "event": "approved",
+      "phase": 4
+    },
+    {
+      "at": "2026-04-01T00:39:29.486Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 17
+    },
+    {
+      "at": "2026-04-01T00:40:47.582Z",
+      "event": "completed",
+      "phase": 4
+    },
+    {
+      "at": "2026-04-01T00:40:50.215Z",
+      "event": "approved",
+      "phase": 4
+    },
+    {
+      "at": "2026-04-01T00:40:52.579Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 15,
+      "failed": 0,
+      "skipped": 2
+    },
+    {
+      "at": "2026-04-01T00:41:43.110Z",
+      "event": "completed",
+      "phase": 4
+    },
+    {
+      "at": "2026-04-01T00:41:43.174Z",
+      "event": "approved",
+      "phase": 4
+    },
+    {
+      "at": "2026-04-01T00:41:45.807Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "at": "2026-04-01T00:41:49.641Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 17,
+      "failed": 0
+    },
+    {
+      "at": "2026-04-01T00:41:51.458Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-01T00:42:35.007Z",
+      "event": "completed",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-01T00:44:46.452Z",
+      "event": "approved",
+      "phase": 5
+    }
+  ],
+  "artifactHashes": {
+    "1": "a769b93dc3b732bec73af7141dbf8a8505c4b5ae7a881c314aaead161153a4a7",
+    "2": "bbda2bd892dc14b1259f0b456451d9f95418d24325e4802bbe8943be64c28b7d",
+    "3": "3f33c85d331c048be63fc2815d64715784e10ba2d2f86200283c387ff2d023cc",
+    "4": "70d4cf67df836b8620a04bf9b01a6bef502ae301231796751239885780a40b3d",
+    "5": "87179bb7beac1aa90d1c638372af43c7e18a22930b594b8afdbd1072f6b6d436",
+    "ux": "0389c570df1d584d11ba7732003ba56792be4e03b48e6b0108da0017257de8e8"
+  },
+  "lastSession": {
+    "at": "2026-04-01T00:44:46.469Z",
+    "agent": "unknown",
+    "event": "approve deploy",
+    "files_touched": [
+      "docker/web-dist/assets/cytoscape-dagre-yhnQJ0pZ.js",
+      "docker/web-dist/assets/index-YyM3fj0S.js",
+      "docker/web-dist/index.html",
+      "lib/alerts/engine.js",
+      "lib/collector/aitri-reader.js",
+      "lib/collector/index.js",
+      "lib/constants.js",
+      "web/src/components/ActivityTab.jsx",
+      "web/src/components/ProjectCard.jsx"
+    ]
+  },
+  "verifyPassed": true,
+  "normalizeState": {
+    "baseRef": "2ea96071cc5601271b6c1c10e4aea160baac9663",
+    "method": "git",
+    "status": "resolved",
+    "lastRun": "2026-04-01T00:41:43.174Z"
+  },
+  "verifyTimestamp": "2026-04-01T00:41:49.640Z",
+  "verifySummary": {
+    "total": 17,
+    "passed": 17,
+    "failed": 0,
+    "skipped": 0,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 0
+  }
+}

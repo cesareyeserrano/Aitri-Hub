@@ -1,0 +1,250 @@
+{
+  "currentPhase": 5,
+  "approvedPhases": [
+    1,
+    "ux",
+    2,
+    3,
+    4,
+    5
+  ],
+  "completedPhases": [
+    1,
+    "ux",
+    2,
+    3,
+    4,
+    5
+  ],
+  "projectName": "AITRI-HUB",
+  "createdAt": "2026-03-13T19:38:24.840Z",
+  "aitriVersion": "2.0.0-rc.159",
+  "artifactsDir": "spec",
+  "updatedAt": "2026-07-05T20:18:38.999Z",
+  "artifactHashes": {
+    "1": "e37d308347403019a08bebc62f792bff95b75fde6a7a3de3c002d67f01a61e9e",
+    "2": "86fde8e7a1ddb52fc88ae18bfcf5d5b589891f183477a017edfdd379bf759cf1",
+    "3": "7236f2659a20beb6dd97839ec79dd67c0a01af98b39d62f691d82849b5f5b38d",
+    "4": "b1aedca7d1272addc6e0fb5a8b4f3ef76a52c8dd2e9070aca9546f4b62373b5c",
+    "5": "31c29b449b29851ed6fd1ad267e756592b37b904e7f2c9e1b280e6a86f955eea",
+    "ux": "12daf662fe656d72c323de6489d65827a89d7afcf55155c4a15d9ad77612ae33"
+  },
+  "verifyPassed": true,
+  "verifyTimestamp": "2026-04-16T22:38:26.112Z",
+  "events": [
+    {
+      "at": "2026-07-05T20:18:38.995Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/hub-bug-summary-snapshot/spec/04_BUILD_REPORT.json",
+      "transform": "rename artifact file 04_IMPLEMENTATION_MANIFEST.json → 04_BUILD_REPORT.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.996Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/hub-bug-summary-snapshot/spec/05_TRACEABILITY.json",
+      "transform": "rename artifact file 05_PROOF_OF_COMPLIANCE.json → 05_TRACEABILITY.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.996Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/hub-folder-scan/spec/04_BUILD_REPORT.json",
+      "transform": "rename artifact file 04_IMPLEMENTATION_MANIFEST.json → 04_BUILD_REPORT.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.996Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/hub-folder-scan/spec/05_TRACEABILITY.json",
+      "transform": "rename artifact file 05_PROOF_OF_COMPLIANCE.json → 05_TRACEABILITY.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.996Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/hub-mvp-web/spec/04_BUILD_REPORT.json",
+      "transform": "rename artifact file 04_IMPLEMENTATION_MANIFEST.json → 04_BUILD_REPORT.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.996Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/hub-mvp-web/spec/05_TRACEABILITY.json",
+      "transform": "rename artifact file 05_PROOF_OF_COMPLIANCE.json → 05_TRACEABILITY.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.996Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/hub-web-only/spec/04_BUILD_REPORT.json",
+      "transform": "rename artifact file 04_IMPLEMENTATION_MANIFEST.json → 04_BUILD_REPORT.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.996Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/hub-web-only/spec/05_TRACEABILITY.json",
+      "transform": "rename artifact file 05_PROOF_OF_COMPLIANCE.json → 05_TRACEABILITY.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.996Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/hub_integration_update/spec/04_BUILD_REPORT.json",
+      "transform": "rename artifact file 04_IMPLEMENTATION_MANIFEST.json → 04_BUILD_REPORT.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.997Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/hub_integration_update/spec/05_TRACEABILITY.json",
+      "transform": "rename artifact file 05_PROOF_OF_COMPLIANCE.json → 05_TRACEABILITY.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.997Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/integration-compat-manifest/spec/04_BUILD_REPORT.json",
+      "transform": "rename artifact file 04_IMPLEMENTATION_MANIFEST.json → 04_BUILD_REPORT.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.997Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/integration-compat-manifest/spec/05_TRACEABILITY.json",
+      "transform": "rename artifact file 05_PROOF_OF_COMPLIANCE.json → 05_TRACEABILITY.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.997Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/integration-last-reviewed-gate/spec/04_BUILD_REPORT.json",
+      "transform": "rename artifact file 04_IMPLEMENTATION_MANIFEST.json → 04_BUILD_REPORT.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.997Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/integration-last-reviewed-gate/spec/05_TRACEABILITY.json",
+      "transform": "rename artifact file 05_PROOF_OF_COMPLIANCE.json → 05_TRACEABILITY.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.997Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/integration_update/spec/04_BUILD_REPORT.json",
+      "transform": "rename artifact file 04_IMPLEMENTATION_MANIFEST.json → 04_BUILD_REPORT.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.997Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/integration_update/spec/05_TRACEABILITY.json",
+      "transform": "rename artifact file 05_PROOF_OF_COMPLIANCE.json → 05_TRACEABILITY.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.997Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/snapshot-adoption/spec/04_BUILD_REPORT.json",
+      "transform": "rename artifact file 04_IMPLEMENTATION_MANIFEST.json → 04_BUILD_REPORT.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.997Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/snapshot-adoption/spec/05_TRACEABILITY.json",
+      "transform": "rename artifact file 05_PROOF_OF_COMPLIANCE.json → 05_TRACEABILITY.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.997Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/web-graph-integration/spec/04_BUILD_REPORT.json",
+      "transform": "rename artifact file 04_IMPLEMENTATION_MANIFEST.json → 04_BUILD_REPORT.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-05T20:18:38.997Z",
+      "event": "upgrade_migration",
+      "phase": "upgrade",
+      "from_version": "0.1.65",
+      "to_version": "2.0.0-rc.159",
+      "category": "artifactRename",
+      "target": "features/web-graph-integration/spec/05_TRACEABILITY.json",
+      "transform": "rename artifact file 05_PROOF_OF_COMPLIANCE.json → 05_TRACEABILITY.json on disk (content unchanged)"
+    }
+  ],
+  "driftPhases": [],
+  "verifyRanAt": "2026-05-22T22:16:08.563Z",
+  "auditLastAt": "2026-05-22T20:18:47.589Z",
+  "upgradeFindings": [],
+  "verifySummary": {
+    "total": 27,
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 0,
+    "manual": 0,
+    "manual_verified": 0
+  }
+}

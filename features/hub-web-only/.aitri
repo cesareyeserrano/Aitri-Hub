@@ -1,0 +1,174 @@
+{
+  "currentPhase": 5,
+  "approvedPhases": [
+    1,
+    "ux",
+    2,
+    3,
+    4,
+    5
+  ],
+  "completedPhases": [
+    1,
+    "ux",
+    2,
+    3,
+    4,
+    5
+  ],
+  "projectName": "hub-web-only",
+  "createdAt": "2026-04-21T18:31:47.878Z",
+  "artifactsDir": "spec",
+  "updatedAt": "2026-05-21T21:34:28.304Z",
+  "driftPhases": [],
+  "events": [
+    {
+      "at": "2026-04-21T23:06:58.477Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-21T23:09:06.510Z",
+      "event": "completed",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-21T23:10:53.330Z",
+      "event": "approved",
+      "phase": 5
+    },
+    {
+      "at": "2026-05-03T23:58:01.010Z",
+      "event": "approved",
+      "phase": 2,
+      "afterDrift": true
+    },
+    {
+      "at": "2026-05-04T00:01:29.339Z",
+      "event": "approved",
+      "phase": 2,
+      "afterDrift": true
+    },
+    {
+      "at": "2026-05-04T00:01:44.625Z",
+      "event": "completed",
+      "phase": 2
+    },
+    {
+      "at": "2026-05-04T00:01:51.127Z",
+      "event": "completed",
+      "phase": 3
+    },
+    {
+      "at": "2026-05-04T00:01:53.541Z",
+      "event": "completed",
+      "phase": 4
+    },
+    {
+      "at": "2026-05-04T00:02:15.856Z",
+      "event": "approved",
+      "phase": 2
+    },
+    {
+      "at": "2026-05-04T00:02:35.374Z",
+      "event": "completed",
+      "phase": 3
+    },
+    {
+      "at": "2026-05-04T00:02:39.214Z",
+      "event": "completed",
+      "phase": 4
+    },
+    {
+      "at": "2026-05-04T00:06:08.163Z",
+      "event": "approved",
+      "phase": 3
+    },
+    {
+      "at": "2026-05-04T00:06:08.967Z",
+      "event": "approved",
+      "phase": 4
+    },
+    {
+      "at": "2026-05-04T00:08:36.690Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 27,
+      "failed": 0,
+      "skipped": 5,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-04T00:08:39.000Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 27,
+      "failed": 0
+    },
+    {
+      "at": "2026-05-04T00:08:44.079Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-05-04T00:08:57.677Z",
+      "event": "completed",
+      "phase": 5
+    },
+    {
+      "at": "2026-05-04T00:17:25.748Z",
+      "event": "approved",
+      "phase": 5
+    },
+    {
+      "at": "2026-05-21T21:34:23.232Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 27,
+      "failed": 0,
+      "skipped": 5,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-21T21:34:28.272Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 27,
+      "failed": 0
+    }
+  ],
+  "artifactHashes": {
+    "1": "f4f01e15f3851aec534331887da26ffdd7ff40df28a05712ed2f882fa55b30c0",
+    "2": "e3b00b3cc38e474f69041292ff25fbae47cc42577013d563ba848a8b3fb202f4",
+    "3": "4e7057eee56b5a0c3379acc7c27189d119fb64202c0916d437eea1a00fac7c1a",
+    "4": "3318464e15223600446fbfa54e38d5375b97481487859d0173216756838f2008",
+    "5": "302307234286e030a854f0f7b6cabc4afe143c983850b46e3f7852459b4fa380",
+    "ux": "cff66068ae12e1da83d5d4da248d6004071334c3103932ce74c3a261c3f981eb"
+  },
+  "lastSession": {
+    "at": "2026-05-21T21:34:28.304Z",
+    "agent": "unknown",
+    "event": "verify-complete",
+    "files_touched": [
+      "features/hub-web-only/spec/04_TEST_RESULTS.json"
+    ]
+  },
+  "verifyRanAt": "2026-05-21T21:34:23.232Z",
+  "verifyPassed": true,
+  "normalizeState": {
+    "baseRef": "3fef715bf9c258d2d723182438b29787bf368278",
+    "method": "git",
+    "status": "resolved",
+    "lastRun": "2026-05-04T00:06:08.966Z"
+  },
+  "verifySummary": {
+    "total": 32,
+    "passed": 27,
+    "failed": 0,
+    "skipped": 5,
+    "skipped_e2e": 1,
+    "skipped_no_marker": 4,
+    "manual": 0,
+    "manual_verified": 0
+  }
+}

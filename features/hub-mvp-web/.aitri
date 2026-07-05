@@ -1,0 +1,198 @@
+{
+  "currentPhase": 5,
+  "approvedPhases": [
+    1,
+    "ux",
+    2,
+    3,
+    4,
+    5
+  ],
+  "completedPhases": [
+    1,
+    "ux",
+    2,
+    3,
+    4,
+    5
+  ],
+  "projectName": "hub-mvp-web",
+  "createdAt": "2026-04-16T23:28:11.097Z",
+  "artifactsDir": "spec",
+  "updatedAt": "2026-05-29T21:11:43.711Z",
+  "driftPhases": [],
+  "events": [
+    {
+      "at": "2026-04-17T03:21:04.035Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 37,
+      "failed": 0,
+      "skipped": 16,
+      "manual": 0
+    },
+    {
+      "at": "2026-04-17T03:21:06.015Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 37,
+      "failed": 0
+    },
+    {
+      "at": "2026-04-17T03:21:08.834Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-17T03:22:15.642Z",
+      "event": "completed",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-17T03:22:21.044Z",
+      "event": "approved",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-17T20:49:24.595Z",
+      "event": "approved",
+      "phase": "ux",
+      "afterDrift": true
+    },
+    {
+      "at": "2026-04-18T02:05:25.390Z",
+      "event": "completed",
+      "phase": 2
+    },
+    {
+      "at": "2026-04-18T02:05:28.126Z",
+      "event": "approved",
+      "phase": 2
+    },
+    {
+      "at": "2026-04-18T02:05:31.664Z",
+      "event": "completed",
+      "phase": 3
+    },
+    {
+      "at": "2026-04-18T02:05:31.708Z",
+      "event": "approved",
+      "phase": 3
+    },
+    {
+      "at": "2026-04-18T02:05:34.328Z",
+      "event": "completed",
+      "phase": 4
+    },
+    {
+      "at": "2026-04-18T02:05:34.382Z",
+      "event": "approved",
+      "phase": 4
+    },
+    {
+      "at": "2026-04-18T02:05:51.058Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 37,
+      "failed": 0,
+      "skipped": 16,
+      "manual": 0
+    },
+    {
+      "at": "2026-04-18T02:05:53.876Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 37,
+      "failed": 0
+    },
+    {
+      "at": "2026-04-18T02:05:56.840Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-18T02:05:56.872Z",
+      "event": "completed",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-18T02:05:56.916Z",
+      "event": "approved",
+      "phase": 5
+    },
+    {
+      "at": "2026-05-12T23:04:57.271Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 30,
+      "failed": 0,
+      "skipped": 23,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-29T20:40:16.941Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 37,
+      "failed": 0,
+      "skipped": 16,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-29T21:11:43.690Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 37,
+      "failed": 0
+    }
+  ],
+  "artifactHashes": {
+    "1": "39578c18ea5ffed54a6b208a9708d1b903b911c99c8aa93cab4387e2dfa52001",
+    "2": "6a8485d9e919dad553ecd60c1db0fc25d4a8168520c8c33f780be98a91e12a7d",
+    "3": "d17c2955196cc1ad53bfe4e2ea131da29e8a5d66a17c68ecdfac93082d8613e7",
+    "4": "4bc8cafd49a081a12c2b2afa0e8e5ea1f0aeda40f8def1baefcfe8e96a4ce2e8",
+    "5": "ac26474f0bb3261636c974051cec47a21c852ec58df89a4d80ff0aff001f0697",
+    "ux": "1c32502eed72dbeae52184eaa20279b97d266a7ad0f67c58902773306c3d4a90"
+  },
+  "lastSession": {
+    "at": "2026-05-29T21:11:43.711Z",
+    "agent": "unknown",
+    "event": "verify-complete",
+    "files_touched": [
+      "features/hub-bug-summary-snapshot/spec/04_TEST_RESULTS.json",
+      "features/hub-folder-scan/spec/04_TEST_RESULTS.json",
+      "features/hub-mvp-web/spec/04_TEST_RESULTS.json",
+      "tests/integration/dashboard-feature-schema.test.js",
+      "tests/integration/e2e-collector-cycle.test.js"
+    ]
+  },
+  "rejections": {
+    "2": {
+      "at": "2026-04-17T01:44:39.597Z",
+      "feedback": "Add app/project version to the VERSION section of the card. Read from the project's package.json 'version' field (if present) or a VERSION file. Show it as a separate row: 'app v1.2.3'. If not found, row is absent. This is independent of aitri version — it shows what version of the product the team is building."
+    },
+    "ux": {
+      "at": "2026-04-17T01:29:55.978Z",
+      "feedback": "Remove expandable/collapsible detail section — all indicators must be visible without interaction. Reorganize card into 4 named sections: (1) BLOCKERS: drift, verify failed, phase rejection, critical/high bugs, blocking alerts count — only shown when issues exist; (2) PIPELINE: X/5 progress bar visual, current phase label, last pipeline event + age, last session agent+event+age; (3) QUALITY: test pass rate with progress bar, FR coverage count, spec quality warnings, compliance badge when available; (4) GIT: branch, last commit age, unpushed commits count (git rev-list @{u}..HEAD), uncommitted files count (git status --porcelain) — last two only shown when >0; (5) VERSION: aitri version of project, version mismatch warning if Hub vs installed differ. Health grade (A-F) stays in card header. Make visual wherever possible: progress bars for pipeline and tests, colored badges for status, icons per section. No velocity, no FR requirements summary table, no time-in-phase on card."
+    }
+  },
+  "verifyPassed": true,
+  "verifyTimestamp": "2026-04-17T03:21:06.015Z",
+  "normalizeState": {
+    "baseRef": "ad27b3ea72ff9d6dd6cd02860f05d9ece5bd703f",
+    "method": "git",
+    "status": "resolved",
+    "lastRun": "2026-04-18T02:05:34.382Z"
+  },
+  "verifyRanAt": "2026-05-29T20:40:16.941Z",
+  "verifySummary": {
+    "total": 53,
+    "passed": 37,
+    "failed": 0,
+    "skipped": 16,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 16,
+    "manual": 0,
+    "manual_verified": 0
+  }
+}

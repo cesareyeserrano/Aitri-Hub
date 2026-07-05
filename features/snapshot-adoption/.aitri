@@ -1,0 +1,210 @@
+{
+  "currentPhase": 5,
+  "approvedPhases": [
+    1,
+    "ux",
+    2,
+    3,
+    4,
+    5
+  ],
+  "completedPhases": [
+    1,
+    "ux",
+    2,
+    3,
+    4,
+    5
+  ],
+  "projectName": "snapshot-adoption",
+  "createdAt": "2026-04-17T23:28:19.963Z",
+  "artifactsDir": "spec",
+  "updatedAt": "2026-05-29T22:27:03.199Z",
+  "driftPhases": [],
+  "events": [
+    {
+      "at": "2026-04-18T01:21:14.372Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 30,
+      "failed": 0,
+      "skipped": 4,
+      "manual": 0
+    },
+    {
+      "at": "2026-04-18T01:21:26.108Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 30,
+      "failed": 0,
+      "skipped": 4,
+      "manual": 0
+    },
+    {
+      "at": "2026-04-18T01:21:28.893Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 30,
+      "failed": 0
+    },
+    {
+      "at": "2026-04-18T01:21:31.962Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-18T01:21:35.302Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-18T01:26:45.815Z",
+      "event": "completed",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-18T01:27:32.836Z",
+      "event": "approved",
+      "phase": 5
+    },
+    {
+      "at": "2026-05-12T23:15:15.702Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 18,
+      "failed": 0,
+      "skipped": 16,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-12T23:15:57.505Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 26,
+      "failed": 0,
+      "skipped": 8,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-12T23:16:01.119Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 26,
+      "failed": 0
+    },
+    {
+      "at": "2026-05-29T21:55:58.084Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 22,
+      "failed": 0,
+      "skipped": 12,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-29T22:04:50.815Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 22,
+      "failed": 0,
+      "skipped": 12,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-29T22:11:13.310Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 30,
+      "failed": 0,
+      "skipped": 4,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-29T22:11:16.842Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 30,
+      "failed": 0
+    },
+    {
+      "at": "2026-05-29T22:26:00.238Z",
+      "event": "approved",
+      "phase": 4,
+      "afterDrift": true
+    },
+    {
+      "at": "2026-05-29T22:26:37.018Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 30,
+      "failed": 0,
+      "skipped": 4,
+      "manual": 0
+    },
+    {
+      "at": "2026-05-29T22:26:37.116Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 30,
+      "failed": 0
+    },
+    {
+      "at": "2026-05-29T22:27:03.021Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-05-29T22:27:03.085Z",
+      "event": "completed",
+      "phase": 5
+    },
+    {
+      "at": "2026-05-29T22:27:03.175Z",
+      "event": "approved",
+      "phase": 5
+    }
+  ],
+  "artifactHashes": {
+    "1": "24466505c0b319f23bb85cea18310b7825f567be7d1e3d39428792955ff405d8",
+    "2": "01539a9d4fbb7e3be688cd0035f67ce85f738bd3e3697905f4db26fe0aee2fc4",
+    "3": "fadbe11c9008c21ad4c92cf17e68a46f937f7ef36b09cc21bfe835ef0da09942",
+    "4": "18e33bfc26c529e1dc71397127505c84f85c9123529c12d2b77dbf4d4f768080",
+    "5": "bb51a1e373a5c2ae6a3077dd95c2dcbde1e9f38a3acdc6bab18182f76af35138",
+    "ux": "3706f3ac34c40f7025f2bd41c93a8ff92acdef8bc91dd9ebea149783355bc132"
+  },
+  "lastSession": {
+    "at": "2026-05-29T22:27:03.198Z",
+    "agent": "unknown",
+    "event": "approve deploy",
+    "files_touched": [
+      "features/hub-bug-summary-snapshot/spec/04_TEST_RESULTS.json",
+      "features/hub-folder-scan/spec/04_TEST_RESULTS.json",
+      "features/hub-mvp-web/spec/04_TEST_RESULTS.json",
+      "features/integration-compat-manifest/spec/04_IMPLEMENTATION_MANIFEST.json",
+      "features/integration-compat-manifest/spec/04_TEST_RESULTS.json",
+      "features/integration-last-reviewed-gate/spec/04_TEST_RESULTS.json",
+      "features/snapshot-adoption/spec/04_IMPLEMENTATION_MANIFEST.json",
+      "features/snapshot-adoption/spec/04_TEST_RESULTS.json",
+      "tests/integration/dashboard-feature-schema.test.js",
+      "tests/integration/e2e-collector-cycle.test.js"
+    ]
+  },
+  "verifyPassed": true,
+  "verifyRanAt": "2026-05-29T22:26:37.018Z",
+  "normalizeState": {
+    "baseRef": "3fb41afb6566931b733963f09cca83eea2179bf2",
+    "method": "git",
+    "status": "resolved",
+    "lastRun": "2026-05-29T22:26:00.216Z"
+  },
+  "verifySummary": {
+    "total": 34,
+    "passed": 30,
+    "failed": 0,
+    "skipped": 4,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 4,
+    "manual": 0,
+    "manual_verified": 0
+  }
+}

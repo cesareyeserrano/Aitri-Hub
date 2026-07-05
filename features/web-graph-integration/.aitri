@@ -1,0 +1,168 @@
+{
+  "currentPhase": 4,
+  "approvedPhases": [
+    1,
+    "ux",
+    2,
+    3,
+    4,
+    5
+  ],
+  "completedPhases": [
+    1,
+    "ux",
+    2,
+    3,
+    4,
+    5
+  ],
+  "projectName": "web-graph-integration",
+  "createdAt": "2026-03-31T20:47:39.338Z",
+  "artifactsDir": "spec",
+  "updatedAt": "2026-04-01T00:39:22.133Z",
+  "driftPhases": [],
+  "events": [
+    {
+      "at": "2026-03-31T21:37:27.128Z",
+      "event": "approved",
+      "phase": 3
+    },
+    {
+      "at": "2026-03-31T21:56:54.544Z",
+      "event": "completed",
+      "phase": 2
+    },
+    {
+      "at": "2026-03-31T21:56:54.590Z",
+      "event": "approved",
+      "phase": 2
+    },
+    {
+      "at": "2026-03-31T21:56:57.422Z",
+      "event": "completed",
+      "phase": 3
+    },
+    {
+      "at": "2026-03-31T21:56:57.467Z",
+      "event": "approved",
+      "phase": 3
+    },
+    {
+      "at": "2026-03-31T21:59:52.417Z",
+      "event": "completed",
+      "phase": 2
+    },
+    {
+      "at": "2026-03-31T21:59:52.463Z",
+      "event": "approved",
+      "phase": 2
+    },
+    {
+      "at": "2026-03-31T21:59:52.507Z",
+      "event": "completed",
+      "phase": 3
+    },
+    {
+      "at": "2026-03-31T21:59:52.551Z",
+      "event": "approved",
+      "phase": 3
+    },
+    {
+      "at": "2026-03-31T22:06:36.602Z",
+      "event": "started",
+      "phase": 4
+    },
+    {
+      "at": "2026-03-31T22:15:50.024Z",
+      "event": "completed",
+      "phase": 4
+    },
+    {
+      "at": "2026-03-31T22:30:35.638Z",
+      "event": "completed",
+      "phase": 4
+    },
+    {
+      "at": "2026-03-31T22:30:41.983Z",
+      "event": "approved",
+      "phase": 4
+    },
+    {
+      "at": "2026-03-31T22:31:08.250Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 18,
+      "failed": 0,
+      "skipped": 6
+    },
+    {
+      "at": "2026-03-31T22:32:37.157Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 19,
+      "failed": 0,
+      "skipped": 5
+    },
+    {
+      "at": "2026-03-31T22:32:37.202Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 19,
+      "failed": 0
+    },
+    {
+      "at": "2026-03-31T22:32:41.274Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-03-31T22:33:54.887Z",
+      "event": "completed",
+      "phase": 5
+    },
+    {
+      "at": "2026-03-31T22:34:25.107Z",
+      "event": "approved",
+      "phase": 5
+    },
+    {
+      "at": "2026-04-01T00:39:22.110Z",
+      "event": "completed",
+      "phase": 4
+    }
+  ],
+  "artifactHashes": {
+    "1": "3f18f4f460dda914c5fafa4d17b4373919c260fb63ddb387d8524152024f50ce",
+    "2": "59af43b9ce2c1b5259dd27e6fccbc94e60acd585d9b8b39cf94c3ee15dec5876",
+    "3": "7e54163a7b36af56e491dd87ff3993a5bb2542086bbb647761b5f2a1911cc55c",
+    "4": "c31697695d36cea32532f47141d281c66a9d3fe0c6d3e5e4215aa487ea5c62d5",
+    "5": "a4165c2b8f582cd95e268227003052e66767d35fa32799869f30adff43132139",
+    "ux": "8a05c3c7921bf431c1320345f45e25c5ef3061f4ee9ebb470ee625a34de38e3a"
+  },
+  "lastSession": {
+    "at": "2026-04-01T00:39:22.133Z",
+    "agent": "unknown",
+    "event": "complete build",
+    "files_touched": [
+      "docker/web-dist/assets/cytoscape-dagre-yhnQJ0pZ.js",
+      "docker/web-dist/assets/index-YyM3fj0S.js",
+      "docker/web-dist/index.html",
+      "lib/alerts/engine.js",
+      "lib/collector/aitri-reader.js",
+      "lib/collector/index.js",
+      "lib/constants.js",
+      "web/src/components/ActivityTab.jsx",
+      "web/src/components/ProjectCard.jsx"
+    ]
+  },
+  "verifyPassed": true,
+  "verifyTimestamp": "2026-03-31T22:32:37.202Z",
+  "verifySummary": {
+    "total": 24,
+    "passed": 19,
+    "failed": 0,
+    "skipped": 5,
+    "skipped_e2e": 2,
+    "skipped_no_marker": 3
+  }
+}
