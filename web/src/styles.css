@@ -1,33 +1,30 @@
 /* ─────────────────────────────────────────────────────────────────────────── */
-/* Design Tokens — Aitri Hub  /  Slate professional dark (UI_UX_SPEC_V2 Layer 1) */
-/* Palette migrated to slate; hybrid typography (Inter UI + JetBrains Mono for   */
-/* machine data). Dark-only; tokens structured so a light theme is a second set. */
+/* Design Tokens — Aitri Hub. Palette: original GitHub-Dark (owner preference,   */
+/* reverted from the slate experiment). Typography kept hybrid: Inter for UI,    */
+/* JetBrains Mono for machine data. Dark-only; tokens ready for a light set.     */
 /* ─────────────────────────────────────────────────────────────────────────── */
 :root {
-  /* Base surfaces — slate */
-  --bg: #0f172a;
-  --surface: #1e293b;
-  --surface-2: #263449;
-  --surface-raised: #2f3e57;
-  --border: #334155;
+  /* Base surfaces — GitHub Dark */
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface-2: #21262d;
+  --surface-raised: #2d333b;
+  --border: #30363d;
 
   /* Text */
-  --text: #f1f5f9;
-  --text-dim: #94a3b8;
-  --text-muted: #64748b;
+  --text: #e6edf3;
+  --text-dim: #8b949e;
+  --text-muted: #484f58;
 
-  /* Accent palette — slate-family brights, all WCAG AA (>=4.5:1) as text on
-     --surface (#1E293B): green 6.9:1, blue 6.3:1, red 5.4:1, yellow 10.4:1,
-     teal 8.6:1, orange 8.1:1, purple 7.4:1. Kept as --syn-* names so every
-     existing selector retargets with zero component edits. */
-  --syn-green: #34d399;
-  --syn-blue: #60a5fa;
-  --syn-purple: #c4b5fd;
-  --syn-orange: #fb923c;
-  --syn-red: #f87171;
-  --syn-yellow: #fbbf24;
-  --syn-teal: #2dd4bf;
-  --syn-comment: #64748b;
+  /* Syntax highlight palette (GitHub Dark) */
+  --syn-green: #3fb950;
+  --syn-blue: #79c0ff;
+  --syn-purple: #d2a8ff;
+  --syn-orange: #ffa657;
+  --syn-red: #f85149;
+  --syn-yellow: #e3b341;
+  --syn-teal: #39c5cf;
+  --syn-comment: #6e7681;
 
   /* Semantic aliases (used by older selectors) */
   --text-primary: var(--text);
@@ -39,11 +36,11 @@
   --accent-info: var(--syn-blue);
   --accent-stalled: var(--syn-comment);
 
-  /* Severity tokens — WCAG AA verified against --surface (#1E293B):
-     warn 10.4:1, critical 5.4:1, info 6.9:1. */
-  --severity-warn: #fbbf24;
-  --severity-critical: #f87171;
-  --severity-info: #7dd3fc;
+  /* Severity tokens — WCAG AA verified against --surface (#161B22):
+     warn 8.07:1, critical 6.39:1, info 7.50:1. */
+  --severity-warn: #fdb022;
+  --severity-critical: #f97066;
+  --severity-info: #84caff;
 
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
   --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
