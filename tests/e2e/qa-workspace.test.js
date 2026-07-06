@@ -68,7 +68,7 @@ async function setup(page, { cards = [card()], detail = detailPayload(), detailS
       body: JSON.stringify(detailStatus === 200 ? detail : { error: 'project_not_found' }) }));
   await page.route('**/api/project/*/validate*', r =>
     r.fulfill({ status: 200, contentType: 'application/json',
-      body: JSON.stringify({ available: true, fetchedAt: 1, report: { health: { deployable: false, reasons: ['blocked: FR-2 uncovered'] }, advisories: [] } }) }));
+      body: JSON.stringify({ available: true, fetchedAt: 1, report: { project: 'demo', allValid: false, deployable: false, deployableReasons: [{ type: 'fr_coverage', message: 'FR-2 refunds uncovered' }], artifacts: [] } }) }));
 }
 
 test('TC-050h: view-project button navigates to /project/:id', async ({ page }) => {
@@ -190,6 +190,29 @@ test('TC-056h: Traceability pins the uncovered MUST first', async ({ page }) => 
   const firstRow = page.locator('[data-testid="trace-row"]').first();
   await expect(firstRow).toHaveAttribute('data-uncovered', 'true');
   await expect(firstRow).toContainText('FR-2');
+});
+
+test('TC-054h: Summary verdict renders from the real validate --json shape (deployable + deployableReasons)', async ({ page }) => {
+  await setup(page);
+  await page.goto(`${BASE}/project/demo`);
+  // Summary is the default tab; the verdict panel fetches validate on open.
+  await expect(page.locator('[data-testid="verdict-report"]')).toBeVisible();
+  await expect(page.locator('[data-testid="verdict-report"]')).toContainText('not deployable');
+  await expect(page.locator('[data-testid="verdict-report"]')).toContainText('FR-2 refunds uncovered');
+});
+
+test('TC-054e: a deployable project with allValid:false (IDEA.md absorbed) still reads deployable', async ({ page }) => {
+  await page.route('**/data/dashboard.json', r =>
+    r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ projects: [card()] }) }));
+  await page.route('**/api/project/*/detail*', r =>
+    r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(detailPayload()) }));
+  // Real validate --json shape for a COMPLETE project: allValid false (IDEA.md
+  // absorbed at approve 1) but deployable TRUE. The verdict must read `deployable`.
+  await page.route('**/api/project/*/validate*', r =>
+    r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ available: true, fetchedAt: 2, report: { project: 'demo', allValid: false, deployable: true, deployableReasons: [], artifacts: [] } }) }));
+  await page.goto(`${BASE}/project/demo`);
+  await expect(page.locator('[data-testid="verdict-report"]')).toContainText('deployable');
+  await expect(page.locator('[data-testid="verdict-badge"], .verdict-badge')).not.toContainText('not deployable');
 });
 
 test('TC-057f: Bugs tab shows the parse-error state, never zero bugs', async ({ page }) => {

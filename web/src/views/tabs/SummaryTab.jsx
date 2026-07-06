@@ -51,8 +51,16 @@ function VerdictPanel({ projectId, isRemote }) {
 }
 
 function VerdictReport({ report }) {
-  const deployable = report.health?.deployable ?? report.allValid ?? null;
-  const reasons = report.health?.reasons ?? report.blockingReasons ?? [];
+  // Per VALIDATE_JSON.md: the deploy verdict is the TOP-LEVEL `deployable`
+  // (same value as status --json health.deployable); `deployableReasons` are
+  // {type, message} objects. `allValid` is artifact-level, NOT the verdict, and
+  // is a false-negative for any completed project (IDEA.md absorbs at approve 1)
+  // — never gate on it. Tolerate the older health-shaped payload defensively.
+  const deployable =
+    typeof report.deployable === 'boolean'
+      ? report.deployable
+      : (report.health?.deployable ?? null);
+  const reasons = report.deployableReasons ?? report.health?.reasons ?? [];
   const advisories = report.advisories ?? [];
   return (
     <div data-testid="verdict-report">
