@@ -1,0 +1,868 @@
+{
+  "test_plan": {
+    "strategy": "Three layers, all runner-visible from day one (TC id in every test title). UNIT (node --test + vitest components): route parsing, detail-reader whitelist/degradation, validate-runner spawn policy (fixed argv, timeout, cache, dedup), markdown renderer inertness, SummaryTab async states. INTEGRATION (node --test): the two endpoints end-to-end against fixture projects with a stub aitri binary and mocked sockets for the loopback guard — including fs-instrumented hostile-input tests (scope traversal, whitelist) and the spawn census for the process budget. E2E (Playwright, browser page tests in the SAME files/worker family as the suites that share server state): navigation, each tab's happy/edge/negative rendering against seeded fixture projects, XSS inertness probe (window.__pwned). Regression NFRs run the EXISTING suites with unmodified assertions plus id-mapped pins where a new id must appear in runner output. NFR-055 (CI) is enforced by the repository workflow (observable lives in CI; not TC-covered — same disposition as the prior feature). All fixtures under os.tmpdir()/AITRI_HUB_DIR isolation.",
+    "coverage_goal": "every MUST FR and every Regression/Security NFR traced to passing automated tests; renderer and endpoint security paths at 100% branch coverage of their decision points",
+    "test_types": [
+      "unit",
+      "integration",
+      "e2e"
+    ]
+  },
+  "test_cases": [
+    {
+      "id": "TC-050h",
+      "requirement_id": "FR-050",
+      "user_story_id": "US-050",
+      "ac_id": "AC-0501",
+      "title": "card click navigates to the detail route",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "hub e2e server on :3099 with registered fixture project 'demo' visible on the overview",
+      "when": "the demo card is clicked in the browser page",
+      "then": "URL becomes /project/<demo-id>; the detail header strip renders the text 'demo'; no full page reload (SPA navigation)",
+      "steps": [
+        "the demo card is clicked in the browser page"
+      ],
+      "expected_result": "card→detail navigation works end-to-end",
+      "test_data": {}
+    },
+    {
+      "id": "TC-050e",
+      "requirement_id": "FR-050",
+      "user_story_id": "US-050",
+      "ac_id": "AC-0501",
+      "title": "back returns to an intact overview",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "browser is on /project/<demo-id> after clicking the card",
+      "when": "browser back is triggered",
+      "then": "URL is '/' and the overview renders the same project cards as before navigation",
+      "steps": [
+        "browser back is triggered"
+      ],
+      "expected_result": "history navigation preserved by the useRoute extension",
+      "test_data": {}
+    },
+    {
+      "id": "TC-050f",
+      "requirement_id": "FR-050",
+      "user_story_id": "US-050",
+      "ac_id": "AC-0502",
+      "title": "unknown project id renders not-found",
+      "type": "e2e",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "hub e2e server running",
+      "when": "the browser opens /project/does-not-exist directly",
+      "then": "a not-found state renders with a working link to '/'; zero uncaught console errors; page is not blank",
+      "steps": [
+        "the browser opens /project/does-not-exist directly"
+      ],
+      "expected_result": "bad deep links degrade safely",
+      "test_data": {}
+    },
+    {
+      "id": "TC-051h",
+      "requirement_id": "FR-051",
+      "user_story_id": "US-051",
+      "ac_id": "AC-0511",
+      "title": "header strip renders identity fields",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture project with aitriVersion '2.0.0-rc.159' and artifactsDir 'spec' collected on the dashboard",
+      "when": "the detail view opens",
+      "then": "header shows name, status badge, '2.0.0-rc.159' (full tag) and 'spec'; all visible at a 375px-wide viewport without horizontal scroll",
+      "steps": [
+        "the detail view opens"
+      ],
+      "expected_result": "identity always visible while judging evidence",
+      "test_data": {}
+    },
+    {
+      "id": "TC-051e",
+      "requirement_id": "FR-051",
+      "user_story_id": "US-051",
+      "ac_id": "AC-0511",
+      "title": "verdict chip neutral before validate",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "detail view opened, validate endpoint NOT yet invoked (Summary verdict panel not opened)",
+      "when": "the header renders",
+      "then": "the verdict chip shows the neutral 'not checked' state — no verdict value is fabricated",
+      "steps": [
+        "the header renders"
+      ],
+      "expected_result": "no verdict without evidence",
+      "test_data": {}
+    },
+    {
+      "id": "TC-051f",
+      "requirement_id": "FR-051",
+      "user_story_id": "US-051",
+      "ac_id": "AC-0511",
+      "title": "tab switching keeps the header stable",
+      "type": "e2e",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "detail view open on the Test Cases tab",
+      "when": "the user switches to Bugs and back",
+      "then": "the header never unmounts/flickers (same DOM node persists) and no additional detail fetch fires for the unchanged scope",
+      "steps": [
+        "the user switches to Bugs and back"
+      ],
+      "expected_result": "single-payload rendering, no refetch churn",
+      "test_data": {}
+    },
+    {
+      "id": "TC-052h",
+      "requirement_id": "FR-052",
+      "user_story_id": "US-052",
+      "ac_id": "AC-0521",
+      "title": "detail endpoint serves the parsed chain over loopback",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "web server started with AITRI_HUB_DIR temp home and a registered fixture project with 01/03/04/05 + BUGS.json",
+      "when": "GET /api/project/<id>/detail from 127.0.0.1",
+      "then": "200 with detailVersion 1, testCases/traceability/bugs/artifacts sections populated per the fixture",
+      "steps": [
+        "GET /api/project/<id>/detail from 127.0.0.1"
+      ],
+      "expected_result": "detail contract served",
+      "test_data": {}
+    },
+    {
+      "id": "TC-052e",
+      "requirement_id": "FR-052",
+      "user_story_id": "US-052",
+      "ac_id": "AC-0522",
+      "title": "hostile scope rejected without filesystem access",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "running server, fs access instrumented on the reader module",
+      "when": "GET /api/project/<id>/detail?scope=../../etc and ?scope=..%2F..%2Fetc",
+      "then": "400 responses; zero file opens outside the project root recorded by the instrumentation",
+      "steps": [
+        "GET /api/project/<id>/detail?scope=../../etc and ?scope=..%2F..%2Fetc"
+      ],
+      "expected_result": "scope validation is regex + membership, never a path",
+      "test_data": {}
+    },
+    {
+      "id": "TC-052f",
+      "requirement_id": "FR-052",
+      "user_story_id": "US-052",
+      "ac_id": "AC-0521",
+      "title": "non-loopback request receives 403 before any read",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "request handler invoked with a mocked socket whose remoteAddress is 10.0.0.5",
+      "when": "GET /api/project/<id>/detail is dispatched",
+      "then": "403 {error:'forbidden'}; the detail reader is never invoked (spy count 0); unknown id over loopback returns 404 JSON",
+      "steps": [
+        "GET /api/project/<id>/detail is dispatched"
+      ],
+      "expected_result": "loopback guard identical to /api/projects",
+      "test_data": {}
+    },
+    {
+      "id": "TC-053h",
+      "requirement_id": "FR-053",
+      "user_story_id": "US-053",
+      "ac_id": "AC-0531",
+      "title": "feature scope renders that feature's own chain",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture project with features f1 and f2, each with DISTINCT TC ids in their own 03_TEST_CASES.json",
+      "when": "GET /detail?scope=f1 then ?scope=f2",
+      "then": "each response's testCases contains exactly that feature's TC ids; product scope returns the root chain",
+      "steps": [
+        "GET /detail?scope=f1 then ?scope=f2"
+      ],
+      "expected_result": "per-scope chains, no aggregation bleed",
+      "test_data": {}
+    },
+    {
+      "id": "TC-053e",
+      "requirement_id": "FR-053",
+      "user_story_id": "US-053",
+      "ac_id": "AC-0531",
+      "title": "featureless project implies product scope",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture project with no features/ dir",
+      "when": "GET /detail with no scope parameter",
+      "then": "200 product payload with scopes ['product']; the SPA renders no selector for a single-scope project",
+      "steps": [
+        "GET /detail with no scope parameter"
+      ],
+      "expected_result": "zero-feature projects stay simple",
+      "test_data": {}
+    },
+    {
+      "id": "TC-053f",
+      "requirement_id": "FR-053",
+      "user_story_id": "US-053",
+      "ac_id": "AC-0531",
+      "title": "unknown feature scope rejected",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture project with feature f1 only",
+      "when": "GET /detail?scope=f9",
+      "then": "400 with a JSON error naming the invalid scope; no partial payload",
+      "steps": [
+        "GET /detail?scope=f9"
+      ],
+      "expected_result": "membership check enforced",
+      "test_data": {}
+    },
+    {
+      "id": "TC-054h",
+      "requirement_id": "FR-054",
+      "user_story_id": "US-054",
+      "ac_id": "AC-0541",
+      "title": "verdict panel renders the validate contract",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "stub 'aitri' on PATH whose validate --json emits a blocked verdict with 2 blocking reasons and 1 advisory",
+      "when": "GET /api/project/<id>/validate, then the SummaryTab renders the payload (component test)",
+      "then": "endpoint returns {available:true, report:<verbatim stub JSON>}; the panel shows the verdict, both reasons and the advisory each with its command; health score and phase list render per the collected record",
+      "steps": [
+        "GET /api/project/<id>/validate, then the SummaryTab renders the payload (component test)"
+      ],
+      "expected_result": "verdict rendered per VALIDATE_JSON.md, never re-derived",
+      "test_data": {}
+    },
+    {
+      "id": "TC-054e",
+      "requirement_id": "FR-054",
+      "user_story_id": "US-054",
+      "ac_id": "AC-0542",
+      "title": "60s cache + refresh semantics",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "stub aitri counts its invocations to a file",
+      "when": "two GET /validate calls within 60s, then one with refresh=1",
+      "then": "invocation count is 2 total (first call + refresh); the second call served the cache (fetchedAt unchanged)",
+      "steps": [
+        "two GET /validate calls within 60s, then one with refresh=1"
+      ],
+      "expected_result": "spawn rate bounded per ADR-Q4",
+      "test_data": {}
+    },
+    {
+      "id": "TC-054f",
+      "requirement_id": "FR-054",
+      "user_story_id": "US-054",
+      "ac_id": "AC-0542",
+      "title": "cycle spawns zero validates; CLI absence degrades",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "collection cycle run 3 times with the stub counting invocations; then PATH without aitri",
+      "when": "cycles execute; afterwards GET /validate",
+      "then": "cycle-attributed validate invocations = 0; the no-CLI call returns {available:false, reason} and the panel renders the degraded state (component test)",
+      "steps": [
+        "cycles execute; afterwards GET /validate"
+      ],
+      "expected_result": "process budget intact; no fabricated verdict",
+      "test_data": {}
+    },
+    {
+      "id": "TC-055h",
+      "requirement_id": "FR-055",
+      "user_story_id": "US-055",
+      "ac_id": "AC-0551",
+      "title": "TC table with statuses, counts and manual banner",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture scope with 5 TCs: 3 pass, 1 fail, 1 pending manual (with manual_reason)",
+      "when": "the Test Cases tab renders in the browser",
+      "then": "5 rows with correct statuses; counts strip shows 3 passed / 1 failed / 1 manual-pending; the banner names the pending TC id; the manual row exposes its manual_reason",
+      "steps": [
+        "the Test Cases tab renders in the browser"
+      ],
+      "expected_result": "per-TC evidence table",
+      "test_data": {}
+    },
+    {
+      "id": "TC-055e",
+      "requirement_id": "FR-055",
+      "user_story_id": "US-055",
+      "ac_id": "AC-0552",
+      "title": "filters compose",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "same fixture",
+      "when": "filter status=fail applied, then combined with linked FR filter",
+      "then": "exactly the failing TC remains; clearing filters restores 5 rows; a TC with downgraded_from renders its trail",
+      "steps": [
+        "filter status=fail applied, then combined with linked FR filter"
+      ],
+      "expected_result": "filterable working set",
+      "test_data": {}
+    },
+    {
+      "id": "TC-055f",
+      "requirement_id": "FR-055",
+      "user_story_id": "US-059",
+      "ac_id": "AC-0591",
+      "title": "results file absent → pending + guidance",
+      "type": "e2e",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture scope with 03_TEST_CASES.json but no 04_TEST_RESULTS.json",
+      "when": "the Test Cases tab renders",
+      "then": "every TC shows status 'pending' and the state names 'aitri verify-run'; no crash, no blank panel",
+      "steps": [
+        "the Test Cases tab renders"
+      ],
+      "expected_result": "mid-pipeline guidance instead of blanks",
+      "test_data": {}
+    },
+    {
+      "id": "TC-056h",
+      "requirement_id": "FR-056",
+      "user_story_id": "US-056",
+      "ac_id": "AC-0561",
+      "title": "uncovered MUST pinned red",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture where FR-002 (MUST) has no passing test and FR-001 is covered by 2 TCs",
+      "when": "the Traceability tab renders",
+      "then": "FR-002 is the first row with a red 'uncovered' marker; FR-001 lists its TCs with latest statuses; priorities visible",
+      "steps": [
+        "the Traceability tab renders"
+      ],
+      "expected_result": "nothing MUST ships untested unseen",
+      "test_data": {}
+    },
+    {
+      "id": "TC-056e",
+      "requirement_id": "FR-056",
+      "user_story_id": "US-056",
+      "ac_id": "AC-0561",
+      "title": "coverage_map + freshness + ac_coverage render",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture with coverage_map entries, ac_coverage on FR-001, and a stale requirements-audit stamp",
+      "when": "the Traceability tab renders",
+      "then": "coverage_map section shows need→disposition; the freshness stamp reads 'stale'; FR-001 shows its ac_coverage; a Hub-derived coverage (no fr_coverage in results) is labeled 'computed by Hub'",
+      "steps": [
+        "the Traceability tab renders"
+      ],
+      "expected_result": "intent coverage visible with honest sourcing",
+      "test_data": {}
+    },
+    {
+      "id": "TC-056f",
+      "requirement_id": "FR-056",
+      "user_story_id": "US-059",
+      "ac_id": "AC-0592",
+      "title": "traceability artifact absent → empty state",
+      "type": "e2e",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture scope without 05_TRACEABILITY.json",
+      "when": "the Traceability tab renders",
+      "then": "empty state names the traceability artifact and its producing command; no blank panel",
+      "steps": [
+        "the Traceability tab renders"
+      ],
+      "expected_result": "guided empty state",
+      "test_data": {}
+    },
+    {
+      "id": "TC-057h",
+      "requirement_id": "FR-057",
+      "user_story_id": "US-057",
+      "ac_id": "AC-0571",
+      "title": "blocking bug pinned with resolution",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture BUGS.json with 3 bugs; one critical active with resolution text and linked TC",
+      "when": "the Bugs tab renders",
+      "then": "the critical bug is pinned first with a red band; severity, status, resolution and linked TC readable; files_changed listed",
+      "steps": [
+        "the Bugs tab renders"
+      ],
+      "expected_result": "de-blocking evidence auditable",
+      "test_data": {}
+    },
+    {
+      "id": "TC-057e",
+      "requirement_id": "FR-057",
+      "user_story_id": "US-057",
+      "ac_id": "AC-0572",
+      "title": "absent vs corrupt are distinct states",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "two fixtures: no BUGS.json, and BUGS.json '{\"bugs\":[]}'",
+      "when": "the Bugs tab renders for each",
+      "then": "absent → 'no bugs recorded' state naming 'aitri bug add'; valid-empty → zero-bug table state; the two are visually distinct",
+      "steps": [
+        "the Bugs tab renders for each"
+      ],
+      "expected_result": "absence ≠ empty ≠ corrupt",
+      "test_data": {}
+    },
+    {
+      "id": "TC-057f",
+      "requirement_id": "FR-057",
+      "user_story_id": "US-057",
+      "ac_id": "AC-0572",
+      "title": "corrupt BUGS.json shows parse error inline",
+      "type": "e2e",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture BUGS.json containing '{invalid'",
+      "when": "the Bugs tab renders",
+      "then": "inline parse-error state names the scope and says bugs are NOT counted; no empty table presented as zero bugs",
+      "steps": [
+        "the Bugs tab renders"
+      ],
+      "expected_result": "corrupt evidence is loud",
+      "test_data": {}
+    },
+    {
+      "id": "TC-058h",
+      "requirement_id": "FR-058",
+      "user_story_id": "US-058",
+      "ac_id": "AC-0581",
+      "title": "markdown renders formatted; PRD as table",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture with 02_SYSTEM_DESIGN.md (headings, list, fenced code) and 01_REQUIREMENTS.json (2 FRs, personas, no_go_zone)",
+      "when": "the Artifacts tab renders both",
+      "then": "the design doc shows real <h2>/<ul>/<pre> formatting (not raw text); the PRD shows an FR table with ids, priorities and ACs plus personas and no_go_zone; raw views are collapsed toggles",
+      "steps": [
+        "the Artifacts tab renders both"
+      ],
+      "expected_result": "specs readable for non-developers",
+      "test_data": {}
+    },
+    {
+      "id": "TC-058e",
+      "requirement_id": "FR-058",
+      "user_story_id": "US-058",
+      "ac_id": "AC-0581",
+      "title": "chain list marks absences; oversized artifact truncates",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture missing 00_DISCOVERY.md and containing a >1MiB markdown artifact",
+      "when": "the Artifacts tab renders",
+      "then": "the chain list marks 00_DISCOVERY.md as not produced (optional phase); the oversized artifact renders its first 1 MiB with a 'truncated' notice",
+      "steps": [
+        "the Artifacts tab renders"
+      ],
+      "expected_result": "presence/absence explicit; size-guarded",
+      "test_data": {}
+    },
+    {
+      "id": "TC-058f",
+      "requirement_id": "FR-058",
+      "user_story_id": "US-058",
+      "ac_id": "AC-0582",
+      "title": "script content renders inert",
+      "type": "e2e",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture markdown artifact containing '<script>window.__pwned=1</script>' and an onclick attribute",
+      "when": "the Artifacts tab renders it",
+      "then": "the script text appears as escaped inert text; window.__pwned is undefined; no dialog/handler fires",
+      "steps": [
+        "the Artifacts tab renders it"
+      ],
+      "expected_result": "XSS-safe by construction (ADR-Q2)",
+      "test_data": {}
+    },
+    {
+      "id": "TC-059h",
+      "requirement_id": "FR-059",
+      "user_story_id": "US-059",
+      "ac_id": "AC-0591",
+      "title": "every tab has a guided empty state",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "a bare fixture project (only .aitri, no artifacts)",
+      "when": "the detail payload is fetched and each of the 5 tabs renders (component tests)",
+      "then": "each tab renders a non-empty state naming its artifact and the producing aitri command (5 assertions)",
+      "steps": [
+        "the detail payload is fetched and each of the 5 tabs renders (component tests)"
+      ],
+      "expected_result": "no blank panels anywhere",
+      "test_data": {}
+    },
+    {
+      "id": "TC-059e",
+      "requirement_id": "FR-059",
+      "user_story_id": "US-059",
+      "ac_id": "AC-0592",
+      "title": "snapshot-degraded project shows the banner",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture whose collected record carries degradationReason 'version_too_old'",
+      "when": "the detail view renders",
+      "then": "the degradation banner shows with the required CLI version; tabs still render from the fallback data",
+      "steps": [
+        "the detail view renders"
+      ],
+      "expected_result": "degradation visible, not fatal",
+      "test_data": {}
+    },
+    {
+      "id": "TC-059f",
+      "requirement_id": "FR-059",
+      "user_story_id": "US-059",
+      "ac_id": "AC-0592",
+      "title": "malformed artifact degrades that section only",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture with malformed 03_TEST_CASES.json but valid BUGS.json",
+      "when": "the detail payload is built and tabs render",
+      "then": "testCases section is available:false with the file named; Bugs tab renders normally; zero uncaught exceptions",
+      "steps": [
+        "the detail payload is built and tabs render"
+      ],
+      "expected_result": "per-section degradation isolation",
+      "test_data": {}
+    },
+    {
+      "id": "TC-150h",
+      "requirement_id": "NFR-050",
+      "user_story_id": "US-050",
+      "ac_id": "AC-0501",
+      "title": "overview renders unchanged with the feature present",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "existing overview e2e fixtures",
+      "when": "the pre-existing overview/snapshot-card e2e suites run",
+      "then": "all pass with UNMODIFIED assertions",
+      "steps": [
+        "the pre-existing overview/snapshot-card e2e suites run"
+      ],
+      "expected_result": "overview untouched",
+      "test_data": {}
+    },
+    {
+      "id": "TC-150e",
+      "requirement_id": "NFR-050",
+      "user_story_id": "US-050",
+      "ac_id": "AC-0501",
+      "title": "dashboard.json schema untouched",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "an unchanged fixture collected before and after the feature code",
+      "when": "type-inventory diff runs",
+      "then": "empty diff — no field added/removed/retyped by this feature in dashboard.json",
+      "steps": [
+        "type-inventory diff runs"
+      ],
+      "expected_result": "polling contract intact",
+      "test_data": {}
+    },
+    {
+      "id": "TC-150f",
+      "requirement_id": "NFR-050",
+      "user_story_id": "US-050",
+      "ac_id": "AC-0501",
+      "title": "route extension does not break '/' and '/admin'",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "useRoute unit fixtures for '/', '/admin', '/project/x', '/unknown'",
+      "when": "the route parser evaluates each",
+      "then": "'/' → overview, '/admin' → admin, '/project/x' → detail with id 'x', '/unknown' → overview fallback exactly as before the change",
+      "steps": [
+        "the route parser evaluates each"
+      ],
+      "expected_result": "routing regression pinned",
+      "test_data": {}
+    },
+    {
+      "id": "TC-151h",
+      "requirement_id": "NFR-051",
+      "user_story_id": "US-054",
+      "ac_id": "AC-0542",
+      "title": "cycle spawn census unchanged",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "stub aitri counting invocations per argv; 2 eligible fixture projects",
+      "when": "3 collection cycles run",
+      "then": "exactly 3×2 status --json invocations and 0 validate invocations attributed to the cycle",
+      "steps": [
+        "3 collection cycles run"
+      ],
+      "expected_result": "one spawn per eligible project per cycle, nothing else",
+      "test_data": {}
+    },
+    {
+      "id": "TC-151e",
+      "requirement_id": "NFR-051",
+      "user_story_id": "US-054",
+      "ac_id": "AC-0542",
+      "title": "open detail view adds no cycle processes",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "same census with a detail view payload having been served (validate cached)",
+      "when": "3 more cycles run",
+      "then": "validate invocation count does not increase during cycles",
+      "steps": [
+        "3 more cycles run"
+      ],
+      "expected_result": "navigation-driven only",
+      "test_data": {}
+    },
+    {
+      "id": "TC-151f",
+      "requirement_id": "NFR-051",
+      "user_story_id": "US-054",
+      "ac_id": "AC-0542",
+      "title": "validate endpoint cannot be amplified",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "10 concurrent GET /validate requests fired at once",
+      "when": "the in-flight dedup handles them",
+      "then": "exactly 1 aitri validate spawn occurs; all 10 responses carry the same fetchedAt",
+      "steps": [
+        "the in-flight dedup handles them"
+      ],
+      "expected_result": "dedup bounds the worst-case click storm",
+      "test_data": {}
+    },
+    {
+      "id": "TC-152h",
+      "requirement_id": "NFR-052",
+      "user_story_id": "US-052",
+      "ac_id": "AC-0521",
+      "title": "validate spawn is fixed-argv execFile",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "spawn layer instrumented",
+      "when": "runValidate is invoked for a project whose id/name contain shell metacharacters ('; rm -rf', backticks)",
+      "then": "the spawn is execFile('aitri',['validate','--json']) with cwd set — argv contains NO project-derived strings; no shell involved",
+      "steps": [
+        "runValidate is invoked for a project whose id/name contain shell metacharacters ('; rm -rf', backticks)"
+      ],
+      "expected_result": "no injection surface",
+      "test_data": {}
+    },
+    {
+      "id": "TC-152e",
+      "requirement_id": "NFR-052",
+      "user_story_id": "US-052",
+      "ac_id": "AC-0522",
+      "title": "artifact whitelist enforced",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "detail-reader fs instrumentation",
+      "when": "readDetail runs on a fixture that also contains 'secrets.env' and '.git/config'",
+      "then": "only whitelisted artifact filenames are opened; the extra files are never read and never appear in the payload",
+      "steps": [
+        "readDetail runs on a fixture that also contains 'secrets.env' and '.git/config'"
+      ],
+      "expected_result": "whitelist-only reads",
+      "test_data": {}
+    },
+    {
+      "id": "TC-152f",
+      "requirement_id": "NFR-052",
+      "user_story_id": "US-052",
+      "ac_id": "AC-0521",
+      "title": "dangerouslySetInnerHTML absent",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "the feature's web source files",
+      "when": "a lint-style scan runs over web/src for dangerouslySetInnerHTML",
+      "then": "zero occurrences in the feature's components (pinned so ADR-Q2's invariant survives refactors)",
+      "steps": [
+        "a lint-style scan runs over web/src for dangerouslySetInnerHTML"
+      ],
+      "expected_result": "XSS invariant mechanical",
+      "test_data": {}
+    },
+    {
+      "id": "TC-153h",
+      "requirement_id": "NFR-053",
+      "user_story_id": "US-052",
+      "ac_id": "AC-0521",
+      "title": "admin CRUD suite unchanged",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "existing admin-api e2e suite (incl. TC-142h/e wrappers)",
+      "when": "the suite runs with the new routes registered",
+      "then": "all pass with unmodified assertions",
+      "steps": [
+        "the suite runs with the new routes registered"
+      ],
+      "expected_result": "admin surface untouched",
+      "test_data": {}
+    },
+    {
+      "id": "TC-153e",
+      "requirement_id": "NFR-053",
+      "user_story_id": "US-052",
+      "ac_id": "AC-0521",
+      "title": "new routes do not shadow admin routes",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "running server",
+      "when": "GET /api/projects and GET /api/project/<id>/detail are both dispatched",
+      "then": "each hits its own handler (admin list unchanged; detail served) — no route-prefix collision",
+      "steps": [
+        "GET /api/projects and GET /api/project/<id>/detail are both dispatched"
+      ],
+      "expected_result": "routing table coexistence",
+      "test_data": {}
+    },
+    {
+      "id": "TC-153f",
+      "requirement_id": "NFR-053",
+      "user_story_id": "US-052",
+      "ac_id": "AC-0521",
+      "title": "malformed detail URLs never reach admin handlers",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "running server",
+      "when": "GET /api/project//detail and /api/project/%2e%2e/detail are dispatched",
+      "then": "400/404 JSON from the detail validation — admin handlers untouched (spy), no crash",
+      "steps": [
+        "GET /api/project//detail and /api/project/%2e%2e/detail are dispatched"
+      ],
+      "expected_result": "malformed input contained",
+      "test_data": {}
+    },
+    {
+      "id": "TC-154h",
+      "requirement_id": "NFR-054",
+      "user_story_id": "US-055",
+      "ac_id": "AC-0551",
+      "title": "detail endpoint under 500ms on the 200-TC fixture",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "generated fixture: 200 TCs, 10 features",
+      "when": "GET /detail timed over 5 runs",
+      "then": "median response ≤500ms on CI hardware",
+      "steps": [
+        "GET /detail timed over 5 runs"
+      ],
+      "expected_result": "fast local reads",
+      "test_data": {}
+    },
+    {
+      "id": "TC-154e",
+      "requirement_id": "NFR-054",
+      "user_story_id": "US-054",
+      "ac_id": "AC-0541",
+      "title": "summary renders before validate resolves",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "SummaryTab mounted with a validate promise that resolves after 2s (fake timers)",
+      "when": "initial render happens",
+      "then": "health score, phases and feature table are visible immediately; the verdict panel shows a loading state until resolution",
+      "steps": [
+        "initial render happens"
+      ],
+      "expected_result": "async verdict never blocks the tab",
+      "test_data": {}
+    },
+    {
+      "id": "TC-154f",
+      "requirement_id": "NFR-054",
+      "user_story_id": "US-054",
+      "ac_id": "AC-0542",
+      "title": "validate timeout degrades cleanly",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "runValidate with a stub that never exits (killed at the 30s timeout, fake-timed)",
+      "when": "the timeout fires",
+      "then": "result is {available:false, reason} mentioning timeout; the process is killed; no unhandled rejection",
+      "steps": [
+        "the timeout fires"
+      ],
+      "expected_result": "hung CLI cannot hang the Hub",
+      "test_data": {}
+    }
+  ]
+}

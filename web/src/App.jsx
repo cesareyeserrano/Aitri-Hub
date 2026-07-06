@@ -12,6 +12,8 @@ import ConnectionBanner from './components/ConnectionBanner.jsx';
 import HomeView from './components/HomeView.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import IntegrationAlertBanner from './components/IntegrationAlertBanner.jsx';
+import DetailView from './views/DetailView.jsx';
+import { useRoute } from './lib/navigate.js';
 
 const POLL_INTERVAL_MS = 5_000;
 const FAILURE_THRESHOLD = 3;
@@ -23,23 +25,6 @@ const CONN = Object.freeze({
   FAILED: 'failed',
   RESTORED: 'restored',
 });
-
-/**
- * Minimal 2-route URL router — no external dependencies.
- * Listens to popstate; uses window.history.pushState for navigation.
- * @returns {string} current pathname
- */
-function useRoute() {
-  const [route, setRoute] = useState(() => window.location.pathname);
-  useEffect(() => {
-    function onPop() {
-      setRoute(window.location.pathname);
-    }
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
-  }, []);
-  return route;
-}
 
 /**
  * @returns {JSX.Element}
@@ -88,7 +73,9 @@ export default function App() {
   const warning = projects.filter(p => p.status === 'warning').length;
   const error = projects.filter(p => p.status === 'error' || p.status === 'unreadable').length;
 
-  const isAdmin = route === '/admin' || route.startsWith('/admin');
+  const isAdmin = route.name === 'admin';
+  const isDetail = route.name === 'project';
+  const detailRecord = isDetail ? projects.find(p => p.id === route.id) ?? null : null;
 
   return (
     <div className="app">
@@ -107,7 +94,13 @@ export default function App() {
       />
 
       <main className="main">
-        {isAdmin ? <AdminPanel /> : <HomeView projects={projects} loading={loading} />}
+        {isAdmin ? (
+          <AdminPanel />
+        ) : isDetail ? (
+          <DetailView id={route.id} record={detailRecord} />
+        ) : (
+          <HomeView projects={projects} loading={loading} />
+        )}
       </main>
     </div>
   );

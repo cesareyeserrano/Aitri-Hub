@@ -12,34 +12,9 @@
 
 import React from 'react';
 import { formatLastSessionLine } from '../../../lib/collector/relative-time.js';
-
-// ── Grade helpers ─────────────────────────────────────────────────────────────
-
-function healthScore(project) {
-  const approved = project.aitriState?.approvedPhases?.length ?? 0;
-  const pipeline = Math.min(40, approved * 8);
-  const ts = project.testSummary;
-  const testPts = ts?.available && ts.total > 0 ? Math.round((ts.passed / ts.total) * 30) : 0;
-  const hasBlocking = (project.alerts ?? []).some(a => a.severity === 'blocking');
-  const blockPts = hasBlocking ? 0 : 20;
-  const cs = project.complianceSummary;
-  const compPts = cs?.available
-    ? cs.overallStatus === 'compliant'
-      ? 10
-      : cs.overallStatus === 'partial'
-        ? 5
-        : 0
-    : 0;
-  return Math.min(100, pipeline + testPts + blockPts + compPts);
-}
-
-function scoreGrade(score) {
-  if (score >= 90) return { label: 'A', color: 'var(--syn-green)' };
-  if (score >= 75) return { label: 'B', color: 'var(--syn-teal)' };
-  if (score >= 55) return { label: 'C', color: 'var(--syn-yellow)' };
-  if (score >= 35) return { label: 'D', color: 'var(--syn-orange)' };
-  return { label: 'F', color: 'var(--syn-red)' };
-}
+// Grade helpers shared with the QA-Workspace Summary tab (FR-054 consistency).
+import { healthScore, scoreGrade } from '../lib/health.js';
+import { navigate } from '../lib/navigate.js';
 
 // ── Format helpers ────────────────────────────────────────────────────────────
 
@@ -548,12 +523,21 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
   const blockingCount = (alerts ?? []).filter(a => a.severity === 'blocking').length;
   const next = Array.isArray(nextActions) && nextActions.length > 0 ? nextActions[0] : null;
 
+  // Card opens the QA Workspace (FR-050). Keyboard-accessible; inner controls
+  // that need their own click stop propagation.
+  const openDetail = () => project.id && navigate(`/project/${encodeURIComponent(project.id)}`);
+
   return (
     <div
-      className="card"
+      className="card card--clickable"
       data-status={status}
       data-testid="project-card"
       style={{ animationDelay: `${animationDelay}ms` }}
+      onClick={openDetail}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(); } }}
+      role="link"
+      tabIndex={0}
+      title="Open QA Workspace"
     >
       <div className="card__header">
         <div className="card__header-left">

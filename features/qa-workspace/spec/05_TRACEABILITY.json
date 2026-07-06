@@ -1,0 +1,138 @@
+{
+  "project": "aitri-hub",
+  "feature_id": "qa-workspace",
+  "version": "0.3.0",
+  "phases_completed": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "completed_at": "2026-07-06",
+  "summary": "Per-project QA Workspace: route /project/:id with a Product|feature scope selector and five read-only tabs (Summary with on-demand deploy verdict, Test Cases, Traceability, Bugs, Artifacts). Two localhost-only on-demand endpoints (detail-reader whitelist-only + path-confined; validate-runner execFile fixed-argv, 30s timeout, 60s cache, in-flight dedup incl. refresh). SPA route via the in-house useRoute (no router dep); markdown rendered to React elements (XSS-inert by construction, no dangerouslySetInnerHTML). The layer that turns the Hub from a monitor into a QA management surface — makes the pipeline's evidence VISIBLE, per the owner's #1 priority.",
+  "overall_status": "partial",
+  "overall_status_rationale": "All 10 MUST FRs and all 6 NFRs covered by passing tests (31 spine-detected: unit+integration+auto-detected e2e; +34 web-vitest + guard tests running as quality gates). One declared technical-debt item on FR-056 (audit-freshness hash normalization — fail-SAFE direction, advisory field, never gates). Per the derivation rule (MUST-clean with a low-risk advisory debt) → 'partial', honestly: nothing MUST is missing or failing.",
+  "requirement_compliance": [
+    {
+      "id": "FR-050",
+      "title": "Card navigation to the detail route",
+      "level": "production_ready",
+      "evidence": "web/src/lib/navigate.js (useRoute/parseRoute/navigate); ProjectCard clickable (role=link, keyboard). TC-050h/e/f pass (e2e): click→/project/:id, back→intact overview, unknown id→not-found with link."
+    },
+    {
+      "id": "FR-051",
+      "title": "Detail header strip",
+      "level": "production_ready",
+      "evidence": "DetailView header: name, status, verdict chip (neutral until Summary), full-tag aitriVersion, artifactsDir. TC-051h/e/f pass (e2e): identity render, neutral chip, header stable across tab switches with no refetch."
+    },
+    {
+      "id": "FR-052",
+      "title": "Localhost-only path-confined detail endpoints",
+      "level": "production_ready",
+      "evidence": "web.js GET /api/project/:id/{detail,validate} behind the loopback guard; detail-reader whitelist (10 artifact basenames) + confineToRoot realpath guard on artifactsDir AND feature dirs (symlink-escape → 400). TC-052h/e/f + detail-guard + path-confinement tests pass; adversarial pass confirmed no out-of-root read after the fix."
+    },
+    {
+      "id": "FR-053",
+      "title": "Scope selector: product + features",
+      "level": "production_ready",
+      "evidence": "detail-reader scopes discovery via layoutBase; per-scope chains verified with distinct fixture ids. TC-053h/e/f pass (reader + endpoint + e2e)."
+    },
+    {
+      "id": "FR-054",
+      "title": "Summary tab with on-demand deploy verdict",
+      "level": "production_ready",
+      "evidence": "SummaryTab: shared healthScore (same as overview card), phase progress, per-feature table, VerdictPanel (lazy validate, refresh, 60s cache, remote short-circuit). TC-054h/e/f pass; NFR-051 census proves zero cycle spawns."
+    },
+    {
+      "id": "FR-055",
+      "title": "Test Cases tab",
+      "level": "production_ready",
+      "evidence": "03×04 join with status/evidence/manual_reason/downgraded_from, filters (status/auto/FR compose), counts strip, pending-manual banner. TC-055h/e/f pass; 'manual' result status consistent across row/summary/filter (adversarial nit fixed)."
+    },
+    {
+      "id": "FR-056",
+      "title": "Traceability tab",
+      "level": "complete",
+      "evidence": "FR→TC→result rows, uncovered-MUST pinned red (reader AND component sort defensively), coverage_map with disposition links, ac_coverage, requirements-audit freshness, 'computed by Hub' label when fr_coverage absent. TC-056h/e/f pass. Level 'complete' not 'production_ready': the freshness hash is declared technical debt (does not normalize like Core; fail-safe, advisory)."
+    },
+    {
+      "id": "FR-057",
+      "title": "Bugs tab",
+      "level": "production_ready",
+      "evidence": "Bug table, blocking pinned with red band, resolution/files_changed/linked TC; absent/valid-empty/corrupt trichotomy — corrupt shows parse-error inline, never zero bugs. TC-057h/e/f pass."
+    },
+    {
+      "id": "FR-058",
+      "title": "Artifacts tab",
+      "level": "production_ready",
+      "evidence": "Chain list with presence/absence; markdown → React elements (formatted), 01_REQUIREMENTS as a PRD table + collapsible raw; script content renders inert (live XSS probe window.__pwned undefined). TC-058h/e/f pass; no-dangerouslySetInnerHTML invariant pinned (TC-152f)."
+    },
+    {
+      "id": "FR-059",
+      "title": "Empty/degraded states on every tab",
+      "level": "production_ready",
+      "evidence": "EmptyState names the missing artifact + producing command on all 5 tabs; per-section available:false isolation; snapshot-degraded banner. TC-059h/e/f pass."
+    },
+    {
+      "id": "NFR-050",
+      "title": "Overview + polling + admin + dashboard.json unchanged",
+      "level": "production_ready",
+      "evidence": "Existing overview/snapshot-card/admin e2e suites pass with unmodified assertions; dashboard.json type-inventory unchanged (no field added by this feature). TC-150h/e/f."
+    },
+    {
+      "id": "NFR-051",
+      "title": "Collection-cycle process budget unchanged",
+      "level": "production_ready",
+      "evidence": "runValidate imported only by web.js; never called from collectAll/collectOne. Spawn census over ~3 cycles (detail-endpoints.test.js): status --json yes, validate never. TC-151h/e; TC-151f dedup incl. concurrent refresh."
+    },
+    {
+      "id": "NFR-052",
+      "title": "Endpoint security",
+      "level": "production_ready",
+      "evidence": "Loopback guard (403) before any read/spawn on both routes; whitelist + realpath confinement; validate spawn is execFile('aitri',['validate','--json']) — no shell, no URL-derived argv. TC-152h/e/f pass; adversarial pass confirmed."
+    },
+    {
+      "id": "NFR-053",
+      "title": "Admin CRUD unchanged",
+      "level": "production_ready",
+      "evidence": "admin-api e2e passes unmodified; singular /api/project/ route cannot collide with plural /api/projects. TC-153e/f + existing suite."
+    },
+    {
+      "id": "NFR-054",
+      "title": "Detail fast; validate async",
+      "level": "complete",
+      "evidence": "Detail reads are local-disk parses; validate runs async with a loading state and never blocks tab render (SummaryTab renders non-verdict content immediately). TC-154e/f pass. Level 'complete': the ≤500ms/200-TC timing (TC-154h) runs as an integration assertion but is CI-hardware-dependent, so held to 'complete' not asserted as a hard perf guarantee."
+    },
+    {
+      "id": "NFR-055",
+      "title": "CI runs the full suite",
+      "level": "functionally_present",
+      "evidence": "Existing workflow globs (tests/unit,integration,e2e; web vitest) pick up all new files. Not TC-covered by design — observable lives in the CI system (recorded in the test-plan strategy, same disposition as the prior feature)."
+    }
+  ],
+  "deployment": {
+    "model": "unchanged — local Node CLI (aitri-hub web) serving the prebuilt SPA; new endpoints are Node-server-only",
+    "steps": [
+      "npm --prefix web run build   # rebuild the SPA bundle (adds the QA Workspace views)",
+      "restart `aitri-hub web`      # new endpoints + collector changes load on start"
+    ],
+    "environment_variables": [
+      {
+        "name": "AITRI_HUB_DIR",
+        "type": "string (path)",
+        "required": false,
+        "example": "~/.aitri-hub",
+        "notes": "pre-existing; unchanged"
+      },
+      {
+        "name": "AITRI_HUB_PORT",
+        "type": "number",
+        "required": false,
+        "example": "3000",
+        "notes": "pre-existing; unchanged"
+      }
+    ],
+    "notes": "No new env vars, no schema migration. Docker/nginx static mode does not proxy the new endpoints — the detail view degrades there with the existing connection banner (known limitation of the optional Docker mode, which already lacks live collection)."
+  }
+}

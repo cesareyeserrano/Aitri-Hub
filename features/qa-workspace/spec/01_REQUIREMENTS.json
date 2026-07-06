@@ -1,0 +1,521 @@
+{
+  "project_name": "Aitri Hub — qa-workspace",
+  "project_summary": "Per-project QA Workspace: route /project/:id with a Product|feature scope selector and five read-only tabs (Summary with on-demand deploy verdict, Test Cases, Traceability, Bugs, Artifacts) that surface the full evidence Aitri already produces — the layer that turns the Hub from a monitor into a QA management surface.\n\nProduct Analysis:\n  North Star KPI: a QA auditor answers 'which TC failed, which MUST FR is uncovered, what is this bug's resolution' in ≤2 clicks from the overview card, without opening an editor or terminal.\n  JTBD: 'When I audit an Aitri project, give me the test cases, traceability, bugs and specs as readable evidence so I can sign off or reject with confidence.'\n  Guardrail metric: the overview page and its 5s collection cycle stay untouched — no added per-cycle process, dashboard.json additive-only.\n\nNFR category applicability: Observability — new endpoints log through the existing web.js request logging (parent NFR); Healthcheck — unchanged (/health exists); CI/CD and Security addressed below; Performance addressed below (detail reads + on-demand validate).",
+  "functional_requirements": [
+    {
+      "id": "FR-050",
+      "title": "Card navigation to the per-project detail route",
+      "description": "Clicking a project card on the overview navigates to /project/:id (client-side route in the existing useRoute mechanism). The view has a back affordance returning to the overview with its state intact. An unknown or unregistered id renders a not-found state with a link back — never a blank page or crash.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Click on a project card navigates to /project/<registered id> and the detail view renders that project's name in the header strip in ≤200ms after dashboard data is already loaded (client-side route, no full page reload)",
+        "Browser back (and the in-app back affordance) returns to the overview, which still renders all cards at the 375px, 768px and 1440px viewports",
+        "/project/does-not-exist renders a not-found state with a working link to '/' — no console error, no blank page"
+      ]
+    },
+    {
+      "id": "FR-051",
+      "title": "Detail header strip",
+      "description": "The detail view shows a persistent header strip: project name, derived status badge, deploy-verdict chip (populated after the on-demand validate of FR-054; shows 'not checked' before), aitri version (full pre-release tag), and artifactsDir (mono).",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Header renders name, status badge, aitriVersion with full tag (e.g. 2.0.0-rc.159), and artifactsDir; all readable at the 375px viewport without horizontal scroll",
+        "Before validate has run, the verdict chip shows a neutral 'not checked' state (no fabricated verdict)",
+        "Header remains visible when switching tabs with no re-fetch flicker (single detail payload; tab switch re-render completes in ≤200ms)"
+      ]
+    },
+    {
+      "id": "FR-052",
+      "title": "Localhost-only per-project detail endpoints",
+      "description": "The existing web.js server gains read-only endpoints serving per-project detail (exact route shape is a phase-2 ADR; the examples here are illustrative): a detail endpoint (e.g. GET /api/project/:id/detail?scope=...) returning the parsed artifact chain for the scope (test cases, results, traceability, requirements, bugs, artifact list+contents), and a validate endpoint running aitri validate --json on demand. Both enforce the existing remoteAddress loopback guard (403 otherwise). All file reads go through the rc.159 readers (resolveArtifact, layoutBase) and are restricted to the known artifact-name whitelist — no path is built from URL input beyond the registered project id and a validated scope name.",
+      "priority": "MUST",
+      "type": "security",
+      "acceptance_criteria": [
+        "GET /api/project/<id>/detail from loopback returns 200 with JSON containing the scope's parsed artifacts; a simulated non-loopback remoteAddress receives 403 with no file read performed",
+        "A scope parameter containing path separators, '..', or a name not present in the project's features list is rejected with 400 and no filesystem access outside the project root",
+        "Only whitelisted artifact filenames are ever opened (verified by fs instrumentation in tests); a request naming anything else returns 400",
+        "GET /api/project/<unknown-id>/detail returns 404 with a JSON error body"
+      ]
+    },
+    {
+      "id": "FR-053",
+      "title": "Scope selector: Product and feature sub-pipelines",
+      "description": "The detail view offers a scope selector listing Product plus every feature under the project's features dir (resolved via layoutBase). Selecting a scope re-renders Test Cases, Traceability, Bugs and Artifacts from that scope's own artifact chain (features/<name>/<artifactsDir>/ and its BUGS.json). Summary always shows the product view plus the per-feature indicator table.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "A project with 2 features shows 3 scope options (Product, f1, f2); selecting f1 renders Test Cases from features/f1's 03/04 artifacts (verifiable with distinct fixture data per scope)",
+        "Scope switching does not reload the page (client-side state) and re-requests only the detail payload for the new scope",
+        "A project with no features shows no selector (Product implied) and all tabs read the root chain"
+      ]
+    },
+    {
+      "id": "FR-054",
+      "title": "Summary tab: health score, phases, feature table, on-demand deploy verdict",
+      "description": "Summary renders: the project's health score/grade (same derivation the overview card uses, shown for the selected project), per-phase pipeline status for the selected project (approved/completed/drifted per phase, from the collected record), the per-feature indicator table (phase, verify state, tests passed/total, open bugs per feature), and a deploy-verdict panel populated by GET /api/project/:id/validate — the aitri validate --json result rendered per the VALIDATE_JSON.md contract: verdict, blocking reasons and advisories, each with its suggested command (mono). validate runs when the panel is first opened and on an explicit refresh button — NEVER in the 5s collection cycle; the endpoint result is cached server-side for 60s to absorb repeated tab switches.",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "The Summary tab shows the project's health score/grade consistent with the value the overview card computes for the same collected record",
+        "Opening Summary on a validate-capable project renders the verdict plus each blocking reason and advisory with its command, matching the fixture's validate --json output",
+        "The 5s collection cycle spawns zero validate processes (fs/process instrumentation over 3 cycles with the detail view closed AND open)",
+        "The refresh button re-invokes validate at most once per click; two tab switches within 60s serve the cached result (1 spawn total)",
+        "A project whose aitri CLI is unavailable renders a degraded verdict panel naming the failure — no crash, no fabricated verdict"
+      ]
+    },
+    {
+      "id": "FR-055",
+      "title": "Test Cases tab",
+      "description": "Table joining 03_TEST_CASES.json with 04_TEST_RESULTS.json for the selected scope: TC id (mono), title, automation (auto/manual with manual_reason on hover or expand), scenario, latest status (pass/fail/pending/skipped), evidence reference when present, downgraded_from audit trail when present, linked FR id and AC id. Filters: by status, by automation, by linked FR. A counts strip (passed/failed/pending/skipped/manual). Pending manual TCs are called out in a prominent banner (they block coverage until verified).",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "A fixture scope with 5 TCs (1 fail, 1 pending manual) renders 5 rows with correct statuses; the counts strip shows 3/1/1 and the manual-pending banner names the pending TC id",
+        "Filtering by status=fail shows exactly the failing TC; filtering by linked FR shows only that FR's TCs; filters compose",
+        "A TC with downgraded_from renders the downgrade trail; a manual TC exposes its manual_reason",
+        "With 03_TEST_CASES.json present but 04_TEST_RESULTS.json absent, every TC renders status 'pending' and the empty-state note names 'aitri verify-run' (no crash)"
+      ]
+    },
+    {
+      "id": "FR-056",
+      "title": "Traceability tab",
+      "description": "One row per FR of the selected scope (id mono, title, priority MUST/SHOULD/NICE) with its linked TCs and each TC's latest result, built from 05_TRACEABILITY.json and the results' fr_coverage. Uncovered MUST FRs (no passing test) are pinned at the top with a red marker. ac_coverage is shown per FR where present. The intent-coverage map (01_REQUIREMENTS.json#coverage_map) renders as its own section (need → disposition) with the requirements-audit freshness stamp (fresh/stale/not-run) derived from the collected record.",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "A fixture with one uncovered MUST FR renders it pinned first with a red uncovered marker; covered FRs list their TCs with per-TC latest status",
+        "coverage_map entries render need→disposition; a disposition naming an FR links/scrolls to that FR's row",
+        "The audit freshness stamp shows 'stale' for a fixture whose requirements changed after the last audit (per the record's coverage-audit fields) and 'not run' when absent",
+        "With 05_TRACEABILITY.json absent, the empty state names 'aitri run-phase 5' / the traceability artifact — no blank panel"
+      ]
+    },
+    {
+      "id": "FR-057",
+      "title": "Bugs tab",
+      "description": "Table from the selected scope's BUGS.json: id (mono), title, severity, status, blocking flag, resolution text, files_changed, linked TC. Blocking bugs (critical/high, active) are pinned at the top with a red band. A corrupt BUGS.json renders the parse-error state inline (scope named, 'bugs are NOT counted') — never an empty table presented as zero bugs.",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "A fixture with 3 bugs (1 blocking with resolution) renders the blocking bug pinned with red band, resolution text readable, linked TC shown",
+        "A corrupt BUGS.json fixture renders the inline parse-error state naming the scope; no '0 bugs' presentation",
+        "An absent BUGS.json renders the empty state ('no bugs recorded — aitri bug add') distinct from the corrupt state"
+      ]
+    },
+    {
+      "id": "FR-058",
+      "title": "Artifacts tab",
+      "description": "Rendered reading view of the selected scope's chain. Markdown artifacts (00_DISCOVERY.md, 01_UX_SPEC.md, 02_SYSTEM_DESIGN.md, 04_CODE_REVIEW.md, AUDIT_REPORT.md) render as formatted markdown. 01_REQUIREMENTS.json renders as a human PRD projection (FR table with id/title/priority/ACs, personas, no_go_zone) with a collapsible raw-JSON view; other JSON artifacts get a summary header plus the collapsible raw view. Artifact list shows presence/absence per chain position.",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "02_SYSTEM_DESIGN.md renders with headings/lists/code blocks formatted (not raw text); the raw markdown is NOT shown by default",
+        "01_REQUIREMENTS.json renders the FR table with id, title, priority and ACs plus personas and no_go_zone; the raw JSON is available under a collapsed toggle",
+        "The chain list marks absent artifacts as such (e.g. 00_DISCOVERY.md 'not produced — optional phase') instead of omitting them silently",
+        "A markdown artifact containing raw HTML/script content renders inert text — no script execution, no HTML injection (sanitized or escaped rendering)"
+      ]
+    },
+    {
+      "id": "FR-059",
+      "title": "Empty and degraded states on every tab",
+      "description": "Every tab renders an explanatory empty/degraded state when its source artifact is absent, malformed, or the scope is mid-pipeline: the state names the missing artifact AND the aitri command that produces it. A degraded snapshot (CLI too old / failed) shows the existing degradation banner on the detail view. No tab ever renders a blank panel or throws.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "For each of the 5 tabs, a fixture missing that tab's artifact renders a non-empty state naming the artifact and its producing aitri command (5 assertions); each state is visible at the 375px viewport",
+        "A malformed artifact (invalid JSON) renders the degraded state naming the file — no crash, no blank panel, zero uncaught exceptions in the console",
+        "The detail view of a snapshot-degraded project shows the degradation banner with the required CLI version"
+      ]
+    }
+  ],
+  "user_personas": [
+    {
+      "role": "QA auditor",
+      "tech_level": "mid",
+      "goal": "Sign off or reject a release from readable evidence: which tests passed, what covers each MUST requirement, what every blocking bug's resolution was",
+      "pain_point": "Today the Hub shows only counters; the evidence lives in JSON files they must open in an editor"
+    },
+    {
+      "role": "QA tester",
+      "tech_level": "mid",
+      "goal": "See which TCs are pending/failed and what each manual TC requires, per feature",
+      "pain_point": "No per-TC view exists; manual TCs and their reasons are invisible"
+    },
+    {
+      "role": "Product owner / BA",
+      "tech_level": "low",
+      "goal": "Read the PRD, UX spec and design docs of any project without cloning it or opening an editor",
+      "pain_point": "Markdown and JSON artifacts are unreadable for non-developers in raw form"
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US-050",
+      "requirement_id": "FR-050",
+      "as_a": "QA auditor",
+      "i_want": "to open a project's detail from its card",
+      "so_that": "I can drill into evidence without leaving the Hub",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0501",
+          "given": "the overview shows a card for registered project 'demo'",
+          "when": "the card is clicked",
+          "then": "the URL is /project/<demo-id> and the detail header shows 'demo'"
+        },
+        {
+          "id": "AC-0502",
+          "given": "the browser is at /project/does-not-exist",
+          "when": "the view renders",
+          "then": "a not-found state with a link to '/' renders; no blank page, no console error"
+        }
+      ]
+    },
+    {
+      "id": "US-051",
+      "requirement_id": "FR-051",
+      "as_a": "QA auditor",
+      "i_want": "a header strip with identity, status and verdict",
+      "so_that": "I always know which project and state I am judging",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0511",
+          "given": "project demo at aitriVersion 2.0.0-rc.159",
+          "when": "the detail view opens",
+          "then": "the header shows the full tag 2.0.0-rc.159 and the verdict chip reads 'not checked' until validate runs"
+        }
+      ]
+    },
+    {
+      "id": "US-052",
+      "requirement_id": "FR-052",
+      "as_a": "QA auditor",
+      "i_want": "the detail data served only to my machine",
+      "so_that": "project evidence never leaks off localhost",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0521",
+          "given": "the hub server is running",
+          "when": "GET /api/project/<id>/detail arrives with a non-loopback remoteAddress",
+          "then": "the response is 403 and no artifact file was opened"
+        },
+        {
+          "id": "AC-0522",
+          "given": "a request with scope='../../etc'",
+          "when": "the endpoint validates the scope",
+          "then": "the response is 400 and no filesystem access outside the project root occurred"
+        }
+      ]
+    },
+    {
+      "id": "US-053",
+      "requirement_id": "FR-053",
+      "as_a": "QA tester",
+      "i_want": "to switch between Product and each feature",
+      "so_that": "I audit a feature's own chain, not an aggregate",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0531",
+          "given": "project with features f1 and f2 holding distinct TC fixtures",
+          "when": "scope f1 is selected",
+          "then": "the Test Cases tab shows exactly f1's TCs (ids from f1's 03_TEST_CASES.json)"
+        }
+      ]
+    },
+    {
+      "id": "US-054",
+      "requirement_id": "FR-054",
+      "as_a": "QA auditor",
+      "i_want": "the deploy verdict with its reasons on demand",
+      "so_that": "I see deploy-readiness as Aitri computes it, without polling cost",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0541",
+          "given": "a fixture project whose validate --json returns a blocked verdict with 2 reasons",
+          "when": "the Summary tab is opened",
+          "then": "the panel renders the verdict and both reasons with their commands"
+        },
+        {
+          "id": "AC-0542",
+          "given": "the detail view stays open through 3 collection cycles",
+          "when": "processes are instrumented",
+          "then": "zero validate spawns occur from the cycle; only the on-open/on-refresh spawns exist"
+        }
+      ]
+    },
+    {
+      "id": "US-055",
+      "requirement_id": "FR-055",
+      "as_a": "QA tester",
+      "i_want": "a filterable per-TC table with evidence and manual reasons",
+      "so_that": "I work failed and pending TCs directly",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0551",
+          "given": "scope fixture with 5 TCs: 3 pass, 1 fail, 1 pending manual",
+          "when": "the Test Cases tab renders",
+          "then": "5 rows with correct statuses; counts strip 3/1/1; manual-pending banner names the TC"
+        },
+        {
+          "id": "AC-0552",
+          "given": "the same fixture",
+          "when": "filter status=fail is applied",
+          "then": "exactly the failing TC row remains visible"
+        }
+      ]
+    },
+    {
+      "id": "US-056",
+      "requirement_id": "FR-056",
+      "as_a": "QA auditor",
+      "i_want": "uncovered MUST requirements pinned and red",
+      "so_that": "nothing MUST ships untested without me seeing it",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0561",
+          "given": "fixture where FR-002 (MUST) has no passing test",
+          "when": "the Traceability tab renders",
+          "then": "FR-002 is the first row with an 'uncovered' red marker; covered FRs show their TCs and latest results"
+        }
+      ]
+    },
+    {
+      "id": "US-057",
+      "requirement_id": "FR-057",
+      "as_a": "QA auditor",
+      "i_want": "blocking bugs with their resolution trail",
+      "so_that": "I audit de-blocking evidence, not just counts",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0571",
+          "given": "fixture with a critical active bug carrying resolution text and a linked TC",
+          "when": "the Bugs tab renders",
+          "then": "the bug is pinned with a red band; resolution and linked TC are readable"
+        },
+        {
+          "id": "AC-0572",
+          "given": "fixture whose BUGS.json contains '{invalid'",
+          "when": "the Bugs tab renders",
+          "then": "the parse-error state names the scope and says bugs are NOT counted; no empty table"
+        }
+      ]
+    },
+    {
+      "id": "US-058",
+      "requirement_id": "FR-058",
+      "as_a": "Product owner / BA",
+      "i_want": "the spec chain rendered readable",
+      "so_that": "I review requirements and design without an editor",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0581",
+          "given": "project with 01_REQUIREMENTS.json and 02_SYSTEM_DESIGN.md",
+          "when": "the Artifacts tab renders",
+          "then": "the PRD shows as an FR table with ACs and the design doc renders formatted markdown; raw views are collapsed toggles"
+        },
+        {
+          "id": "AC-0582",
+          "given": "a markdown artifact containing '<script>alert(1)</script>'",
+          "when": "it renders",
+          "then": "the script text appears inert/escaped; no dialog fires (no HTML injection)"
+        }
+      ]
+    },
+    {
+      "id": "US-059",
+      "requirement_id": "FR-059",
+      "as_a": "QA tester",
+      "i_want": "clear guidance when evidence is missing",
+      "so_that": "a mid-pipeline project tells me what to run next instead of showing blanks",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0591",
+          "given": "a scope with no 04_TEST_RESULTS.json",
+          "when": "the Test Cases tab renders",
+          "then": "TCs show 'pending' and the state names 'aitri verify-run'"
+        },
+        {
+          "id": "AC-0592",
+          "given": "a scope with malformed 03_TEST_CASES.json",
+          "when": "the tab renders",
+          "then": "a degraded state names the file; no crash, no blank panel"
+        }
+      ]
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-050",
+      "category": "Regression",
+      "requirement": "The overview page and its data path are unchanged: cards, triage, header tiles, 5s dashboard.json polling and its schema (additive-only).",
+      "acceptance_criteria": "Existing overview/web test suites pass with unmodified assertions; dashboard.json type-inventory diff is empty for an unchanged fixture."
+    },
+    {
+      "id": "NFR-051",
+      "category": "Regression",
+      "requirement": "Collection-cycle process budget unchanged: one aitri status --json per eligible project per cycle; the workspace adds zero per-cycle processes (validate is user-navigation-driven only).",
+      "acceptance_criteria": "Instrumented run over 3 cycles with a detail view open shows zero validate/extra spawns from the cycle (FR-054 AC-2 test)."
+    },
+    {
+      "id": "NFR-052",
+      "category": "Security",
+      "requirement": "Every new endpoint enforces the loopback guard (403 non-loopback) and reads only whitelisted artifact filenames through path-confined resolution (layoutBase/resolveArtifact); the validate endpoint spawns aitri with execFile semantics (no shell) and only the fixed argument form.",
+      "acceptance_criteria": "Unit/integration tests: non-loopback 403, hostile scope 400 with zero out-of-root reads, whitelist enforcement, and the validate spawn is execFile('aitri',['validate','--json'],...) — no shell string interpolation (asserted via spawn instrumentation)."
+    },
+    {
+      "id": "NFR-053",
+      "category": "Regression",
+      "requirement": "Admin panel CRUD unchanged.",
+      "acceptance_criteria": "Existing admin-api e2e suite passes with unmodified assertions."
+    },
+    {
+      "id": "NFR-054",
+      "category": "Performance",
+      "requirement": "The detail endpoint responds from local disk in ≤500ms for a project with ≤200 TCs and ≤10 features; validate runs async with a visible loading state and never blocks tab rendering.",
+      "acceptance_criteria": "Integration test times the detail endpoint on a 200-TC fixture (≤500ms on CI hardware, generous margin); the Summary tab renders its non-verdict content before validate resolves (loading state asserted in a component test)."
+    },
+    {
+      "id": "NFR-055",
+      "category": "CI/CD",
+      "requirement": "The full declared suite (unit + integration + web + e2e), including this feature's tests, runs on every push to main.",
+      "acceptance_criteria": "Existing workflow globs pick up the new test files; a deliberate failing test on a branch fails CI (verified once during development)."
+    }
+  ],
+  "no_go_zone": [
+    "No visual restyle — slate palette/Inter/light tokens are Layer 1 (separate feature); the workspace ships in the current theme",
+    "No writes of any kind: no bug state changes, no TC verification, no approvals, no aitri command execution beyond read-only status --json / --version and the on-demand validate --json",
+    "No validate --json in the 5s collection cycle — on-demand only (process-budget decision carried from contract-catchup-rc159 / audit GAP-1)",
+    "No Cytoscape FR→TC graph in v1 — enters as a secondary visualization after the table-based Traceability tab proves itself",
+    "No GitHub API metrics, dependency scanning, or runtime monitoring (owner cut, 2026-07-05)",
+    "No arbitrary file serving: detail endpoints never open a path derived from URL input beyond registered project id + validated scope + whitelisted artifact names",
+    "No new runtime dependency without an explicit phase-2 ADR (markdown rendering: prefer a minimal in-repo renderer or an ADR-justified, sanitizing library — FR-058 AC-4 holds either way)"
+  ],
+  "constraints": [
+    "Server code: Node built-ins only (parent constraint); web/ additions follow the existing React 18 + Vite stack",
+    "Detail data is served on demand by new endpoints — dashboard.json stays lean (architecture detail finalized in phase 2 ADR)",
+    "validate --json cadence: on first open of the Summary verdict panel + explicit refresh, 60s server-side cache (owner-accepted assumption)"
+  ],
+  "technology_preferences": [],
+  "idea_provenance": {
+    "problem": "confirmed",
+    "users": "confirmed",
+    "baseline": "confirmed",
+    "success_metric": "confirmed",
+    "no_go_zone": "confirmed"
+  },
+  "idea_provenance_sources": {
+    "problem": "Owner vision stated in chat 2026-07-05 ('enviar todo el informe y artefactos de QA'); seed reviewed and approved by owner in chat 2026-07-06",
+    "users": "Owner named QA testers/auditors primary, BA/PO/PM secondary (chat 2026-07-05); restated in the approved seed",
+    "baseline": "Current Hub behavior read from the code: aggregate-only cards, no detail route, evidence unreachable without an editor",
+    "success_metric": "Given/When/Then criteria in the seed FEATURE_IDEA.md, presented to and approved by the owner in chat 2026-07-06",
+    "no_go_zone": "Owner scope decisions 2026-07-05/06: Aitri-data-only, restyle separate, graph deferred, read-only; seed approved as written"
+  },
+  "idea_gaps": [],
+  "coverage_map": [
+    {
+      "need": "Card click opens per-project detail route with back navigation and not-found handling",
+      "disposition": "FR-050"
+    },
+    {
+      "need": "Header strip: name, status, verdict chip, version, artifactsDir",
+      "disposition": "FR-051"
+    },
+    {
+      "need": "Detail data served on demand by localhost-only endpoints, path-confined, whitelisted",
+      "disposition": "FR-052"
+    },
+    {
+      "need": "On-demand validate --json endpoint (never per-cycle)",
+      "disposition": "FR-052"
+    },
+    {
+      "need": "Scope selector Product|features re-rendering tabs from each scope's own chain",
+      "disposition": "FR-053"
+    },
+    {
+      "need": "Summary: per-phase status + per-feature indicator table",
+      "disposition": "FR-054"
+    },
+    {
+      "need": "Summary: health score for the selected project (Layer-2 spec Tab 1)",
+      "disposition": "FR-054"
+    },
+    {
+      "need": "Summary: deploy verdict rendered per VALIDATE_JSON.md with reasons/advisories/commands",
+      "disposition": "FR-054"
+    },
+    {
+      "need": "Test Cases table with automation/manual_reason, status, evidence, downgraded_from, FR/AC links",
+      "disposition": "FR-055"
+    },
+    {
+      "need": "Test Cases filters + counts strip + pending-manual callout",
+      "disposition": "FR-055"
+    },
+    {
+      "need": "Traceability rows FR→TC→latest result; uncovered MUST pinned red",
+      "disposition": "FR-056"
+    },
+    {
+      "need": "ac_coverage per FR where present",
+      "disposition": "FR-056"
+    },
+    {
+      "need": "coverage_map rendered with audit freshness stamp",
+      "disposition": "FR-056"
+    },
+    {
+      "need": "Bugs table with severity/status/resolution/files_changed/linked TC; blocking pinned",
+      "disposition": "FR-057"
+    },
+    {
+      "need": "Corrupt BUGS.json shown inline as parse error, never zero bugs",
+      "disposition": "FR-057"
+    },
+    {
+      "need": "Markdown artifacts rendered; PRD as human table; raw JSON collapsible",
+      "disposition": "FR-058"
+    },
+    {
+      "need": "Artifact chain presence/absence listing",
+      "disposition": "FR-058"
+    },
+    {
+      "need": "Empty/degraded states naming the producing aitri command on every tab",
+      "disposition": "FR-059"
+    },
+    {
+      "need": "Overview + polling + admin + dashboard.json untouched",
+      "disposition": "NFR-050"
+    },
+    {
+      "need": "Process budget: no per-cycle additions",
+      "disposition": "NFR-051"
+    },
+    {
+      "need": "Loopback guard + path confinement + no-shell spawn on new endpoints",
+      "disposition": "NFR-052"
+    },
+    {
+      "need": "Admin CRUD unchanged",
+      "disposition": "NFR-053"
+    },
+    {
+      "need": "Detail reads fast; validate async with loading state",
+      "disposition": "NFR-054"
+    },
+    {
+      "need": "Visual restyle",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "FR→TC graph visualization",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "Any write/edit capability from the workspace",
+      "disposition": "out_of_scope"
+    }
+  ],
+  "original_brief": "## Feature\nQA Workspace: a per-project detail view (route `/project/:id`) with QA-grade\ndrill-down — test cases, FR→TC traceability, bugs, rendered artifacts, and the\ndeploy verdict — scoped by a Product | feature selector.\n\n## Problem / Why\nThe Hub today is a monitoring card grid: every QA-relevant number is an\nAGGREGATE (tests 89/92, bugs 3, coverage 14/16 FRs). The primary target users —\nQA testers and QA auditors — cannot answer their actual working questions from\nit: WHICH test case failed and with what evidence, WHICH MUST requirement lacks\na passing test, WHAT is the resolution trail of a blocking bug, WHAT does the\nrequirement actually say. Aitri already produces every one of those answers\n(03_TEST_CASES.json, 04_TEST_RESULTS.json, 05_TRACEABILITY.json, BUGS.json,\n`validate --json`, and the markdown artifact chain) — the Hub summarizes it\ninto counters and throws the detail away. This layer is the product's core\nvalue for its declared target (owner vision 2026-07-05: \"enviar todo el informe\ny artefactos de QA que el equipo de QAs necesite para su gestión\") and the #1\ndesign priority carried from Core's close-out: make the pipeline's value\nVISIBLE, not just monitored. Full spec: `idea_context/UI_UX_SPEC_V2.md`,\nsection \"Layer 2 — QA Workspace\".\n\n## Target Users\nPrimary: QA testers and QA auditors reviewing an Aitri project's evidence for\nsign-off. Secondary: BA / PO / PM reading the spec chain (PRD, UX spec, system\ndesign, audit reports) without opening an editor; developers tracing an\nuncovered requirement. All roles confirmed by the owner (2026-07-05).\n\n## New Behavior\n- The system must open a per-project detail view when a project card is clicked\n  (route `/project/:id`), with a header strip: project name, status, deploy\n  verdict, aitri version, artifactsDir.\n- The system must provide a scope selector `Product | <feature>…` — each\n  feature is a full pipeline with its own artifact chain under\n  `features/<name>/`; selecting a scope re-renders the data tabs from that\n  scope's chain.\n- Tab Summary: per-phase pipeline status (approved/completed/drifted), the\n  deploy verdict rendered from `aitri validate --json` (verdict, blocking\n  reasons, advisories, each with its suggested command), and the per-feature\n  indicator table (phase, verify, tests, bugs per feature).\n- Tab Test Cases: table from 03_TEST_CASES.json × 04_TEST_RESULTS.json — TC id,\n  title, automation (auto/manual + manual_reason), latest status\n  (pass/fail/pending/skipped), evidence reference, downgraded_from trail,\n  linked FR/AC ids; filters by status/automation/linked FR; counts strip;\n  pending manual TCs called out prominently (they block coverage).\n- Tab Traceability: one row per FR (id, title, priority) with its TCs and each\n  TC's latest result, from 05_TRACEABILITY.json + fr_coverage; uncovered MUST\n  FRs pinned top in red; ac_coverage per FR where present; intent coverage\n  (coverage_map) rendered with its audit-freshness stamp.\n- Tab Bugs: table from BUGS.json — id, title, severity, status, blocking flag,\n  resolution, files_changed, linked TC; blocking bugs pinned with a red band;\n  parse errors surfaced inline (never \"0 bugs\" over a corrupt file).\n- Tab Artifacts: rendered reading view of the chain — markdown artifacts\n  (00_DISCOVERY, 01_UX_SPEC, 02_SYSTEM_DESIGN, 04_CODE_REVIEW, AUDIT_REPORT)\n  rendered as markdown; JSON artifacts (01_REQUIREMENTS as a PRD table) get a\n  human projection plus a collapsible raw view.\n- Every tab must have an explanatory empty/degraded state naming the aitri\n  command that produces the missing artifact — never a blank panel.\n- `validate --json` runs ON-DEMAND when the Summary tab is opened (never in the\n  5s collection cycle — process-budget decision recorded in\n  contract-catchup-rc159's no_go_zone resolving audit GAP-1). [ASSUMPTION:\n  on-open with a manual refresh button and a short cache is the right cadence —\n  implementer's call within phase 2.]\n\n## Success Criteria\n- Given a project with a failing TC, when the QA auditor opens Test Cases, then\n  the failing TC's id, title and latest status are visible and filterable\n  within 2 clicks from the overview card.\n- Given a MUST FR with no passing test, when Traceability opens, then that FR\n  appears pinned at the top marked uncovered (red), with its priority visible.\n- Given a project with a blocking bug carrying a resolution, when Bugs opens,\n  then the bug's severity, status, resolution text and linked TC are readable\n  without leaving the Hub.\n- Given a feature sub-pipeline selected in the scope selector, when any data\n  tab renders, then its content comes from `features/<name>/`'s own artifact\n  chain (verifiable with distinct fixture data per scope).\n- Given a project whose artifacts are absent (e.g. Phase 3 not run), when the\n  corresponding tab opens, then an empty state names the artifact and the aitri\n  command that produces it (no blank panel, no crash).\n- Given the Summary tab, when it opens on a validate-capable project, then the\n  deploy verdict and its blocking reasons render from `aitri validate --json`\n  per the VALIDATE_JSON.md contract.\n\n## Touch Points\nModifies: `web/src/App.jsx` (routing — currently a ~30-line useRoute handling\n`/` and `/admin` only), `ProjectCard.jsx` (card click → navigate). Adds: detail\nview components (tabs), a data source for per-project detail — [ASSUMPTION:\nthe 5s dashboard.json stays lean; detail data is served on demand by new\nlocalhost-only read endpoints on the existing web.js server (e.g.\n/api/project/:id/detail), same 127.0.0.1 guard — architecture decision for\nphase 2, including how `validate --json` is invoked on demand]. Server:\n`lib/commands/web.js` (new read-only routes), possibly a new\n`lib/collector/detail-reader.js` reading through the rc.159 readers\n(resolveArtifact/layoutBase from contract-catchup-rc159).\n\n## Must Not Break (Regression Boundary)\n- The overview page (`/`) renders exactly as today: cards, triage, header\n  tiles, 5s polling of dashboard.json.\n- The collection cycle's process budget: one `aitri status --json` per eligible\n  project per cycle — the QA Workspace adds NO per-cycle process (validate runs\n  on-demand only, per user navigation).\n- Localhost-only guard: every new endpoint refuses non-loopback requests with\n  403, same as /api/projects (web.js remoteAddress guard).\n- dashboard.json shape stays additive (the SPA overview is its consumer).\n- Admin panel (`/admin`) CRUD unchanged.\n- Path safety: all per-project file reads stay confined to the project root\n  (reuse layoutBase/resolveArtifact; no path built from URL input without\n  whitelisting to the known artifact names).\n\n## Out of Scope\n- The visual restyle (slate palette, Inter typography, light tokens) — Layer 1\n  of UI_UX_SPEC_V2.md, separate feature; the workspace ships in the current\n  theme.\n- Editing anything: the workspace is read-only; no bug state changes, no TC\n  verification, no aitri command execution beyond read-only `status --json` /\n  `--version` / on-demand `validate --json`.\n- The Cytoscape FR→TC graph (built, unwired) — lands as a secondary\n  visualization AFTER the table-based Traceability tab proves itself; not in\n  this feature's v1.\n- GitHub API metrics, dependency scanning, runtime monitoring (owner cut,\n  2026-07-05).\n- quality_gates / ac_coverage from the snapshot where Core does not yet expose\n  them (HUB-CATCHUP-0705 feedback pending); the tabs read artifacts directly on\n  demand, which does not depend on that.\n"
+}

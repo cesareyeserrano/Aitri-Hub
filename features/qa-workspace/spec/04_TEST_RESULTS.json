@@ -1,0 +1,498 @@
+{
+  "executed_at": "2026-07-06T17:34:01.157Z",
+  "test_runner": "node --test ../../tests/unit/detail-reader.test.js ../../tests/unit/validate-runner.test.js ../../tests/unit/detail-guard.test.js ../../tests/integration/detail-endpoints.test.js",
+  "exit_code": 0,
+  "results": [
+    {
+      "tc_id": "TC-050h",
+      "status": "pass",
+      "notes": "✓   1 [api] › tests/e2e/qa-workspace.test.js:74:1 › TC-050h: card click navigates to /project/:id (632ms)"
+    },
+    {
+      "tc_id": "TC-050e",
+      "status": "pass",
+      "notes": "✓  29 [api] › tests/e2e/qa-workspace.test.js:110:1 › TC-050e: back returns to an intact overview (370ms)"
+    },
+    {
+      "tc_id": "TC-050f",
+      "status": "pass",
+      "notes": "✓  31 [api] › tests/e2e/qa-workspace.test.js:120:1 › TC-050f: unknown project id renders not-found with a link back (386ms)"
+    },
+    {
+      "tc_id": "TC-051h",
+      "status": "pass",
+      "notes": "✓  23 [api] › tests/e2e/qa-workspace.test.js:82:1 › TC-051h: header strip renders name and full-tag version (277ms)"
+    },
+    {
+      "tc_id": "TC-051e",
+      "status": "pass",
+      "notes": "✓  25 [api] › tests/e2e/qa-workspace.test.js:89:1 › TC-051e: verdict chip is neutral until the Summary verdict runs (382ms)"
+    },
+    {
+      "tc_id": "TC-051f",
+      "status": "pass",
+      "notes": "✓  27 [api] › tests/e2e/qa-workspace.test.js:97:1 › TC-051f: header stays stable across tab switches (no flicker/refetch) (374ms)"
+    },
+    {
+      "tc_id": "TC-052h",
+      "status": "pass",
+      "notes": "✔ TC-052h + TC-053h/e: detail endpoint serves scoped chains (694.876791ms)"
+    },
+    {
+      "tc_id": "TC-052e",
+      "status": "pass",
+      "notes": "✔ TC-052e: path-traversal scope → 400 (regex rejects the separator) (1.4835ms)"
+    },
+    {
+      "tc_id": "TC-052f",
+      "status": "pass",
+      "notes": "✔ TC-052f: detail endpoints reject non-loopback sources (2.763458ms)"
+    },
+    {
+      "tc_id": "TC-053h",
+      "status": "pass",
+      "notes": "✔ TC-053h: feature scope reads that feature own chain (3.436042ms)"
+    },
+    {
+      "tc_id": "TC-053e",
+      "status": "pass",
+      "notes": "✔ TC-053e: featureless project implies product scope (21.645708ms)"
+    },
+    {
+      "tc_id": "TC-053f",
+      "status": "pass",
+      "notes": "✔ TC-053f: hostile / unknown scope → 400 (4.974834ms)"
+    },
+    {
+      "tc_id": "TC-054h",
+      "status": "pass",
+      "notes": "✔ TC-054h/e: validate endpoint renders + caches (20.647625ms)"
+    },
+    {
+      "tc_id": "TC-054e",
+      "status": "pass",
+      "notes": "✔ TC-054e: 60s cache + refresh bypass (400.23075ms)"
+    },
+    {
+      "tc_id": "TC-054f",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-054f\" so it appears on stdout (e.g. test_TC_054f_description, # @aitri-tc TC-054f); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-054f --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-055h",
+      "status": "pass",
+      "notes": "✓  36 [api] › tests/e2e/qa-workspace.test.js:136:1 › TC-055h: Test Cases tab shows counts + manual banner (299ms)"
+    },
+    {
+      "tc_id": "TC-055e",
+      "status": "pass",
+      "notes": "✓  38 [api] › tests/e2e/qa-workspace.test.js:145:1 › TC-055e: Test Cases filters compose (454ms)"
+    },
+    {
+      "tc_id": "TC-055f",
+      "status": "pass",
+      "notes": "✔ TC-055f: results absent → all pending, available with a reason marker (1.478083ms)"
+    },
+    {
+      "tc_id": "TC-056h",
+      "status": "pass",
+      "notes": "✓  44 [api] › tests/e2e/qa-workspace.test.js:186:1 › TC-056h: Traceability pins the uncovered MUST first (288ms)"
+    },
+    {
+      "tc_id": "TC-056e",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-056e\" so it appears on stdout (e.g. test_TC_056e_description, # @aitri-tc TC-056e); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-056e --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-056f",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-056f\" so it appears on stdout (e.g. test_TC_056f_description, # @aitri-tc TC-056f); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-056f --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-057h",
+      "status": "pass",
+      "notes": "✔ TC-057h blocking bug pinned with resolution (1.465042ms)"
+    },
+    {
+      "tc_id": "TC-057e",
+      "status": "pass",
+      "notes": "✔ TC-057e absent vs empty; TC-057f corrupt (2.287417ms)"
+    },
+    {
+      "tc_id": "TC-057f",
+      "status": "pass",
+      "notes": "✓  45 [api] › tests/e2e/qa-workspace.test.js:195:1 › TC-057f: Bugs tab shows the parse-error state, never zero bugs (275ms)"
+    },
+    {
+      "tc_id": "TC-058h",
+      "status": "pass",
+      "notes": "✓  43 [api] › tests/e2e/qa-workspace.test.js:158:1 › TC-058h: Artifacts render markdown formatted and PRD as a table (385ms)"
+    },
+    {
+      "tc_id": "TC-058e",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-058e\" so it appears on stdout (e.g. test_TC_058e_description, # @aitri-tc TC-058e); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-058e --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-058f",
+      "status": "pass",
+      "notes": "✓  47 [api] › tests/e2e/qa-workspace.test.js:202:1 › TC-058f: Artifacts markdown renders inert (no script execution) (345ms)"
+    },
+    {
+      "tc_id": "TC-059h",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-059h\" so it appears on stdout (e.g. test_TC_059h_description, # @aitri-tc TC-059h); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-059h --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-059e",
+      "status": "pass",
+      "notes": "✓  50 [api] › tests/e2e/qa-workspace.test.js:212:1 › TC-059e: snapshot-degraded project shows the banner (256ms)"
+    },
+    {
+      "tc_id": "TC-059f",
+      "status": "pass",
+      "notes": "✔ TC-059f: malformed artifact degrades only its section (1.603916ms)"
+    },
+    {
+      "tc_id": "TC-150h",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-150h\" so it appears on stdout (e.g. test_TC_150h_description, # @aitri-tc TC-150h); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-150h --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-150e",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-150e\" so it appears on stdout (e.g. test_TC_150e_description, # @aitri-tc TC-150e); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-150e --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-150f",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-150f\" so it appears on stdout (e.g. test_TC_150f_description, # @aitri-tc TC-150f); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-150f --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-151h",
+      "status": "pass",
+      "notes": "✔ TC-151h: collection cycle spawns status only, never validate (1302.221583ms)"
+    },
+    {
+      "tc_id": "TC-151e",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-151e\" so it appears on stdout (e.g. test_TC_151e_description, # @aitri-tc TC-151e); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-151e --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-151f",
+      "status": "pass",
+      "notes": "✔ TC-151f: in-flight dedup under a burst (6.450542ms)"
+    },
+    {
+      "tc_id": "TC-152h",
+      "status": "pass",
+      "notes": "✔ TC-152h: remote project short-circuits (no spawn) (0.471917ms)"
+    },
+    {
+      "tc_id": "TC-152e",
+      "status": "pass",
+      "notes": "✔ TC-152e: whitelist — non-artifact files are never read (1.801917ms)"
+    },
+    {
+      "tc_id": "TC-152f",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-152f\" so it appears on stdout (e.g. test_TC_152f_description, # @aitri-tc TC-152f); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-152f --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-153h",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-153h\" so it appears on stdout (e.g. test_TC_153h_description, # @aitri-tc TC-153h); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-153h --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-153e",
+      "status": "pass",
+      "notes": "✔ TC-153e: new routes do not shadow admin routes (4.6355ms)"
+    },
+    {
+      "tc_id": "TC-153f",
+      "status": "pass",
+      "notes": "✔ TC-153f: malformed detail URLs are contained (no admin, no crash) (2.998375ms)"
+    },
+    {
+      "tc_id": "TC-154h",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-154h\" so it appears on stdout (e.g. test_TC_154h_description, # @aitri-tc TC-154h); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-154h --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-154e",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-154e\" so it appears on stdout (e.g. test_TC_154e_description, # @aitri-tc TC-154e); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-154e --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-154f",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-154f\" so it appears on stdout (e.g. test_TC_154f_description, # @aitri-tc TC-154f); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-154f --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    }
+  ],
+  "fr_coverage": [
+    {
+      "fr_id": "FR-050",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-051",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-052",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-053",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-054",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-055",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-056",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 2,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-057",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-058",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-059",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    }
+  ],
+  "ac_coverage": [
+    {
+      "ac_id": "AC-0501",
+      "fr_id": "FR-050",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 3,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0502",
+      "fr_id": "FR-050",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0511",
+      "fr_id": "FR-051",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0521",
+      "fr_id": "FR-052",
+      "tests_passing": 5,
+      "tests_failing": 0,
+      "tests_skipped": 2,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0522",
+      "fr_id": "FR-052",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0531",
+      "fr_id": "FR-053",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0541",
+      "fr_id": "FR-054",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0542",
+      "fr_id": "FR-054",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 3,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0551",
+      "fr_id": "FR-055",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0552",
+      "fr_id": "FR-055",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0561",
+      "fr_id": "FR-056",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0571",
+      "fr_id": "FR-057",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0572",
+      "fr_id": "FR-057",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0581",
+      "fr_id": "FR-058",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0582",
+      "fr_id": "FR-058",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0591",
+      "fr_id": "FR-059",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0592",
+      "fr_id": "FR-059",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    }
+  ],
+  "summary": {
+    "total": 45,
+    "passed": 31,
+    "failed": 0,
+    "skipped": 14,
+    "skipped_e2e": 5,
+    "skipped_no_marker": 9,
+    "manual": 0,
+    "manual_verified": 0
+  },
+  "low_confidence_tcs": [],
+  "quality_gates": [
+    {
+      "name": "lint",
+      "command": "npm --prefix ../.. run lint",
+      "required": true,
+      "status": "pass",
+      "exit_code": 0,
+      "output": "wed unused vars must match /^_/u  no-unused-vars\n  8:37  warning  'within' is defined but never used. Allowed unused vars must match /^_/u      no-unused-vars\n\n/Users/cesareyeserrano/Documents/PROJECTS/AITRI-HUB/web/src/components/Header.jsx\n  51:3  warning  'projects' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars\n\n/Users/cesareyeserrano/Documents/PROJECTS/AITRI-HUB/web/src/components/ProjectCard.jsx\n  515:5  warning  'audit' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars\n\n✖ 18 problems (0 errors, 18 warnings)"
+    },
+    {
+      "name": "web-tests",
+      "command": "npm --prefix ../.. run test:web",
+      "required": true,
+      "status": "pass",
+      "exit_code": 0,
+      "output": " (transform 579ms, setup 654ms, import 1.06s, tests 565ms, environment 5.67s)\n\n\n12:33:59 PM [vite] warning: `esbuild` option was specified by \"vite:react-babel\" plugin. This option is deprecated, please use `oxc` instead.\n12:33:59 PM [vite] warning: `optimizeDeps.esbuildOptions` option was specified by \"vite:react-babel\" plugin. This option is deprecated, please use `optimizeDeps.rolldownOptions` instead.\nBoth esbuild and oxc options were set. oxc options will be used and esbuild options will be ignored. The following esbuild options were set: `{ jsx: 'automatic', jsxImportSource: undefined }`"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "files_created": [
+    "lib/collector/detail-reader.js",
+    "lib/collector/validate-runner.js",
+    "web/src/lib/navigate.js",
+    "web/src/lib/detailApi.js",
+    "web/src/lib/health.js",
+    "web/src/lib/markdown.jsx",
+    "web/src/components/EmptyState.jsx",
+    "web/src/views/DetailView.jsx",
+    "web/src/views/tabs/SummaryTab.jsx",
+    "web/src/views/tabs/TestCasesTab.jsx",
+    "web/src/views/tabs/TraceabilityTab.jsx",
+    "web/src/views/tabs/BugsTab.jsx",
+    "web/src/views/tabs/ArtifactsTab.jsx",
+    "tests/unit/detail-reader.test.js",
+    "tests/unit/validate-runner.test.js",
+    "tests/unit/detail-guard.test.js",
+    "tests/integration/detail-endpoints.test.js",
+    "web/src/__tests__/QaWorkspace.test.jsx",
+    "web/src/__tests__/no-inner-html.test.jsx",
+    "tests/e2e/qa-workspace.test.js"
+  ],
+  "files_modified": [
+    "lib/collector/index.js",
+    "lib/commands/web.js",
+    "web/src/App.jsx",
+    "web/src/components/ProjectCard.jsx",
+    "web/src/styles.css"
+  ],
+  "setup_commands": [],
+  "environment_variables": [],
+  "technical_debt": [
+    {
+      "fr_id": "FR-056",
+      "substitution": "requirements-audit freshness hashes the raw 01_REQUIREMENTS.json bytes (BOM-retained, 1 MiB-truncated) against .aitri#coverageAuditReqHash. If Core normalized the bytes before hashing, or the file exceeds 1 MiB, freshness reads 'stale' permanently.",
+      "reason": "Fail-direction is SAFE — it can only under-report freshness (never falsely 'fresh'), and the field is advisory (does not gate anything). Replicating Core's exact hash normalization would couple the Hub to Core internals; deferred until a real project mis-reports.",
+      "effort_to_fix": "low"
+    }
+  ],
+  "test_runner": "node --test ../../tests/unit/detail-reader.test.js ../../tests/unit/validate-runner.test.js ../../tests/unit/detail-guard.test.js ../../tests/integration/detail-endpoints.test.js",
+  "test_files": [
+    "tests/unit/detail-reader.test.js",
+    "tests/unit/validate-runner.test.js",
+    "tests/unit/detail-guard.test.js",
+    "tests/integration/detail-endpoints.test.js",
+    "web/src/__tests__/QaWorkspace.test.jsx",
+    "web/src/__tests__/no-inner-html.test.jsx",
+    "tests/e2e/qa-workspace.test.js"
+  ],
+  "quality_gates": [
+    { "name": "lint", "command": "npm --prefix ../.. run lint", "required": true, "timeout_ms": 300000 },
+    { "name": "web-tests", "command": "npm --prefix ../.. run test:web", "required": true, "timeout_ms": 600000 }
+  ],
+  "test_runner_timeout_ms": 900000
+}
