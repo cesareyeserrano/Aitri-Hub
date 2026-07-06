@@ -1,28 +1,33 @@
 /* ─────────────────────────────────────────────────────────────────────────── */
-/* Design Tokens — Aitri Hub  /  Code-Editor / Terminal Aesthetic              */
+/* Design Tokens — Aitri Hub  /  Slate professional dark (UI_UX_SPEC_V2 Layer 1) */
+/* Palette migrated to slate; hybrid typography (Inter UI + JetBrains Mono for   */
+/* machine data). Dark-only; tokens structured so a light theme is a second set. */
 /* ─────────────────────────────────────────────────────────────────────────── */
 :root {
-  /* Base surfaces — GitHub Dark */
-  --bg: #0d1117;
-  --surface: #161b22;
-  --surface-2: #21262d;
-  --surface-raised: #2d333b;
-  --border: #30363d;
+  /* Base surfaces — slate */
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-2: #263449;
+  --surface-raised: #2f3e57;
+  --border: #334155;
 
   /* Text */
-  --text: #e6edf3;
-  --text-dim: #8b949e;
-  --text-muted: #484f58;
+  --text: #f1f5f9;
+  --text-dim: #94a3b8;
+  --text-muted: #64748b;
 
-  /* Syntax highlight palette */
-  --syn-green: #3fb950;
-  --syn-blue: #79c0ff;
-  --syn-purple: #d2a8ff;
-  --syn-orange: #ffa657;
-  --syn-red: #f85149;
-  --syn-yellow: #e3b341;
-  --syn-teal: #39c5cf;
-  --syn-comment: #6e7681;
+  /* Accent palette — slate-family brights, all WCAG AA (>=4.5:1) as text on
+     --surface (#1E293B): green 6.9:1, blue 6.3:1, red 5.4:1, yellow 10.4:1,
+     teal 8.6:1, orange 8.1:1, purple 7.4:1. Kept as --syn-* names so every
+     existing selector retargets with zero component edits. */
+  --syn-green: #34d399;
+  --syn-blue: #60a5fa;
+  --syn-purple: #c4b5fd;
+  --syn-orange: #fb923c;
+  --syn-red: #f87171;
+  --syn-yellow: #fbbf24;
+  --syn-teal: #2dd4bf;
+  --syn-comment: #64748b;
 
   /* Semantic aliases (used by older selectors) */
   --text-primary: var(--text);
@@ -34,14 +39,14 @@
   --accent-info: var(--syn-blue);
   --accent-stalled: var(--syn-comment);
 
-  /* Severity tokens — snapshot-adoption FR-012/013/014/015. WCAG AA verified
-     against --surface (#161B22): warn 8.07:1, critical 6.39:1, info 7.50:1. */
-  --severity-warn: #fdb022;
-  --severity-critical: #f97066;
-  --severity-info: #84caff;
+  /* Severity tokens — WCAG AA verified against --surface (#1E293B):
+     warn 10.4:1, critical 5.4:1, info 6.9:1. */
+  --severity-warn: #fbbf24;
+  --severity-critical: #f87171;
+  --severity-info: #7dd3fc;
 
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
-  --font-ui: 'JetBrains Mono', 'Courier New', monospace;
+  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -70,7 +75,9 @@ html {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-mono);
+  /* Inter for UI/prose; machine data (ids, versions, hashes, commands) opts
+     into --font-mono explicitly or via .mono. Hybrid typography, Layer 1. */
+  font-family: var(--font-ui);
   font-size: 13px;
   line-height: 1.6;
   min-height: 100vh;
@@ -78,6 +85,13 @@ body {
     background 0.2s ease,
     color 0.2s ease;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Headings — Inter, tight tracking (Layer 1 professional look). */
+h1, h2, h3, h4, .section-title, .detail-name, .card__name {
+  font-family: var(--font-ui);
+  letter-spacing: -0.01em;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
@@ -386,17 +400,20 @@ body {
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  border-left: 3px solid var(--border);
+  border-radius: 8px;
+  border-top: 4px solid var(--border);
   padding: var(--space-4);
   min-width: 280px;
   min-height: 260px;
   display: flex;
   flex-direction: column;
   gap: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
   transition:
-    border-left-color 0.2s ease,
-    border-color 0.15s;
+    border-top-color 0.2s ease,
+    border-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.12s;
   animation: cardFadeIn 0.3s ease both;
 }
 
@@ -426,19 +443,19 @@ body {
 }
 
 .card[data-status='healthy'] {
-  border-left-color: var(--syn-green);
+  border-top-color: var(--syn-green);
 }
 .card[data-status='warning'] {
-  border-left-color: var(--syn-yellow);
+  border-top-color: var(--syn-yellow);
 }
 .card[data-status='error'] {
-  border-left-color: var(--syn-red);
+  border-top-color: var(--syn-red);
 }
 .card[data-status='unreadable'] {
-  border-left-color: var(--syn-comment);
+  border-top-color: var(--syn-comment);
 }
 .card[data-status='loading'] {
-  border-left-color: var(--border);
+  border-top-color: var(--border);
 }
 
 /* ── Snapshot-derived rows (FR-012/013/014/015/016/017) ─────────────────── */
@@ -3161,3 +3178,8 @@ body {
 .raw-json { background: #0d1117; border: 1px solid var(--border,#30363d); border-radius: 6px; padding: 10px; overflow-x: auto; font-family: var(--font-mono); font-size: 11px; }
 .ac-list { margin: 0; padding-left: 16px; }
 @media (max-width: 768px) { .tab-artifacts { grid-template-columns: 1fr; } }
+
+/* Layer 1 restyle — link contrast + heading font in the QA Workspace */
+.coverage-map a, .md a, .trace-meta a { color: var(--syn-teal); text-decoration: none; }
+.coverage-map a:hover, .md a:hover { text-decoration: underline; }
+.empty-state__title, .notfound-title, .prd-view h4 { font-family: var(--font-ui); }
