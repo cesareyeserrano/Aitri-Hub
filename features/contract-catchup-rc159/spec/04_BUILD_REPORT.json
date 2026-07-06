@@ -1,0 +1,73 @@
+{
+  "files_created": [
+    "lib/utils/semver.js",
+    "tests/unit/semver.test.js",
+    "tests/unit/artifact-resolver.test.js",
+    "tests/unit/layout-base.test.js",
+    "tests/unit/aitri-local.test.js",
+    "tests/unit/parse-errors-binding.test.js",
+    "tests/integration/legacy-golden.test.js",
+    "tests/integration/integration-review-prerelease.test.js",
+    "tests/integration/snapshot-first.test.js",
+    "tests/fixtures/legacy-golden/project/.aitri",
+    "tests/fixtures/legacy-golden/golden.json",
+    "web/src/__tests__/ContractCatchupIndicators.test.jsx",
+    "tests/integration/remote-sync-143.test.js"
+  ],
+  "files_modified": [
+    "lib/collector/aitri-reader.js",
+    "lib/collector/compliance-reader.js",
+    "lib/collector/bugs-reader.js",
+    "lib/collector/snapshot-reader.js",
+    "lib/collector/aitri-version-reader.js",
+    "lib/collector/integration-guard.js",
+    "lib/collector/index.js",
+    "lib/alerts/engine.js",
+    "lib/store/compat-manifest.js",
+    "lib/commands/integration-review.js",
+    "lib/constants.js",
+    "web/src/components/BugBadge.jsx",
+    "web/src/components/ProjectCard.jsx",
+    "tests/unit/bugs-reader.test.js",
+    "tests/e2e/admin-api.test.js",
+    "lib/collector/github-poller.js"
+  ],
+  "setup_commands": [],
+  "environment_variables": [],
+  "technical_debt": [
+    {
+      "fr_id": "FR-047",
+      "substitution": "Snapshot projection passthrough for quality_gates / ac_coverage / coverage-audit freshness NOT implemented: aitri status --json does not expose those fields as of v2.0.0-rc.159 (verified in Core lib/snapshot.js + STATUS_JSON.md). Only resultsBinding and bugs.parseErrors exist on the snapshot and both ARE consumed (FR-044/FR-045).",
+      "reason": "no_go_zone rule: what the contract lacks becomes feedback to Aitri Core, not a Hub workaround (reading 04_TEST_RESULTS.json in the snapshot path would break snapshot-first). Filed as a Core feedback item: expose quality_gates results + ac_coverage on status --json (additive, candidate rc.160); FR-047 completes when that surface ships.",
+      "effort_to_fix": "low"
+    }
+  ],
+  "test_runner": "node --test ../../tests/unit/semver.test.js ../../tests/unit/artifact-resolver.test.js ../../tests/unit/layout-base.test.js ../../tests/unit/aitri-local.test.js ../../tests/unit/parse-errors-binding.test.js ../../tests/unit/bugs-reader.test.js ../../tests/integration/legacy-golden.test.js ../../tests/integration/integration-review-prerelease.test.js ../../tests/integration/snapshot-first.test.js ../../tests/integration/remote-sync-143.test.js",
+  "test_files": [
+    "tests/unit/semver.test.js",
+    "tests/unit/artifact-resolver.test.js",
+    "tests/unit/layout-base.test.js",
+    "tests/unit/aitri-local.test.js",
+    "tests/unit/parse-errors-binding.test.js",
+    "tests/integration/legacy-golden.test.js",
+    "tests/integration/integration-review-prerelease.test.js",
+    "tests/integration/snapshot-first.test.js",
+    "web/src/__tests__/ContractCatchupIndicators.test.jsx",
+    "tests/integration/remote-sync-143.test.js"
+  ],
+  "quality_gates": [
+    {
+      "name": "lint",
+      "command": "npm --prefix ../.. run lint",
+      "required": true,
+      "timeout_ms": 300000
+    },
+    {
+      "name": "web-tests",
+      "command": "npm --prefix ../.. run test:web",
+      "required": true,
+      "timeout_ms": 600000
+    }
+  ],
+  "test_runner_timeout_ms": 900000
+}

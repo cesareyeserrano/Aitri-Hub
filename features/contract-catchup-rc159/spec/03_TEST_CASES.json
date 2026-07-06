@@ -1,0 +1,813 @@
+{
+  "test_plan": {
+    "strategy": "Unit tests pin the new pure modules (semver comparator, artifact resolver, local-merge, layoutBase confinement, projection passthrough) with exhaustive vectors BEFORE the five version call-sites migrate (TRD risk flag 1). Integration tests exercise collectOne end-to-end per path: snapshot-first (stub aitri binary), fallback (no CLI), contained layout, remote sync. A committed golden fixture (pre-rc.41 legacy project + its recorded pre-change output) enforces NFR-041 byte-parity, with a mutation case proving the comparison is not vacuous. Regression NFR-042/043 are covered by the EXISTING admin-api e2e and remote-sync suites run with unmodified assertions — their TCs map onto those suites rather than duplicating them. NFR-046 (CI/CD) is enforced by the repository workflow executing the full suite on push; it is not TC-covered because its observable lives in the CI system, not the codebase. All fixtures use os.tmpdir()/AITRI_HUB_DIR isolation; no absolute user paths.",
+    "coverage_goal": "every MUST FR and every Regression NFR traced to at least one passing automated test; new modules at 100% branch coverage of their decision points",
+    "test_types": [
+      "unit",
+      "integration",
+      "e2e"
+    ]
+  },
+  "test_cases": [
+    {
+      "id": "TC-040h",
+      "requirement_id": "FR-040",
+      "user_story_id": "US-040",
+      "ac_id": "AC-0401",
+      "title": "semver: rc counters compare numerically",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "lib/utils/semver.js is importable; inputs '2.0.0-rc.159' and '2.0.0-rc.15'",
+      "when": "compareSemver('2.0.0-rc.159','2.0.0-rc.15')",
+      "then": "return value > 0; also compareSemver('2.0.0-rc.15','2.0.0-rc.159') < 0 (antisymmetry)",
+      "steps": [
+        "compareSemver('2.0.0-rc.159','2.0.0-rc.15')"
+      ],
+      "expected_result": "rc.159 > rc.15 by numeric identifier comparison, not string order",
+      "test_data": {}
+    },
+    {
+      "id": "TC-040e",
+      "requirement_id": "FR-040",
+      "user_story_id": "US-040",
+      "ac_id": "AC-0401",
+      "title": "semver: pre-release precedence vs stable and across tags",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "inputs '2.0.0-rc.159' vs '2.0.0', and '2.0.0-alpha.27' vs '2.0.0-rc.1'",
+      "when": "compareSemver('2.0.0-rc.159','2.0.0') and compareSemver('2.0.0-alpha.27','2.0.0-rc.1')",
+      "then": "first returns < 0 (pre-release precedes stable); second returns < 0 ('alpha' < 'rc' alphanumerically)",
+      "steps": [
+        "compareSemver('2.0.0-rc.159','2.0.0') and compareSemver('2.0.0-alpha.27','2.0.0-rc.1')"
+      ],
+      "expected_result": "semver.org §11 precedence holds for the identifier shapes Aitri emits",
+      "test_data": {}
+    },
+    {
+      "id": "TC-040f",
+      "requirement_id": "FR-040",
+      "user_story_id": "US-040",
+      "ac_id": "AC-0402",
+      "title": "semver: junk input is rejected, caller degrades",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "input string 'git-deadbeef'",
+      "when": "parseSemver('git-deadbeef'); then aitri-version-reader processes CLI output 'git-deadbeef'",
+      "then": "parseSemver returns null; compareSemver('git-deadbeef','1.0.0') throws TypeError; version reader returns the same null/absent result it returns today for a missing CLI — no crash, no comparison performed",
+      "steps": [
+        "parseSemver('git-deadbeef'); then aitri-version-reader processes CLI output 'git-deadbeef'"
+      ],
+      "expected_result": "unparseable version → null path, never a fabricated compare",
+      "test_data": {}
+    },
+    {
+      "id": "TC-041h",
+      "requirement_id": "FR-041",
+      "user_story_id": "US-041",
+      "ac_id": "AC-0411",
+      "title": "fallback reads rc.41 names without aitri CLI",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "temp project dir with .aitri (approvedPhases [1,2,3,4,5], artifactsDir 'spec'), spec/04_BUILD_REPORT.json and spec/05_TRACEABILITY.json valid per contract; aitri CLI made unavailable (PATH without aitri)",
+      "when": "collectOne runs on the project (fallback path)",
+      "then": "record.compliance populated from 05_TRACEABILITY.json (overall_status + levels present); detectDrift hashes spec/04_BUILD_REPORT.json for phase 4 and spec/05_TRACEABILITY.json for phase 5",
+      "steps": [
+        "collectOne runs on the project (fallback path)"
+      ],
+      "expected_result": "post-rc.41 project fully readable on the fallback path",
+      "test_data": {}
+    },
+    {
+      "id": "TC-041e",
+      "requirement_id": "FR-041",
+      "user_story_id": "US-041",
+      "ac_id": "AC-0411",
+      "title": "fallback: both names present → new name wins",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "temp dir with spec/04_BUILD_REPORT.json containing {\"files\":[\"new.js\"]} AND spec/04_IMPLEMENTATION_MANIFEST.json containing {\"files\":[\"old.js\"]}",
+      "when": "resolveArtifact(dir,'04_BUILD_REPORT.json') and the drift hash for phase 4",
+      "then": "resolved path ends with 04_BUILD_REPORT.json; hashed content is {\"files\":[\"new.js\"]}; the old file is never opened",
+      "steps": [
+        "resolveArtifact(dir,'04_BUILD_REPORT.json') and the drift hash for phase 4"
+      ],
+      "expected_result": "new name wins when both exist",
+      "test_data": {}
+    },
+    {
+      "id": "TC-041f",
+      "requirement_id": "FR-041",
+      "user_story_id": "US-042",
+      "ac_id": "AC-0412",
+      "title": "fallback: neither name present degrades exactly as today",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "temp dir with .aitri but no 04_*/05_* artifact under spec/",
+      "when": "compliance reader and drift detection run",
+      "then": "compliance section absent from the record; no exception thrown; no error entry in the collection log for the missing files",
+      "steps": [
+        "compliance reader and drift detection run"
+      ],
+      "expected_result": "absence degrades silently, matching current behavior",
+      "test_data": {}
+    },
+    {
+      "id": "TC-042h",
+      "requirement_id": "FR-042",
+      "user_story_id": "US-042",
+      "ac_id": "AC-0422",
+      "title": "local merge: lastSession read from .aitri.local",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "temp project with .aitri lacking lastSession and .aitri.local containing {\"lastSession\":{\"event\":\"verify-run\",\"agent\":\"cli\"}}",
+      "when": "readAitriState(dir)",
+      "then": "state.lastSession.event === 'verify-run' (merged from .aitri.local)",
+      "steps": [
+        "readAitriState(dir)"
+      ],
+      "expected_result": "per-machine fields merge over the shared view",
+      "test_data": {}
+    },
+    {
+      "id": "TC-042e",
+      "requirement_id": "FR-042",
+      "user_story_id": "US-042",
+      "ac_id": "AC-0421",
+      "title": "local merge: remote clone without .aitri.local",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "temp project with .aitri only (no .aitri.local on disk), shaped like a fresh git clone",
+      "when": "readAitriState(dir)",
+      "then": "no exception; returned state has NO lastSession key; no warning logged",
+      "steps": [
+        "readAitriState(dir)"
+      ],
+      "expected_result": "absence is normal, nothing fabricated",
+      "test_data": {}
+    },
+    {
+      "id": "TC-042f",
+      "requirement_id": "FR-042",
+      "user_story_id": "US-042",
+      "ac_id": "AC-0421",
+      "title": "local merge: malformed .aitri.local ignored with warning",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "temp project with valid .aitri (projectName 'p1') and .aitri.local containing '{invalid'",
+      "when": "readAitriState(dir)",
+      "then": "returned state matches the shared .aitri view (projectName 'p1'); exactly one console.warn mentioning .aitri.local; no throw",
+      "steps": [
+        "readAitriState(dir)"
+      ],
+      "expected_result": "corrupt per-machine file never breaks collection",
+      "test_data": {}
+    },
+    {
+      "id": "TC-043h",
+      "requirement_id": "FR-043",
+      "user_story_id": "US-043",
+      "ac_id": "AC-0431",
+      "title": "contained-layout project discovered and read end-to-end",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "scan dir containing project 'cont1' whose .aitri declares layoutRoot 'aitri' and artifactsDir 'aitri/product/spec' (project-root-relative, per SCHEMA.md); artifacts exist at cont1/aitri/product/spec/; features at cont1/aitri/features/",
+      "when": "scan + collectOne run over the scan dir (fallback path)",
+      "then": "'cont1' appears in the collected set; compliance read at projectDir + artifactsDir (never layoutRoot re-prefixed); features discovered under layoutRoot/features; pipeline phases read from .aitri",
+      "steps": [
+        "scan + collectOne run over the scan dir (fallback path)"
+      ],
+      "expected_result": "contained layout fully supported in discovery and reading",
+      "test_data": {}
+    },
+    {
+      "id": "TC-043e",
+      "requirement_id": "FR-043",
+      "user_story_id": "US-043",
+      "ac_id": "AC-0431",
+      "title": "flat project resolves identically (layoutBase = dir)",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "temp flat project (no layoutRoot in .aitri) with spec/05_TRACEABILITY.json",
+      "when": "layoutBase(dir, state) and the compliance read",
+      "then": "layoutBase returns dir unchanged; artifact resolution is projectDir + artifactsDir — byte-identical to the pre-change code path",
+      "steps": [
+        "layoutBase(dir, state) and the compliance read"
+      ],
+      "expected_result": "flat layout regression-safe",
+      "test_data": {}
+    },
+    {
+      "id": "TC-043f",
+      "requirement_id": "FR-043",
+      "user_story_id": "US-043",
+      "ac_id": "AC-0432",
+      "title": "hostile layoutRoot rejected before any read",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "temp project whose .aitri declares layoutRoot '../../etc'",
+      "when": "layoutBase(dir, state)",
+      "then": "returns dir (layoutRoot ignored); one console.warn naming layoutRoot; instrumented fs access shows zero reads outside the project root",
+      "steps": [
+        "layoutBase(dir, state)"
+      ],
+      "expected_result": "path escape rejected, collection continues as flat",
+      "test_data": {}
+    },
+    {
+      "id": "TC-044h",
+      "requirement_id": "FR-044",
+      "user_story_id": "US-044",
+      "ac_id": "AC-0441",
+      "title": "snapshot bugs.parseErrors → warning alert + unknown pill state",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "a snapshot JSON fixture with bugs: {total:0, open:0, parseErrors:['root']}",
+      "when": "projectFromSnapshot + alert engine run on the fixture",
+      "then": "record.bugs.parseErrors deep-equals ['root']; alerts contain one severity 'warning' rule id BUGS_PARSE_ERROR whose message includes 'root' and 'NOT counted'",
+      "steps": [
+        "projectFromSnapshot + alert engine run on the fixture"
+      ],
+      "expected_result": "corrupt bug file is visible, not silent",
+      "test_data": {}
+    },
+    {
+      "id": "TC-044e",
+      "requirement_id": "FR-044",
+      "user_story_id": "US-044",
+      "ac_id": "AC-0442",
+      "title": "empty parseErrors adds no noise",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "snapshot fixture with bugs: {total:2, open:1, parseErrors:[]} and a second fixture with a valid empty BUGS.json ({\"bugs\":[]}) on the fallback path",
+      "when": "projection + fallback bugs reader run",
+      "then": "record.bugs has NO parseErrors key in either case; no BUGS_PARSE_ERROR alert; fallback reports open=0 for the empty file",
+      "steps": [
+        "projection + fallback bugs reader run"
+      ],
+      "expected_result": "clean data stays clean — additive field appears only on real errors",
+      "test_data": {}
+    },
+    {
+      "id": "TC-044f",
+      "requirement_id": "FR-044",
+      "user_story_id": "US-044",
+      "ac_id": "AC-0441",
+      "title": "fallback flags non-contract BUGS.json shape",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "temp project with BUGS.json containing {\"bugs\":42}",
+      "when": "bugs-reader runs on the fallback path",
+      "then": "reader returns parseErrors ['root'] (or the scope label); bug counters absent/zeroed AND the record carries the parseErrors marker; BUGS_PARSE_ERROR alert fires",
+      "steps": [
+        "bugs-reader runs on the fallback path"
+      ],
+      "expected_result": "shape violation = parse error, never '0 bugs'",
+      "test_data": {}
+    },
+    {
+      "id": "TC-045h",
+      "requirement_id": "FR-045",
+      "user_story_id": "US-045",
+      "ac_id": "AC-0451",
+      "title": "unbound results → warning indicator",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "snapshot fixture whose resultsBinding reports state 'unbound' per rc.159 STATUS_JSON contract",
+      "when": "projectFromSnapshot + alert engine",
+      "then": "record.resultsBinding carried verbatim; RESULTS_UNBOUND alert (severity warning) present with message 'test results not bound to a verify run' and command 'aitri verify-run'",
+      "steps": [
+        "projectFromSnapshot + alert engine"
+      ],
+      "expected_result": "unbound evidence is flagged for the QA auditor",
+      "test_data": {}
+    },
+    {
+      "id": "TC-045e",
+      "requirement_id": "FR-045",
+      "user_story_id": "US-045",
+      "ac_id": "AC-0452",
+      "title": "older CLI without resultsBinding → nothing added",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "snapshot fixture with NO resultsBinding key (pre-rc.148 CLI)",
+      "when": "projectFromSnapshot + alert engine",
+      "then": "record has NO resultsBinding key; no RESULTS_UNBOUND alert; no log entry",
+      "steps": [
+        "projectFromSnapshot + alert engine"
+      ],
+      "expected_result": "absent ≠ unbound",
+      "test_data": {}
+    },
+    {
+      "id": "TC-045f",
+      "requirement_id": "FR-045",
+      "user_story_id": "US-045",
+      "ac_id": "AC-0451",
+      "title": "malformed resultsBinding shape degrades to absent",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "snapshot fixture with resultsBinding: 'yes' (wrong type: string instead of object)",
+      "when": "projectFromSnapshot",
+      "then": "field is dropped (record has no resultsBinding); no crash; no alert",
+      "steps": [
+        "projectFromSnapshot"
+      ],
+      "expected_result": "shape-checked passthrough never propagates garbage",
+      "test_data": {}
+    },
+    {
+      "id": "TC-046h",
+      "requirement_id": "FR-046",
+      "user_story_id": "US-046",
+      "ac_id": "AC-0461",
+      "title": "review stores full rc tag and silences the banner",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "AITRI_HUB_DIR temp home; detected CLI version '2.0.0-rc.159'",
+      "when": "run 'aitri-hub integration review 2.0.0-rc.159', then generate the dashboard",
+      "then": "integration-compat.json has reviewedUpTo '2.0.0-rc.159' (full tag, untruncated); dashboard.json contains no integrationAlert",
+      "steps": [
+        "run 'aitri-hub integration review 2.0.0-rc.159', then generate the dashboard"
+      ],
+      "expected_result": "reviewed-up-to expresses pre-release versions",
+      "test_data": {}
+    },
+    {
+      "id": "TC-046e",
+      "requirement_id": "FR-046",
+      "user_story_id": "US-046",
+      "ac_id": "AC-0461",
+      "title": "newer unreviewed pre-release re-raises the banner",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "manifest reviewedUpTo '2.0.0-rc.159'; detected CLI '2.0.0-rc.160'",
+      "when": "integration-guard compare runs",
+      "then": "guard reports the CLI as newer than the baseline (compareSemver > 0) and integrationAlert is produced",
+      "steps": [
+        "integration-guard compare runs"
+      ],
+      "expected_result": "rc.160 > rc.159 detected numerically",
+      "test_data": {}
+    },
+    {
+      "id": "TC-046f",
+      "requirement_id": "FR-046",
+      "user_story_id": "US-046",
+      "ac_id": "AC-0462",
+      "title": "review rejects an unparseable version",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "AITRI_HUB_DIR temp home with an existing manifest reviewedUpTo '2.0.0-rc.159'",
+      "when": "run 'aitri-hub integration review not-a-version'",
+      "then": "exit code !== 0; stderr/stdout contains a usage message; integration-compat.json bytes unchanged",
+      "steps": [
+        "run 'aitri-hub integration review not-a-version'"
+      ],
+      "expected_result": "invalid input cannot corrupt the baseline",
+      "test_data": {}
+    },
+    {
+      "id": "TC-047h",
+      "requirement_id": "FR-047",
+      "user_story_id": "US-045",
+      "ac_id": "AC-0451",
+      "title": "quality gates + coverage surfaces carried through",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "medium",
+      "preconditions": [],
+      "given": "snapshot fixture containing quality-gate results [{name:'lint',passed:true},{name:'security',passed:false}] and ac_coverage + coverage-audit freshness fields per rc.159 STATUS_JSON",
+      "when": "projectFromSnapshot",
+      "then": "record carries the gates array with names and pass/fail intact, plus the ac_coverage and coverage-audit fields verbatim",
+      "steps": [
+        "projectFromSnapshot"
+      ],
+      "expected_result": "downstream views can render without another collector change",
+      "test_data": {}
+    },
+    {
+      "id": "TC-047e",
+      "requirement_id": "FR-047",
+      "user_story_id": "US-045",
+      "ac_id": "AC-0452",
+      "title": "absent surfaces add no fields",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [],
+      "given": "snapshot fixture without quality-gate/ac_coverage/coverage-audit fields",
+      "when": "projectFromSnapshot",
+      "then": "record contains none of the new keys (deep-equal to pre-change projection for this fixture)",
+      "steps": [
+        "projectFromSnapshot"
+      ],
+      "expected_result": "additive and absent-tolerant",
+      "test_data": {}
+    },
+    {
+      "id": "TC-047f",
+      "requirement_id": "FR-047",
+      "user_story_id": "US-045",
+      "ac_id": "AC-0452",
+      "title": "garbage shapes are dropped, not carried",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": [],
+      "given": "snapshot fixture with quality gates as a 3 MB string and ac_coverage as a function-like object",
+      "when": "projectFromSnapshot",
+      "then": "fields dropped (shape check fails); no crash; record otherwise complete",
+      "steps": [
+        "projectFromSnapshot"
+      ],
+      "expected_result": "shape-checked passthrough",
+      "test_data": {}
+    },
+    {
+      "id": "TC-140h",
+      "requirement_id": "NFR-040",
+      "user_story_id": "US-041",
+      "ac_id": "AC-0411",
+      "title": "eligible project collected via snapshot only",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture project with .aitri aitriVersion '2.0.0-rc.159' and a stub 'aitri' binary on PATH returning a valid snapshot; fallback readers instrumented",
+      "when": "collectOne runs",
+      "then": "record built from the stub snapshot (source marker 'snapshot'); instrumented fallback artifact readers record ZERO invocations",
+      "steps": [
+        "collectOne runs"
+      ],
+      "expected_result": "snapshot-first is never demoted (FR-017)",
+      "test_data": {}
+    },
+    {
+      "id": "TC-140e",
+      "requirement_id": "NFR-040",
+      "user_story_id": "US-041",
+      "ac_id": "AC-0411",
+      "title": "below-floor version routes to fallback",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture project with .aitri aitriVersion '0.1.50' (< 0.1.77 floor)",
+      "when": "eligibility gate in collectOne evaluates",
+      "then": "gteSemver('0.1.50','0.1.77') is false → legacy fallback path selected, same as today",
+      "steps": [
+        "eligibility gate in collectOne evaluates"
+      ],
+      "expected_result": "floor semantics unchanged under the new comparator",
+      "test_data": {}
+    },
+    {
+      "id": "TC-140f",
+      "requirement_id": "NFR-040",
+      "user_story_id": "US-041",
+      "ac_id": "AC-0411",
+      "title": "snapshot failure degrades visibly; fallback fills in, snapshot data never overridden",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "eligible fixture whose stub 'aitri' exits 1 on status --json; .aitri and artifacts present on disk",
+      "when": "collectOne runs",
+      "then": "record carries the degradation marker (degradationReason non-null); record fields ARE populated from the fallback readers (FR-017 degradation path); the card renders the degraded state",
+      "steps": [
+        "collectOne runs"
+      ],
+      "expected_result": "failure is visible degradation with fallback data — never a silent empty record; a SUCCESSFUL snapshot is never overridden by fallback data (NFR-040)",
+      "test_data": {}
+    },
+    {
+      "id": "TC-141h",
+      "requirement_id": "NFR-041",
+      "user_story_id": "US-042",
+      "ac_id": "AC-0412",
+      "title": "legacy golden fixture: record equality",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "in-repo golden fixture: pre-rc.41 flat project (04_IMPLEMENTATION_MANIFEST.json, 05_PROOF_OF_COMPLIANCE.json, lastSession inside .aitri) + its recorded pre-change collected record (timestamps excluded)",
+      "when": "collectOne runs on the fixture with the new code",
+      "then": "collected record deep-equals the golden record field-for-field (timestamps excluded)",
+      "steps": [
+        "collectOne runs on the fixture with the new code"
+      ],
+      "expected_result": "legacy path byte-parity holds",
+      "test_data": {}
+    },
+    {
+      "id": "TC-141e",
+      "requirement_id": "NFR-041",
+      "user_story_id": "US-042",
+      "ac_id": "AC-0412",
+      "title": "legacy fixture with feature subdirs stays equal",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "same golden fixture plus features/f1/.aitri and features/f1/spec/05_PROOF_OF_COMPLIANCE.json",
+      "when": "collectOne runs",
+      "then": "feature summary section of the record deep-equals the golden feature section",
+      "steps": [
+        "collectOne runs"
+      ],
+      "expected_result": "feature scanning unchanged for legacy projects",
+      "test_data": {}
+    },
+    {
+      "id": "TC-141f",
+      "requirement_id": "NFR-041",
+      "user_story_id": "US-042",
+      "ac_id": "AC-0412",
+      "title": "golden comparison actually detects a change",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "golden fixture with one field mutated in the freshly collected record (e.g. compliance.overall_status flipped)",
+      "when": "the golden-equality assertion helper runs",
+      "then": "the assertion FAILS and names the differing path — proving the parity test is not vacuous",
+      "steps": [
+        "the golden-equality assertion helper runs"
+      ],
+      "expected_result": "the golden test can catch a real regression",
+      "test_data": {}
+    },
+    {
+      "id": "TC-142h",
+      "requirement_id": "NFR-042",
+      "user_story_id": "US-046",
+      "ac_id": "AC-0461",
+      "title": "admin CRUD over loopback unchanged",
+      "type": "e2e",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "aitri-hub web running on 127.0.0.1:3099 with AITRI_HUB_DIR temp home (existing e2e harness)",
+      "when": "POST /api/projects {name:'p1',type:'local',location:<tmpdir>} then GET /api/projects",
+      "then": "POST returns 200/201 and GET lists p1 — the pre-existing admin-api e2e suite passes with UNMODIFIED assertions",
+      "steps": [
+        "POST /api/projects {name:'p1',type:'local',location:<tmpdir>} then GET /api/projects"
+      ],
+      "expected_result": "admin surface untouched",
+      "test_data": {}
+    },
+    {
+      "id": "TC-142e",
+      "requirement_id": "NFR-042",
+      "user_story_id": "US-046",
+      "ac_id": "AC-0461",
+      "title": "PUT and DELETE lifecycle unchanged",
+      "type": "e2e",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "running server with project p1 registered",
+      "when": "PUT /api/projects/<id> renaming to 'p2', then DELETE /api/projects/<id>",
+      "then": "PUT returns 200 with name 'p2'; DELETE returns 204 No Content (the API's existing contract); GET no longer lists it (existing suite assertions unmodified)",
+      "steps": [
+        "PUT /api/projects/<id> renaming to 'p2', then DELETE /api/projects/<id>"
+      ],
+      "expected_result": "full CRUD lifecycle intact",
+      "test_data": {}
+    },
+    {
+      "id": "TC-142f",
+      "requirement_id": "NFR-042",
+      "user_story_id": "US-046",
+      "ac_id": "AC-0461",
+      "title": "non-loopback request still 403",
+      "type": "e2e",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "running server; request crafted with Host header / origin simulating non-loopback client per the existing suite",
+      "when": "GET /api/projects from the non-loopback context",
+      "then": "response status 403 (existing assertion, unmodified)",
+      "steps": [
+        "GET /api/projects from the non-loopback context"
+      ],
+      "expected_result": "localhost-only guard intact",
+      "test_data": {},
+      "automation": "manual",
+      "manual_reason": "The localhost-only guard keys on req.socket.remoteAddress (lib/commands/web.js:118-124); a loopback-only e2e harness cannot present a non-loopback source address without privileged network spoofing. Verified by code inspection: server binds 127.0.0.1 and the guard 403s any remoteAddress outside {127.0.0.1, ::1, ::ffff:127.0.0.1}."
+    },
+    {
+      "id": "TC-143h",
+      "requirement_id": "NFR-043",
+      "user_story_id": "US-041",
+      "ac_id": "AC-0411",
+      "title": "remote clone/pull cycle unchanged",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "existing remote-sync test fixture (local bare git repo registered as type 'remote')",
+      "when": "two collection cycles run",
+      "then": "cycle 1 clones into ~/.aitri-hub/cache/<slug>-<id>; cycle 2 pulls; existing suite assertions pass unmodified",
+      "steps": [
+        "two collection cycles run"
+      ],
+      "expected_result": "remote sync intact",
+      "test_data": {}
+    },
+    {
+      "id": "TC-143e",
+      "requirement_id": "NFR-043",
+      "user_story_id": "US-041",
+      "ac_id": "AC-0411",
+      "title": "poller skip on unchanged content",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "github-poller fixture reporting unchanged raw content",
+      "when": "remote refresh evaluates",
+      "then": "no git pull is executed this cycle (existing assertion unmodified)",
+      "steps": [
+        "remote refresh evaluates"
+      ],
+      "expected_result": "cheap-poll optimization intact",
+      "test_data": {}
+    },
+    {
+      "id": "TC-143f",
+      "requirement_id": "NFR-043",
+      "user_story_id": "US-041",
+      "ac_id": "AC-0411",
+      "title": "429 backoff preserved",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "poller fixture returning HTTP 429",
+      "when": "remote refresh evaluates",
+      "then": "backoff state recorded and no pull attempted until the backoff window passes (existing assertion unmodified)",
+      "steps": [
+        "remote refresh evaluates"
+      ],
+      "expected_result": "rate-limit behavior intact",
+      "test_data": {}
+    },
+    {
+      "id": "TC-144h",
+      "requirement_id": "NFR-044",
+      "user_story_id": "US-044",
+      "ac_id": "AC-0442",
+      "title": "current-release fields all present with same types",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "an unchanged fixture project collected pre-change, its field/type inventory recorded",
+      "when": "the same fixture is collected with the new code and the schema-diff helper compares",
+      "then": "every recorded field exists with the same JS type; diff report empty",
+      "steps": [
+        "the same fixture is collected with the new code and the schema-diff helper compares"
+      ],
+      "expected_result": "no field removed or retyped",
+      "test_data": {}
+    },
+    {
+      "id": "TC-144e",
+      "requirement_id": "NFR-044",
+      "user_story_id": "US-044",
+      "ac_id": "AC-0442",
+      "title": "new fields appear only with data present",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "fixture snapshot WITHOUT parseErrors/resultsBinding/quality gates",
+      "when": "projection runs",
+      "then": "record contains none of the new keys",
+      "steps": [
+        "projection runs"
+      ],
+      "expected_result": "old consumers see an unchanged record",
+      "test_data": {}
+    },
+    {
+      "id": "TC-144f",
+      "requirement_id": "NFR-044",
+      "user_story_id": "US-044",
+      "ac_id": "AC-0442",
+      "title": "schema-diff helper detects a type change",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "a record where bugs.open is artificially set to the string '3'",
+      "when": "schema-diff helper compares against the inventory",
+      "then": "diff reports bugs.open type change number→string — proving the guard is not vacuous",
+      "steps": [
+        "schema-diff helper compares against the inventory"
+      ],
+      "expected_result": "the additive gate can catch a real break",
+      "test_data": {}
+    },
+    {
+      "id": "TC-145h",
+      "requirement_id": "NFR-045",
+      "user_story_id": "US-043",
+      "ac_id": "AC-0432",
+      "title": "safe relative layoutRoot accepted",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "temp project, .aitri layoutRoot 'aitri' (plain child dir, exists)",
+      "when": "layoutBase(dir, state)",
+      "then": "returns dir/aitri; zero warnings",
+      "steps": [
+        "layoutBase(dir, state)"
+      ],
+      "expected_result": "legitimate contained layout passes confinement",
+      "test_data": {}
+    },
+    {
+      "id": "TC-145e",
+      "requirement_id": "NFR-045",
+      "user_story_id": "US-043",
+      "ac_id": "AC-0432",
+      "title": "dangling layoutRoot does not throw",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "temp project, .aitri layoutRoot 'aitri' but the directory does not exist yet",
+      "when": "layoutBase(dir, state)",
+      "then": "no exception (deepest-existing-ancestor realpath check); returns the resolved child path or dir per design; collection continues",
+      "steps": [
+        "layoutBase(dir, state)"
+      ],
+      "expected_result": "missing dir ≠ crash",
+      "test_data": {}
+    },
+    {
+      "id": "TC-145f",
+      "requirement_id": "NFR-045",
+      "user_story_id": "US-043",
+      "ac_id": "AC-0432",
+      "title": "absolute, ../ and symlink escapes all rejected",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "three temp projects: layoutRoot '/etc'; layoutRoot '../../etc'; layoutRoot 'link' where link is a symlink to a dir outside the project root",
+      "when": "layoutBase(dir, state) for each",
+      "then": "each returns dir (field ignored) with one warning; instrumented fs shows zero reads outside each project root",
+      "steps": [
+        "layoutBase(dir, state) for each"
+      ],
+      "expected_result": "all three escape vectors blocked (NFR-045 trio)",
+      "test_data": {}
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "state": {
+    "currentPhase": 5,
+    "approvedPhases": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "completedPhases": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "verifyPassed": true,
+    "verifySummary": {
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "total": 3
+    },
+    "hasDrift": false,
+    "driftPhases": [],
+    "lastRejection": null,
+    "projectName": "legacy-golden",
+    "artifactsDir": "spec",
+    "aitriVersion": "0.1.63",
+    "updatedAt": "2026-04-02T00:00:00.000Z",
+    "createdAt": "2026-04-01T00:00:00.000Z",
+    "events": [
+      {
+        "phase": 5,
+        "event": "approved",
+        "at": "2026-04-02T00:00:00.000Z"
+      }
+    ],
+    "features": [
+      {
+        "name": "f1",
+        "currentPhase": 3,
+        "approvedPhases": [
+          1,
+          2
+        ],
+        "completedPhases": [
+          1,
+          2,
+          3
+        ]
+      }
+    ],
+    "lastSession": {
+      "at": "2026-04-02T00:00:00.000Z",
+      "agent": "cli",
+      "event": "verify-run",
+      "files_touched": [
+        "src/app.js"
+      ]
+    }
+  },
+  "compliance": {
+    "available": true,
+    "overallStatus": "compliant",
+    "levels": {
+      "production_ready": 0,
+      "complete": 1,
+      "partial": 0,
+      "functionally_present": 0
+    },
+    "total": 1
+  },
+  "bugs": {
+    "open": 0,
+    "fixed": 0,
+    "verified": 0,
+    "closed": 1,
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "openIds": []
+  },
+  "tests": {
+    "available": true,
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "total": 3,
+    "frCoverage": []
+  }
+}

@@ -1,0 +1,442 @@
+{
+  "project_name": "Aitri Hub — contract-catchup-rc159",
+  "project_summary": "Bring the Hub's Aitri-integration layer (collectors, readers, version logic, compat manifest) up to the Aitri v2.0.0-rc.159 contract, so every current and future dashboard view reads correct data from projects on the 2.0.0-rc channel while the fallback path keeps serving legacy 0.1.x projects.\n\nProduct Analysis:\n  North Star KPI (parity/acceptance gate — this is a change to an existing system): a project on Aitri 2.0.0-rc.159 and a legacy pre-rc.41 project BOTH render correct dashboards, with zero behavioral change for the legacy path vs today.\n  JTBD: 'When my projects run current Aitri, let the Hub read their real state instead of miscomputing versions and missing renamed artifacts.'\n  Guardrail metric: the collection cycle for 20 registered projects stays within the parent guardrail (dashboard render ≤2s); no new reader may spawn additional processes per cycle beyond the existing aitri status --json call.\n\nNFR category applicability: Observability and Healthcheck are covered by the parent project's NFRs (this feature adds no new server surface or endpoint); CI/CD and Security are addressed below; Performance is the guardrail above.",
+  "functional_requirements": [
+    {
+      "id": "FR-040",
+      "title": "Full semver parse and compare including pre-release tags",
+      "description": "Replace the stable-only X.Y.Z version handling in the integration layer with a full semver parse/compare that understands pre-release tags (2.0.0-alpha.N, 2.0.0-rc.N) with numeric pre-release ordering per semver precedence: 2.0.0-alpha.3 < 2.0.0-rc.15 < 2.0.0-rc.159 < 2.0.0. Applies everywhere a version is parsed, compared, or displayed: aitri CLI version detection, per-project aitriVersion, snapshot eligibility gate (MIN vs detected), VERSION_MISMATCH alert, integration-review baseline compare, and dashboard display. Zero-dependency hand-rolled comparator.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "compare('2.0.0-rc.159','2.0.0-rc.15') returns >0 (numeric, not lexicographic, ordering of the pre-release counter)",
+        "compare('2.0.0-rc.159','2.0.0') returns <0 (a pre-release precedes its stable release)",
+        "compare('2.0.0-alpha.27','2.0.0-rc.1') returns <0 (alpha precedes rc)",
+        "Detected version '2.0.0-rc.159' is stored and displayed with its full tag — no truncation to '2.0.0' anywhere in dashboard.json or the UI",
+        "An unparseable version string (e.g. 'git-deadbeef') is rejected by the parser and the caller degrades exactly as it does today for a missing version (no crash, no fabricated compare result)"
+      ]
+    },
+    {
+      "id": "FR-041",
+      "title": "Fallback readers accept post-rc.41 artifact names with pre-rc.41 fallback",
+      "description": "The direct-parsing fallback path reads 04_BUILD_REPORT.json and 05_TRACEABILITY.json (rc.41 names) wherever it currently reads 04_IMPLEMENTATION_MANIFEST.json / 05_PROOF_OF_COMPLIANCE.json — the drift-detection ARTIFACT_MAP and the compliance reader. Because the fallback path exists to serve old CLIs, each read tries the new name first and falls back to the old name when the new one is absent. When BOTH names exist, the new name wins and the old file is ignored.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "A post-rc.41 project (new names on disk, no aitri CLI available) yields the same compliance summary and drift verdict as the snapshot path yields for that project",
+        "A pre-rc.41 project (old names only) yields compliance and drift output byte-identical to the current Hub release (regression parity)",
+        "A directory containing both 04_BUILD_REPORT.json and 04_IMPLEMENTATION_MANIFEST.json reads only the new-name file",
+        "A project with neither name present degrades exactly as today (compliance section absent, no error)"
+      ]
+    },
+    {
+      "id": "FR-042",
+      "title": "Fallback state reader merges .aitri.local when present, tolerates absence",
+      "description": "Model the rc.51 state split: per-machine fields (lastSession, reconcileState, sessionContext) live in gitignored .aitri.local. The fallback reader merges .aitri.local over the shared .aitri view when the file exists. When it does not exist (every remote GitHub clone; any fresh checkout), the reader proceeds without error and simply omits those fields — it must not fabricate values from the shared file's legacy copies unless they are genuinely present there (pre-split projects).",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "A local post-split project with .aitri.local present reports lastSession from .aitri.local",
+        "A remote clone (no .aitri.local) is collected with no error and no lastSession field fabricated",
+        "A pre-split legacy project (lastSession still inside .aitri) keeps reporting it exactly as today",
+        "A malformed .aitri.local (invalid JSON) is ignored with a logged warning; the shared .aitri view is still returned"
+      ]
+    },
+    {
+      "id": "FR-043",
+      "title": "Contained-layout (layoutRoot) projects are discovered and read",
+      "description": "Support the rc.76 contained layout where Aitri-owned files live under an aitri/ container recorded in .aitri#layoutRoot: (a) directory scan recognizes such projects, (b) the fallback readers resolve artifact and feature paths through layoutRoot, (c) flat-layout projects (layoutRoot absent) keep resolving exactly as today.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "A contained-layout project inside a scanned directory appears on the dashboard with pipeline, tests, and compliance populated via the fallback path",
+        "A flat-layout project resolves identically to the current release (regression parity)",
+        "A .aitri declaring layoutRoot whose resolved path escapes the project root (absolute path or ../) is rejected: the project is collected as if layoutRoot were absent and a warning is logged"
+      ]
+    },
+    {
+      "id": "FR-044",
+      "title": "Corrupt BUGS.json is visibly distinguished from zero bugs",
+      "description": "Consume the rc.158 status --json field bugs.parseErrors: when present and non-empty, the project record carries the parse-error scopes and the alert engine emits a warning-severity alert ('BUGS.json unreadable in <scope> — bugs are NOT counted'). The fallback bugs reader gains the same distinction: a BUGS.json that exists but fails to parse (bad syntax or non-contract shape) is reported as a parse error, not as zero bugs.",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "A project whose BUGS.json contains invalid JSON shows a warning alert naming the scope, and its bug count renders as unknown/warning — not as '0 bugs'",
+        "A project with a valid empty BUGS.json ({\"bugs\":[]}) shows zero bugs and NO parse-error alert",
+        "A snapshot reporting bugs.parseErrors: [] produces no alert and no field noise in dashboard.json",
+        "The fallback path flags a BUGS.json with a non-contract shape (e.g. {\"bugs\":42}) as a parse error"
+      ]
+    },
+    {
+      "id": "FR-045",
+      "title": "Unbound test results are surfaced as an indicator",
+      "description": "Consume the rc.148 snapshot surface resultsBinding: when the snapshot reports the 04_TEST_RESULTS.json is not bound to a real verify run (absent or stale binding), the project record carries that state and the card shows a warning indicator ('results not bound to a verify run'). Snapshot-only — the fallback path does not re-derive binding (it has no hash authority).",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "A snapshot whose resultsBinding reports unbound/stale results yields a per-project warning indicator in dashboard.json and on the project card",
+        "A snapshot with a valid binding shows no indicator",
+        "A snapshot from an older CLI without the resultsBinding field produces no indicator and no error (absent ≠ unbound)"
+      ]
+    },
+    {
+      "id": "FR-046",
+      "title": "Integration review baseline records full pre-release versions; rc.1→rc.159 review performed",
+      "description": "The integration-review machinery (compat manifest, changelog drift check, integrationAlert) operates on full pre-release versions: 'aitri-hub integration review 2.0.0-rc.159' stores reviewedUpTo:'2.0.0-rc.159' and the banner logic compares with FR-040 semantics. The hardcoded FALLBACK_BASELINE and snapshot floor remain valid floors but are compared with the new comparator. As part of shipping this feature, the actual review of Aitri's integration CHANGELOG entries rc.1→rc.159 (including all 9 breaking entries) is performed and its outcome recorded in the manifest's reviewerNote.",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "integration review 2.0.0-rc.159 writes reviewedUpTo:'2.0.0-rc.159' (full tag) to integration-compat.json",
+        "With reviewedUpTo:'2.0.0-rc.159' and CLI 2.0.0-rc.159 detected, no integrationAlert fires",
+        "With reviewedUpTo:'2.0.0-rc.159' and CLI 2.0.0-rc.160 detected, the integrationAlert fires (a NEWER unreviewed pre-release is detected as newer)",
+        "integration review rejects a version string that fails the FR-040 parser with a usage error"
+      ]
+    },
+    {
+      "id": "FR-047",
+      "title": "Snapshot projection preserves quality-gate and coverage surfaces for downstream views",
+      "description": "The snapshot-to-record projection carries through, when present in aitri status --json: quality_gates results (gate name + pass/fail), ac_coverage, and the coverage/requirements audit freshness fields the rc.159 STATUS_JSON contract documents — so Layer-1/2 UI features can render them without another collector change. Each field is additive and absent-tolerant. Display in this feature is limited to what already exists; no new UI section. validate --json is explicitly NOT invoked (see no_go_zone — per-cycle process budget); the QA Workspace feature adds it deliberately.",
+      "priority": "SHOULD",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "A snapshot containing quality-gate results appears in the project's dashboard.json record with gate name and pass/fail preserved",
+        "A snapshot containing ac_coverage or coverage-audit freshness fields carries them into the record unchanged",
+        "A snapshot without these fields adds no field to the record (additive, absent-tolerant)"
+      ]
+    }
+  ],
+  "user_personas": [
+    {
+      "role": "QA auditor",
+      "tech_level": "mid",
+      "goal": "Trust the dashboard's bug counts, test verdicts, and deploy-readiness for audit decisions",
+      "pain_point": "A corrupt bug file or unbound test results currently render as a clean project — the dashboard can show green on data that proves nothing"
+    },
+    {
+      "role": "Multi-project developer",
+      "tech_level": "high",
+      "goal": "Monitor projects on the current Aitri rc channel and legacy projects side by side",
+      "pain_point": "Version logic truncates rc tags so upgrade state is invisible, and post-rename projects lose compliance/drift data on the fallback path"
+    },
+    {
+      "role": "Hub maintainer",
+      "tech_level": "high",
+      "goal": "Review Aitri contract changes once, record the baseline, and silence the banner honestly",
+      "pain_point": "The review baseline cannot express '2.0.0-rc.159', so the reviewed-up-to gate miscomputes against every rc release"
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US-040",
+      "requirement_id": "FR-040",
+      "as_a": "Multi-project developer",
+      "i_want": "the Hub to understand pre-release Aitri versions",
+      "so_that": "version mismatch and eligibility decisions are computed against the version actually installed",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0401",
+          "given": "a project with .aitri aitriVersion '2.0.0-rc.15' and CLI 'aitri --version' reporting 2.0.0-rc.159",
+          "when": "the collection cycle runs",
+          "then": "the VERSION_MISMATCH indicator reports '2.0.0-rc.15' vs '2.0.0-rc.159' with both full tags visible"
+        },
+        {
+          "id": "AC-0402",
+          "given": "a version string 'git-deadbeef' returned by a broken CLI shim",
+          "when": "the version reader parses it",
+          "then": "parsing fails cleanly and the project degrades to the same 'version unknown' path as a missing CLI today, with no crash and no comparison performed"
+        }
+      ]
+    },
+    {
+      "id": "US-041",
+      "requirement_id": "FR-041",
+      "as_a": "Multi-project developer",
+      "i_want": "post-rc.41 projects to render compliance and drift on the fallback path",
+      "so_that": "a project without a working aitri CLI still shows correct build/traceability state",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0411",
+          "given": "a project directory with spec/04_BUILD_REPORT.json and spec/05_TRACEABILITY.json and no aitri CLI on PATH",
+          "when": "the fallback collector reads it",
+          "then": "the compliance summary is populated from 05_TRACEABILITY.json and phase-4/5 drift detection hashes the new-name files"
+        },
+        {
+          "id": "AC-0412",
+          "given": "a legacy project with only spec/05_PROOF_OF_COMPLIANCE.json",
+          "when": "the fallback collector reads it",
+          "then": "the compliance summary is identical to the current Hub release's output for that project"
+        }
+      ]
+    },
+    {
+      "id": "US-042",
+      "requirement_id": "FR-042",
+      "as_a": "Multi-project developer",
+      "i_want": "remote clones without .aitri.local to collect cleanly",
+      "so_that": "GitHub-registered projects render without errors or fabricated session data",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0421",
+          "given": "a cloned remote project whose .aitri has no lastSession and no .aitri.local exists",
+          "when": "the fallback collector reads it",
+          "then": "collection succeeds and the record contains no lastSession field"
+        },
+        {
+          "id": "AC-0422",
+          "given": "a local project with .aitri.local containing lastSession {event:'verify-run'}",
+          "when": "the fallback collector reads it",
+          "then": "the record's lastSession.event equals 'verify-run' (merged from .aitri.local)"
+        }
+      ]
+    },
+    {
+      "id": "US-043",
+      "requirement_id": "FR-043",
+      "as_a": "Multi-project developer",
+      "i_want": "contained-layout projects discovered and read",
+      "so_that": "new-generation Aitri projects appear on the dashboard like flat ones",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0431",
+          "given": "a scanned directory containing a project whose .aitri declares layoutRoot 'aitri'",
+          "when": "the scan and fallback collection run",
+          "then": "the project appears with pipeline and compliance data resolved under aitri/"
+        },
+        {
+          "id": "AC-0432",
+          "given": "a .aitri declaring layoutRoot '../../etc'",
+          "when": "the fallback collector reads it",
+          "then": "layoutRoot is ignored, a warning is logged, and no path outside the project root is opened"
+        }
+      ]
+    },
+    {
+      "id": "US-044",
+      "requirement_id": "FR-044",
+      "as_a": "QA auditor",
+      "i_want": "corrupt bug files to be visibly flagged",
+      "so_that": "I never sign off a project whose '0 bugs' actually means 'unreadable bug file'",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0441",
+          "given": "a project whose BUGS.json contains '{invalid'",
+          "when": "the dashboard renders it",
+          "then": "a warning alert names the corrupt scope and the bug pill shows an unknown/warning state, not '0'"
+        },
+        {
+          "id": "AC-0442",
+          "given": "a project whose BUGS.json is '{\"bugs\":[]}'",
+          "when": "the dashboard renders it",
+          "then": "the project shows zero open bugs and no parse-error alert"
+        }
+      ]
+    },
+    {
+      "id": "US-045",
+      "requirement_id": "FR-045",
+      "as_a": "QA auditor",
+      "i_want": "to see when test results are not bound to a real verify run",
+      "so_that": "I can reject evidence that was never produced by the verification spine",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0451",
+          "given": "a snapshot whose resultsBinding reports the results file is unbound",
+          "when": "the dashboard renders the project",
+          "then": "the card shows a 'results not bound to a verify run' warning indicator"
+        },
+        {
+          "id": "AC-0452",
+          "given": "a snapshot from an older CLI with no resultsBinding field",
+          "when": "the dashboard renders the project",
+          "then": "no binding indicator appears and no error is logged"
+        }
+      ]
+    },
+    {
+      "id": "US-046",
+      "requirement_id": "FR-046",
+      "as_a": "Hub maintainer",
+      "i_want": "to record the reviewed contract baseline as a full rc version",
+      "so_that": "the integration banner fires only on genuinely unreviewed releases",
+      "acceptance_criteria": [
+        {
+          "id": "AC-0461",
+          "given": "integration-compat.json with reviewedUpTo '2.0.0-rc.159' and detected CLI 2.0.0-rc.159",
+          "when": "the dashboard is generated",
+          "then": "no integrationAlert is present in dashboard.json"
+        },
+        {
+          "id": "AC-0462",
+          "given": "the command 'aitri-hub integration review not-a-version'",
+          "when": "it executes",
+          "then": "it exits non-zero with a usage message and integration-compat.json is unchanged"
+        }
+      ]
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-040",
+      "category": "Regression",
+      "requirement": "Snapshot-first collection is never demoted: a snapshot-eligible project is collected via aitri status --json, and the fallback readers run only when the snapshot path is ineligible or fails (existing FR-017 semantics).",
+      "acceptance_criteria": "Integration test: a snapshot-eligible fixture project is collected with zero fallback-reader invocations (verified by reader instrumentation or by feeding it artifacts that would change the result if the fallback ran)."
+    },
+    {
+      "id": "NFR-041",
+      "category": "Regression",
+      "requirement": "Legacy fallback rendering is unchanged: a pre-rc.41 fixture project (old artifact names, pre-split .aitri, flat layout) produces a dashboard record equal to the current release's output for pipeline, tests, bugs, compliance, and drift.",
+      "acceptance_criteria": "Golden-fixture test: the legacy fixture's collected record matches the recorded pre-change golden output field-for-field (excluding timestamps)."
+    },
+    {
+      "id": "NFR-042",
+      "category": "Regression",
+      "requirement": "The localhost-only admin API and project registry CRUD keep working unchanged: non-loopback requests still receive 403; GET/POST/PUT/DELETE /api/projects behave as today.",
+      "acceptance_criteria": "Existing admin-api e2e suite passes without modification to its assertions."
+    },
+    {
+      "id": "NFR-043",
+      "category": "Regression",
+      "requirement": "Remote project sync keeps working unchanged: clone/pull into ~/.aitri-hub/cache and the poller backoff on 429 behave as today.",
+      "acceptance_criteria": "Existing remote-sync tests pass without modification to their assertions."
+    },
+    {
+      "id": "NFR-044",
+      "category": "Regression",
+      "requirement": "dashboard.json remains additive: every field written by the current release is still written with the same type and meaning; new fields are additions only (the SPA is the Hub's own downstream consumer).",
+      "acceptance_criteria": "Schema-diff test: the collected record for an unchanged fixture contains at least all current-release fields with unchanged types."
+    },
+    {
+      "id": "NFR-045",
+      "category": "Security",
+      "requirement": "Path resolution through .aitri-declared fields (layoutRoot, artifactsDir) is confined to the project root: absolute paths, .. traversal, and symlinks escaping the root are rejected before any file read.",
+      "acceptance_criteria": "Unit tests: layoutRoot values '../../etc', '/etc', and a symlink pointing outside the project root each result in the field being ignored with a warning and zero reads outside the root."
+    },
+    {
+      "id": "NFR-046",
+      "category": "CI/CD",
+      "requirement": "The full declared test suite (unit + integration + web + e2e) runs on every push to main and includes the new reader/version/alert tests added by this feature.",
+      "acceptance_criteria": "CI workflow executes npm run test:all (or its equivalent staged jobs) and fails the build on any new-test failure."
+    }
+  ],
+  "no_go_zone": [
+    "No new UI views or tabs — the overview restyle and QA Workspace are separate features (Layers 1–2 of idea_context/UI_UX_SPEC_V2.md); this feature only makes the data layer correct and adds at most inline warning indicators on existing surfaces",
+    "No GitHub API metrics (velocity/PRs), no dependency scanning, no runtime monitoring — cut from v1 by owner decision 2026-07-05",
+    "No full rendering of coverage_map, ac_coverage, or validate --json — the QA Workspace feature consumes them; this feature carries through what the snapshot already returns (FR-047) and nothing more",
+    "No validate --json invocation in the collection cycle — it would add a second per-project process per cycle, breaking the process-budget constraint; the QA Workspace feature introduces it deliberately (on-demand, not per-cycle). Explicit decision resolving audit GAP-1",
+    "No changes to Aitri Core — the Hub is a passive consumer of the documented contract; anything the contract lacks becomes feedback to Core, not a workaround",
+    "No aitri command execution beyond the existing read-only status --json / --version calls — no upgrades, approvals, or writes to consumer projects from the Hub"
+  ],
+  "constraints": [
+    "Zero new runtime dependencies (Hub runtime is Node built-ins only; semver comparator is hand-rolled)",
+    "Collection cycle must not spawn additional per-project processes beyond the existing aitri status --json call"
+  ],
+  "technology_preferences": [],
+  "idea_provenance": {
+    "problem": "confirmed",
+    "users": "confirmed",
+    "baseline": "confirmed",
+    "success_metric": "assumed",
+    "no_go_zone": "confirmed"
+  },
+  "idea_provenance_sources": {
+    "problem": "Owner requested the rc.159 catch-up in chat (2026-07-05); each gap verified by code inspection and cited in FEATURE_IDEA.md",
+    "users": "Owner stated the target roles (QA testers/auditors primary; BA/PO/PM) in chat (2026-07-05)",
+    "baseline": "Read from the code and ~/.aitri-hub/integration-compat.json (reviewedUpTo alpha.3-era, FALLBACK_BASELINE '0.1.80', snapshot floor '0.1.77')",
+    "success_metric": "Given/When/Then criteria authored by the agent from the owner-approved scope; the specific thresholds were not individually ratified by the owner",
+    "no_go_zone": "Owner's explicit v1 scope decision in chat (2026-07-05): Aitri-data-only, UI layers separate"
+  },
+  "idea_gaps": [
+    "success_metric: the concrete acceptance scenarios in FEATURE_IDEA.md were derived by the agent from the owner-approved plan, not individually confirmed — owner ratifies or corrects them at approve 1"
+  ],
+  "coverage_map": [
+    {
+      "need": "Pre-release semver parsed/compared/displayed correctly across the integration layer",
+      "disposition": "FR-040"
+    },
+    {
+      "need": "Fallback drift detection (ARTIFACT_MAP) reads post-rc.41 artifact names",
+      "disposition": "FR-041"
+    },
+    {
+      "need": "Fallback compliance reader reads 05_TRACEABILITY.json with legacy fallback",
+      "disposition": "FR-041"
+    },
+    {
+      "need": "Per-machine state split (.aitri.local) merged when present, tolerated when absent",
+      "disposition": "FR-042"
+    },
+    {
+      "need": "Contained layout (layoutRoot) supported in directory scan",
+      "disposition": "FR-043"
+    },
+    {
+      "need": "Contained layout supported in fallback artifact/feature path resolution",
+      "disposition": "FR-043"
+    },
+    {
+      "need": "Corrupt BUGS.json distinguishable from zero bugs (snapshot bugs.parseErrors + fallback equivalent)",
+      "disposition": "FR-044"
+    },
+    {
+      "need": "Unbound test results (resultsBinding) surfaced as indicator",
+      "disposition": "FR-045"
+    },
+    {
+      "need": "quality_gates results carried through the snapshot projection for future views",
+      "disposition": "FR-047"
+    },
+    {
+      "need": "ac_coverage and coverage-audit freshness fields carried through the snapshot projection (data layer can read them)",
+      "disposition": "FR-047"
+    },
+    {
+      "need": "validate --json read by the data layer",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "Review baseline records full pre-release version; review command validates input",
+      "disposition": "FR-046"
+    },
+    {
+      "need": "Actual review of integration CHANGELOG rc.1→rc.159 (9 breaking entries) performed and recorded",
+      "disposition": "FR-046"
+    },
+    {
+      "need": "Fossil baselines (FALLBACK_BASELINE, snapshot floor) compared with pre-release-aware comparator",
+      "disposition": "FR-046"
+    },
+    {
+      "need": "validate --json / coverage_map / ac_coverage full rendering",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "New UI views for QA roles",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "Snapshot-first collection order preserved",
+      "disposition": "NFR-040"
+    },
+    {
+      "need": "Legacy project rendering unchanged",
+      "disposition": "NFR-041"
+    },
+    {
+      "need": "Admin API and registry CRUD unchanged",
+      "disposition": "NFR-042"
+    },
+    {
+      "need": "Remote sync behavior unchanged",
+      "disposition": "NFR-043"
+    },
+    {
+      "need": "dashboard.json shape stays additive for the SPA",
+      "disposition": "NFR-044"
+    },
+    {
+      "need": "Path fields from untrusted .aitri confined to project root",
+      "disposition": "NFR-045"
+    }
+  ],
+  "original_brief": "## Feature\nBring the Hub's Aitri-integration layer (collectors, readers, version logic, compat\nmanifest) up to the Aitri v2.0.0-rc.159 contract.\n\n## Problem / Why\nThe Hub's readers were last reviewed at the 2.0.0-alpha.3 era (compat manifest,\n2026-04-24). Since then Aitri Core published ~60 integration-contract entries, 9 of\nthem breaking. Concretely verified in the code (2026-07-05):\n\n1. **Pre-release semver truncated** — the integration-layer version regexes accept\n   stable `X.Y.Z` only and silently drop `-rc.N`/`-alpha.N`, so `2.0.0-rc.159` reads\n   as `2.0.0`. Version compare, the snapshot eligibility gate, and the review\n   baseline all miscompute against the rc channel the ecosystem actually runs.\n   (Already a P2 in BACKLOG.md.)\n2. **Fallback readers use pre-rc.41 artifact names** — `aitri-reader.js` ARTIFACT_MAP\n   and the compliance reader read `04_IMPLEMENTATION_MANIFEST.json` /\n   `05_PROOF_OF_COMPLIANCE.json`; renamed rc.41 to `04_BUILD_REPORT.json` /\n   `05_TRACEABILITY.json`. The fallback path exists to serve OLD CLIs, so readers\n   must accept both names (new first, old fallback), not just swap.\n3. **`.aitri`/`.aitri.local` split (rc.51) not modeled** — per-machine fields\n   (`lastSession`, `reconcileState`, `sessionContext`) moved to gitignored\n   `.aitri.local`; the fallback reader reads them from `.aitri` only. Remote clones\n   never have `.aitri.local`; readers must merge when present, tolerate absence.\n4. **Contained layout (rc.76 `layoutRoot`) unhandled** — directory scan and fallback\n   readers assume the flat layout.\n5. **New machine surfaces not consumed** — `status --json` `bugs.parseErrors`\n   (corrupt BUGS.json currently indistinguishable from zero bugs), `resultsBinding`\n   (results not bound to a real verify run), `quality_gates` results;\n   `validate --json` now has a contract doc (VALIDATE_JSON.md).\n6. **Baselines are fossils** — `reviewedUpTo` at alpha.3 era, `FALLBACK_BASELINE\n   '0.1.80'`, snapshot floor `'0.1.77'` — all predating the 2.0.0-rc channel.\n\nEvery future Hub view (QA Workspace, overview restyle — see\n`idea_context/UI_UX_SPEC_V2.md`) reads through this layer; it must be correct first.\n\n## Target Users\nExisting Hub users (the QA/PM/PO/BA roles monitoring Aitri projects) on projects\nmanaged with current Aitri (2.0.0-rc channel). Also protects users with legacy\n0.1.x projects, which the fallback path must keep serving.\n\n## New Behavior\n- The system must parse and compare full semver including pre-release tags\n  (`2.0.0-rc.159` > `2.0.0-rc.15` > `2.0.0-alpha.3`; numeric rc/alpha ordering, not\n  lexicographic) everywhere a version is compared or displayed.\n- The system must read `04_BUILD_REPORT.json` and `05_TRACEABILITY.json` in the\n  fallback path, falling back to the pre-rc.41 names when the new names are absent.\n- The system must merge `.aitri.local` into the fallback state view when the file\n  exists and degrade gracefully (no error, fields absent) when it does not.\n- The system must discover and read projects using the contained layout\n  (`.aitri#layoutRoot`) in both the directory scan and the fallback readers.\n- The system must surface `bugs.parseErrors` from `status --json` as a per-project\n  warning (corrupt BUGS.json must be distinguishable from zero bugs).\n- The system must surface `resultsBinding` absence/staleness as a per-project\n  indicator when the snapshot provides it.\n- The system must record the integration review baseline as a full pre-release\n  version (e.g. `2.0.0-rc.159`) in `integration-compat.json`, and the review of the\n  rc.1→rc.159 CHANGELOG (including its 9 breaking entries) must be performed and\n  recorded as part of this feature.\n\n## Success Criteria\n- Given a project on Aitri 2.0.0-rc.159, when the Hub collects it via the snapshot\n  path, then version displays/compares show the full rc tag and no spurious\n  version-mismatch or integration alerts fire after `integration review 2.0.0-rc.159`.\n- Given a legacy project (pre-rc.41 artifact names, old CLI), when collected via\n  the fallback path, then pipeline/tests/compliance/drift render exactly as before\n  (no regression).\n- Given a post-rc.41 project WITHOUT a working `aitri` CLI (fallback path), when\n  collected, then compliance and drift read the new artifact names correctly.\n- Given a project whose BUGS.json is corrupt, when collected, then the dashboard\n  shows a parse-error warning, not \"0 bugs\".\n- Given a remote (GitHub) project with no `.aitri.local`, when collected, then no\n  error and no fabricated lastSession appears.\n\n## Touch Points\nModifies existing modules (no new commands): `lib/collector/aitri-reader.js`\n(ARTIFACT_MAP, state fields), `lib/collector/compliance-reader.js`,\n`lib/collector/snapshot-reader.js` (projection of new fields),\n`lib/collector/index.js` (eligibility gate), `lib/utils/scan.js` (contained layout),\n`lib/integration/` version regexes + `lib/store/compat-manifest.js` +\n`lib/constants.js` (baselines), `lib/alerts/engine.js` (new alert rules),\n`web/src` ProjectCard/alert surfaces for the two new indicators (display only —\n[ASSUMPTION] minimal display of parseErrors/resultsBinding belongs here rather than\nwaiting for the UI layers, because invisible data has no consumer; confirmed\ndirection with owner 2026-07-05, exact placement is implementer's call).\n\n## Must Not Break (Regression Boundary)\n- Snapshot-first collection: a snapshot-eligible project must still be collected\n  via `aitri status --json`, never demoted to fallback (FR-017 semantics).\n- Legacy fallback rendering: a pre-rc.41 project renders pipeline, tests, bugs,\n  compliance, and drift identically to today.\n- Localhost-only admin API and project registry CRUD keep working unchanged.\n- Remote project sync (clone/pull cache, poller backoff) keeps working unchanged.\n- Dashboard write cycle: `dashboard.json` keeps its shape — all additions to the\n  Hub's own output are additive (Hub has its own downstream consumer: the SPA).\n\n## Out of Scope\n- All new UI views (overview restyle, QA Workspace tabs) — Layers 1–2, separate\n  features per `idea_context/UI_UX_SPEC_V2.md`.\n- GitHub API metrics (velocity/PRs), dependency scanning, runtime monitoring — cut\n  from v1 by owner decision (2026-07-05).\n- `coverage_map`/`ac_coverage`/`validate --json` full rendering — consumed by the\n  QA Workspace feature; this feature only ensures the data layer can read them.\n"
+}

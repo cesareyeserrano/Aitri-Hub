@@ -1,0 +1,9 @@
+{
+  "functional_requirements": [
+    {
+      "id": "FR-001",
+      "title": "Legacy FR",
+      "priority": "MUST"
+    }
+  ]
+}

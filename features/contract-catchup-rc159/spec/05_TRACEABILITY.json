@@ -1,0 +1,132 @@
+{
+  "project": "aitri-hub",
+  "feature_id": "contract-catchup-rc159",
+  "version": "0.2.0",
+  "phases_completed": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "completed_at": "2026-07-06",
+  "summary": "Brought the Hub's Aitri-integration layer to the v2.0.0-rc.159 contract. New zero-dep semver SSoT (lib/utils/semver.js) replaced five stable-only parse sites that truncated pre-release tags; fallback readers learned the rc.41 artifact names via a legacy-alias resolver; the rc.51 .aitri.local split and rc.76 contained layout (layoutRoot confined to the project root) are modeled; bugs.parseErrors and resultsBinding from the snapshot are carried, alerted (2 new warning rules) and rendered inline (BugBadge '?' state, results-unbound card line); integration review stores full pre-release baselines and the rc.1->rc.159 CHANGELOG review was performed and recorded (reviewedUpTo 2.0.0-rc.159).",
+  "overall_status": "partial",
+  "overall_status_rationale": "All 7 MUST FRs and all 5 Regression NFRs + Security NFR covered by passing tests (39/42: 36 automated unit/integration + 2 e2e + 1 verified manual; 3 skipped are FR-047's). FR-047 (SHOULD) carries declared technical debt — aitri status --json does not expose quality_gates/ac_coverage as of rc.159, so the passthrough is deferred to the filed Core feedback (HUB-CATCHUP-0705). Per the derivation rule (a MUST-clean build with declared debt on a SHOULD FR), overall status is 'partial', honestly: nothing MUST is missing.",
+  "requirement_compliance": [
+    {
+      "id": "FR-040",
+      "title": "Full semver parse and compare including pre-release tags",
+      "level": "production_ready",
+      "evidence": "lib/utils/semver.js parseSemver/compareSemver/gteSemver (semver.org §11 precedence; junk input throws at compare, gated at parse); all five call-sites migrated (aitri-version-reader full-tag regex, integration-guard, collector eligibility, compat-manifest gate, alerts engine). TC-040h/e/f pass in tests/unit/semver.test.js; 'truncation stays dead' pinned in tests/integration/integration-review-prerelease.test.js (rc.15 vs rc.159 no false alert)."
+    },
+    {
+      "id": "FR-041",
+      "title": "Fallback readers accept post-rc.41 artifact names with pre-rc.41 fallback",
+      "level": "production_ready",
+      "evidence": "resolveArtifact + LEGACY_ALIASES in lib/collector/aitri-reader.js; ARTIFACT_MAP on canonical names; compliance-reader routes through the resolver; drift hashes resolve through the alias. TC-041h/e/f pass; legacy parity held by the committed golden fixture (TC-141h/e, mutation-detection TC-141f)."
+    },
+    {
+      "id": "FR-042",
+      "title": "Fallback state reader merges .aitri.local when present, tolerates absence",
+      "level": "complete",
+      "evidence": "readAitriState merges lastSession/reconcileState/sessionContext from .aitri.local (absent: silent; malformed: one warning, shared view returned); snapshot path reads own-machine .aitri.local inline for lastSession. TC-042h/e/f pass in tests/unit/aitri-local.test.js. Level 'complete' not 'production_ready': deliberate documented deviation from SCHEMA.md's guidance (scoped exception recorded in Core commit 0acd079); retiring the inline read awaits Core exposing lastSession on status --json (HUB-CATCHUP-0705)."
+    },
+    {
+      "id": "FR-043",
+      "title": "Contained-layout (layoutRoot) projects are discovered and read",
+      "level": "production_ready",
+      "evidence": "layoutBase confinement (absolute//../ /symlink escapes rejected via deepest-existing-ancestor realpath; projectDir normalized); artifactsDir stays project-root-relative per SCHEMA.md (adversarial pass corrected the double-prefix misreading pre-commit); features read under <layoutRoot>/features. TC-043h/e/f + TC-145h/e/f pass."
+    },
+    {
+      "id": "FR-044",
+      "title": "Corrupt BUGS.json is visibly distinguished from zero bugs",
+      "level": "production_ready",
+      "evidence": "Snapshot projection carries bugs.parseErrors; fallback bugs-reader returns the parse-error marker on bad syntax AND non-contract shape; BUGS_PARSE_ERROR warning rule; BugBadge unknown '?' pill. TC-044h/e/f pass (unit) + TC-044h-ui/TC-044e-ui pass (vitest)."
+    },
+    {
+      "id": "FR-045",
+      "title": "Unbound test results are surfaced as an indicator",
+      "level": "production_ready",
+      "evidence": "projectFromSnapshot carries resultsBinding under a strict enum whitelist (absent ≠ unbound; garbage dropped); RESULTS_UNBOUND warning rule with 'aitri verify-run' command; ProjectCard results-unbound line. TC-045h/e/f pass (unit) + TC-045h-ui/TC-045e-ui pass (vitest); 'bound' inertness pinned in tests/integration/snapshot-first.test.js."
+    },
+    {
+      "id": "FR-046",
+      "title": "Integration review baseline records full pre-release versions; rc.1->rc.159 review performed",
+      "level": "production_ready",
+      "evidence": "integration review validates with parseSemver BEFORE any write (invalid input leaves the manifest byte-identical), stores the raw full tag; guard compares with compareSemver. TC-046h/e/f pass. Ritual executed for real: ~/.aitri-hub/integration-compat.json now reviewedUpTo '2.0.0-rc.159' with the 9 breaking entries dispositioned in reviewerNote."
+    },
+    {
+      "id": "FR-047",
+      "title": "Snapshot projection preserves quality-gate and coverage surfaces for downstream views",
+      "level": "functionally_present",
+      "evidence": "NOT implemented as specified — declared technical debt in 04_BUILD_REPORT.json: aitri status --json exposes neither quality_gates results nor ac_coverage as of v2.0.0-rc.159 (verified against Core lib/snapshot.js + STATUS_JSON.md). The two surfaces the snapshot DOES provide (resultsBinding, bugs.parseErrors) are fully carried (FR-044/FR-045). TC-047h/e/f recorded as skipped. Completes when Core ships the additive surface (feedback filed, HUB-CATCHUP-0705); SHOULD priority — does not gate deployment."
+    },
+    {
+      "id": "NFR-040",
+      "title": "Snapshot-first collection never demoted",
+      "level": "production_ready",
+      "evidence": "tests/integration/snapshot-first.test.js: disagreeing-sources fixture proves an eligible project renders from the stub snapshot, never from disk (TC-140h); snapshot failure degrades visibly with fallback fill-in per FR-017 (TC-140f); eligibility floor semantics under the new comparator pinned (TC-140e)."
+    },
+    {
+      "id": "NFR-041",
+      "title": "Legacy fallback rendering unchanged",
+      "level": "production_ready",
+      "evidence": "Committed golden fixture (pre-rc.41 flat project + record captured with PRE-change readers): subset-equality on all golden keys passes (TC-141h), feature subdirs equal (TC-141e), and the comparison provably detects a mutation (TC-141f)."
+    },
+    {
+      "id": "NFR-042",
+      "title": "Admin API and registry CRUD unchanged",
+      "level": "production_ready",
+      "evidence": "Pre-existing admin-api e2e suite passes with unmodified assertions; TC-142h/e id-mapped wrappers pass in the same file (same-worker placement after a real cross-file race was caught by verify-run); TC-142f verified manually with cited code evidence (remoteAddress guard, lib/commands/web.js:118-124 — unreachable from a loopback harness)."
+    },
+    {
+      "id": "NFR-043",
+      "title": "Remote sync unchanged",
+      "level": "production_ready",
+      "evidence": "tests/integration/remote-sync-143.test.js: real clone->pull cycle against a local bare repo (TC-143h), poller throttle-skip (TC-143e) and 429 backoff (TC-143f) pinned via the test-only state injector — both decision paths return before any network call."
+    },
+    {
+      "id": "NFR-044",
+      "title": "dashboard.json stays additive",
+      "level": "production_ready",
+      "evidence": "TC-144h/e pass (type-inventory equality on an unchanged snapshot; new keys appear only with data) and TC-144f proves the type-diff guard detects a number->string break. All new fields are presence-guarded additions."
+    },
+    {
+      "id": "NFR-045",
+      "title": "Path confinement for .aitri-declared fields",
+      "level": "production_ready",
+      "evidence": "TC-145h/e/f pass: safe relative accepted, dangling dir no-throw, absolute + ../ + symlink-escape all rejected with warnings and zero reads outside the project root (fs instrumentation via mocked console.warn + tmpdir symlink fixtures)."
+    },
+    {
+      "id": "NFR-046",
+      "title": "CI runs the full suite on push",
+      "level": "functionally_present",
+      "evidence": "Existing .github/workflows CI runs the declared suites on push; the new test files are picked up by the existing globs (tests/unit/*.test.js, tests/integration/*.test.js, playwright testDir). Not TC-covered by design — the observable lives in the CI system (recorded in the test plan strategy)."
+    }
+  ],
+  "deployment": {
+    "model": "unchanged — local Node CLI (aitri-hub web) serving the prebuilt SPA; Docker path optional and unaffected",
+    "steps": [
+      "npm --prefix web run build   # rebuild the SPA bundle into docker/web-dist (required: bundle predates this feature)",
+      "restart `aitri-hub web`      # collector changes load on process start"
+    ],
+    "environment_variables": [
+      {
+        "name": "AITRI_HUB_DIR",
+        "type": "string (path)",
+        "required": false,
+        "example": "~/.aitri-hub",
+        "notes": "pre-existing; unchanged"
+      },
+      {
+        "name": "AITRI_HUB_PORT",
+        "type": "number",
+        "required": false,
+        "example": "3000",
+        "notes": "pre-existing; unchanged"
+      }
+    ],
+    "notes": "No new env vars, no new endpoints, no schema migration of ~/.aitri-hub state (integration-compat.json reviewedUpTo now carries a pre-release tag — an opaque string to old readers)."
+  }
+}

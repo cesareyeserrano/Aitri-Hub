@@ -13,6 +13,32 @@ import React from 'react';
  * @returns {JSX.Element | null}
  */
 export default function BugBadge({ bugsSummary }) {
+  // Unknown state (FR-044): BUGS.json exists but is unreadable — its bugs are
+  // NOT counted, so a zero count proves nothing. Warning '?' pill, not silence.
+  const parseErrors = bugsSummary?.parseErrors;
+  if (Array.isArray(parseErrors) && parseErrors.length > 0) {
+    return (
+      <span
+        className="bug-badge bug-badge-unknown"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '3px',
+          fontSize: '10px',
+          fontFamily: 'var(--font-mono)',
+          color: 'var(--syn-yellow)',
+          border: '1px solid var(--syn-yellow)',
+          borderRadius: '3px',
+          padding: '1px 5px',
+          whiteSpace: 'nowrap',
+        }}
+        title={`BUGS.json unreadable in ${parseErrors.join(', ')} — bugs are NOT counted`}
+      >
+        ? bugs
+      </span>
+    );
+  }
+
   if (!bugsSummary || bugsSummary.open === 0) return null;
 
   const { open, critical, high } = bugsSummary;

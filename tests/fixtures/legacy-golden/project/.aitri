@@ -1,0 +1,52 @@
+{
+  "projectName": "legacy-golden",
+  "currentPhase": 5,
+  "approvedPhases": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "completedPhases": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "verifyPassed": true,
+  "verifySummary": {
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "total": 3
+  },
+  "artifactsDir": "spec",
+  "aitriVersion": "0.1.63",
+  "createdAt": "2026-04-01T00:00:00.000Z",
+  "updatedAt": "2026-04-02T00:00:00.000Z",
+  "artifactHashes": {
+    "1": "197990bffcf00506a63412ff9abb82a6ea6ffb1ee8ef2c2af17a16a1369bc466",
+    "2": "1f5ecb0469e1c4f89e1106135c076ea4961fc169b327e97074721de11eb5551f",
+    "3": "2d4dec421cf7d241f7bc540c6c9c8c777455da5a93193be06fdd0b9bd3b1ae65",
+    "4": "9855485845a0cbdb1c89695a5c19bd91ab24c972e7c4b07b386ad6478dfff8fe",
+    "5": "cccd0daf0ea4c7f106936736acf928b840a18e7af48085fd52f2903e62548f2b"
+  },
+  "rejections": {},
+  "lastSession": {
+    "at": "2026-04-02T00:00:00.000Z",
+    "agent": "cli",
+    "event": "verify-run",
+    "files_touched": [
+      "src/app.js"
+    ]
+  },
+  "events": [
+    {
+      "phase": 5,
+      "event": "approved",
+      "at": "2026-04-02T00:00:00.000Z"
+    }
+  ]
+}

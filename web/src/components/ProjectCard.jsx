@@ -330,7 +330,11 @@ function QualitySection({ project }) {
     aggregatedTcTotal,
     health,
     audit,
+    resultsBinding,
   } = project;
+  // FR-045: results not bound to a real verify run — evidence proves nothing.
+  const resultsUnbound =
+    resultsBinding === 'mismatch' || resultsBinding === 'no-stamp' || resultsBinding === 'missing-file';
   // Prefer the CLI's canonical aggregate (tests.totals) — both numerator and
   // denominator from the same source. Fall back to the legacy path (main
   // pipeline numerator, recomputed aggregate denominator) only for snapshots
@@ -367,6 +371,16 @@ function QualitySection({ project }) {
           {tests.ok === false && (
             <span data-testid="blocking-badge" className="blocking-badge">
               {tests.failed} failing
+            </span>
+          )}
+          {resultsUnbound && (
+            <span
+              className="severity-warn"
+              data-testid="results-unbound-indicator"
+              style={{ marginLeft: '8px', fontSize: '11px' }}
+              title={`run-binding: ${resultsBinding}`}
+            >
+              results not bound to a verify run
             </span>
           )}
           <StalenessIndicators staleVerify={health?.staleVerify} audit={audit} />

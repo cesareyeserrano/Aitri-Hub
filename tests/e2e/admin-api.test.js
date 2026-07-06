@@ -342,3 +342,44 @@ test('TC-e2eFolderEmpty: folder with no valid children produces no cards', async
     fs.rmSync(workspace, { recursive: true, force: true });
   }
 });
+
+// ── NFR-042 regression wrappers (contract-catchup-rc159) ─────────────────────
+// Same-file placement is deliberate: this suite and these wrappers mutate the
+// same projects.json, and Playwright parallelizes across FILES — a separate
+// file raced this one's beforeEach (TC-142e failed only under the full run).
+
+test('TC-142h: admin CRUD over loopback unchanged — POST then GET lists the project', async ({
+  request,
+}) => {
+  const res = await request.post(`${BASE}/api/projects`, {
+    data: { name: 'p1-142', type: 'local', location: os.tmpdir() },
+    headers: { 'Content-Type': 'application/json' },
+  });
+  expect([200, 201]).toContain(res.status());
+
+  const list = await request.get(`${BASE}/api/projects`);
+  expect(list.status()).toBe(200);
+  const body = await list.json();
+  expect(body.projects.some(p => p.name === 'p1-142')).toBe(true);
+});
+
+test('TC-142e: PUT and DELETE lifecycle unchanged', async ({ request }) => {
+  const created = await request.post(`${BASE}/api/projects`, {
+    data: { name: 'p1-142e', type: 'local', location: os.tmpdir() },
+    headers: { 'Content-Type': 'application/json' },
+  });
+  const { project } = await created.json();
+
+  const updated = await request.put(`${BASE}/api/projects/${project.id}`, {
+    data: { name: 'p2-142e' },
+    headers: { 'Content-Type': 'application/json' },
+  });
+  expect(updated.status()).toBe(200);
+  expect((await updated.json()).project.name).toBe('p2-142e');
+
+  const removed = await request.delete(`${BASE}/api/projects/${project.id}`);
+  expect(removed.status()).toBe(204); // API's existing contract: DELETE → 204 No Content
+
+  const list = await request.get(`${BASE}/api/projects`);
+  expect((await list.json()).projects.some(p => p.id === project.id)).toBe(false);
+});

@@ -1,0 +1,10 @@
+{
+  "bugs": [
+    {
+      "id": "BUG-001",
+      "title": "old bug",
+      "severity": "low",
+      "status": "closed"
+    }
+  ]
+}

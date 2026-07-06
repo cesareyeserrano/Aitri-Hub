@@ -1,0 +1,9 @@
+{
+  "overall_status": "partial",
+  "requirement_compliance": [
+    {
+      "requirement_id": "FR-001",
+      "level": "partial"
+    }
+  ]
+}

@@ -77,10 +77,15 @@ describe('TC-017e: readBugsSummary — malformed BUGS.json', () => {
   });
   after(() => fs.rmSync(dir, { recursive: true, force: true }));
 
-  it('TC-017e: returns null without throwing', () => {
+  it('TC-017e: returns a parse-error summary without throwing (FR-044 supersedes null)', () => {
     // @aitri-tc TC-017e
+    // Pre-rc.159 behavior returned null — indistinguishable from "no bugs".
+    // FR-044 (contract-catchup-rc159) requires a corrupt BUGS.json to be
+    // visibly distinct: zeroed counters + parseErrors naming the scope.
     const result = readBugsSummary(dir, '');
-    assert.equal(result, null);
+    assert.notEqual(result, null);
+    assert.deepEqual(result.parseErrors, ['root']);
+    assert.equal(result.open, 0);
   });
 });
 

@@ -1,0 +1,443 @@
+{
+  "executed_at": "2026-07-06T12:48:27.793Z",
+  "test_runner": "node --test ../../tests/unit/semver.test.js ../../tests/unit/artifact-resolver.test.js ../../tests/unit/layout-base.test.js ../../tests/unit/aitri-local.test.js ../../tests/unit/parse-errors-binding.test.js ../../tests/unit/bugs-reader.test.js ../../tests/integration/legacy-golden.test.js ../../tests/integration/integration-review-prerelease.test.js ../../tests/integration/snapshot-first.test.js ../../tests/integration/remote-sync-143.test.js",
+  "exit_code": 0,
+  "results": [
+    {
+      "tc_id": "TC-040h",
+      "status": "pass",
+      "notes": "✔ TC-040h: compareSemver — rc counters compare numerically (2.875666ms)"
+    },
+    {
+      "tc_id": "TC-040e",
+      "status": "pass",
+      "notes": "✔ TC-040e: compareSemver — pre-release precedence vs stable and across tags (0.854708ms)"
+    },
+    {
+      "tc_id": "TC-040f",
+      "status": "pass",
+      "notes": "✔ TC-040f: junk input is rejected, caller degrades (0.688ms)"
+    },
+    {
+      "tc_id": "TC-041h",
+      "status": "pass",
+      "notes": "✔ TC-041h: fallback reads rc.41 names without aitri CLI (2.46775ms)"
+    },
+    {
+      "tc_id": "TC-041e",
+      "status": "pass",
+      "notes": "✔ TC-041e: resolveArtifact — both names present → new name wins (4.99475ms)"
+    },
+    {
+      "tc_id": "TC-041f",
+      "status": "pass",
+      "notes": "✔ TC-041f: resolveArtifact — neither name present degrades as today (3.066125ms)"
+    },
+    {
+      "tc_id": "TC-042h",
+      "status": "pass",
+      "notes": "✔ TC-042h: lastSession read from .aitri.local (4.159209ms)"
+    },
+    {
+      "tc_id": "TC-042e",
+      "status": "pass",
+      "notes": "✔ TC-042e: remote clone without .aitri.local (6.386125ms)"
+    },
+    {
+      "tc_id": "TC-042f",
+      "status": "pass",
+      "notes": "✔ TC-042f: malformed .aitri.local ignored with warning (4.961041ms)"
+    },
+    {
+      "tc_id": "TC-043h",
+      "status": "pass",
+      "notes": "✔ TC-043h: contained-layout project read end-to-end (fallback) (2.677ms)"
+    },
+    {
+      "tc_id": "TC-043e",
+      "status": "pass",
+      "notes": "✔ TC-043e: flat project — layoutBase returns dir unchanged (1.806583ms)"
+    },
+    {
+      "tc_id": "TC-043f",
+      "status": "pass",
+      "notes": "✔ TC-043f: hostile layoutRoot rejected before any read (1.163459ms)"
+    },
+    {
+      "tc_id": "TC-044h",
+      "status": "pass",
+      "notes": "✔ TC-044h: snapshot bugs.parseErrors → warning alert + carried field (94.292917ms)"
+    },
+    {
+      "tc_id": "TC-044e",
+      "status": "pass",
+      "notes": "✔ TC-044e: empty parseErrors adds no noise (2.497791ms)"
+    },
+    {
+      "tc_id": "TC-044f",
+      "status": "pass",
+      "notes": "✔ TC-044f: fallback flags corrupt BUGS.json (syntax AND shape) (3.73075ms)"
+    },
+    {
+      "tc_id": "TC-045h",
+      "status": "pass",
+      "notes": "✔ TC-045h: unbound results → warning indicator (0.668416ms)"
+    },
+    {
+      "tc_id": "TC-045e",
+      "status": "pass",
+      "notes": "✔ TC-045e: older CLI without resultsBinding → nothing added (0.25775ms)"
+    },
+    {
+      "tc_id": "TC-045f",
+      "status": "pass",
+      "notes": "✔ TC-045f: malformed resultsBinding shape degrades to absent (0.356417ms)"
+    },
+    {
+      "tc_id": "TC-046h",
+      "status": "pass",
+      "notes": "✔ TC-046h: review stores the full rc tag and silences the banner (109.198416ms)"
+    },
+    {
+      "tc_id": "TC-046e",
+      "status": "pass",
+      "notes": "✔ TC-046e: a newer unreviewed pre-release re-raises the banner (0.839625ms)"
+    },
+    {
+      "tc_id": "TC-046f",
+      "status": "pass",
+      "notes": "✔ TC-046f: review rejects an unparseable version, manifest untouched (0.77875ms)"
+    },
+    {
+      "tc_id": "TC-047h",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-047h\" so it appears on stdout (e.g. test_TC_047h_description, # @aitri-tc TC-047h); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-047h --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-047e",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-047e\" so it appears on stdout (e.g. test_TC_047e_description, # @aitri-tc TC-047e); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-047e --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-047f",
+      "status": "skip",
+      "notes": "Not detected in runner output. Make the result readable one of three ways: (1) name the test after \"TC-047f\" so it appears on stdout (e.g. test_TC_047f_description, # @aitri-tc TC-047f); (2) if the runner writes a results FILE, point aitri at it: verify-run --results <file|dir> (JUnit-XML — emitted by most runners — or TRX); (3) record it against evidence: tc verify TC-047f --result pass|fail --evidence <path>. E2E tests may also require a browser environment."
+    },
+    {
+      "tc_id": "TC-140h",
+      "status": "pass",
+      "notes": "✔ TC-140h: eligible project collected via snapshot only (376.664416ms)"
+    },
+    {
+      "tc_id": "TC-140e",
+      "status": "pass",
+      "notes": "✔ TC-140e: snapshot-eligibility floor under the new comparator (9.089709ms)"
+    },
+    {
+      "tc_id": "TC-140f",
+      "status": "pass",
+      "notes": "✔ TC-140f: snapshot failure degrades visibly; fallback fills in (23.20175ms)"
+    },
+    {
+      "tc_id": "TC-141h",
+      "status": "pass",
+      "notes": "✔ TC-141h: legacy golden fixture — record equality (subset on golden keys) (10.661958ms)"
+    },
+    {
+      "tc_id": "TC-141e",
+      "status": "pass",
+      "notes": "✔ TC-141e: legacy fixture feature subdirs stay equal (0.964292ms)"
+    },
+    {
+      "tc_id": "TC-141f",
+      "status": "pass",
+      "notes": "✔ TC-141f: the golden comparison detects a real change (1.881375ms)"
+    },
+    {
+      "tc_id": "TC-142h",
+      "status": "pass",
+      "notes": "✓  44 [api] › tests/e2e/admin-api.test.js:351:1 › TC-142h: admin CRUD over loopback unchanged — POST then GET lists the project (8ms)"
+    },
+    {
+      "tc_id": "TC-142e",
+      "status": "pass",
+      "notes": "✓  45 [api] › tests/e2e/admin-api.test.js:366:1 › TC-142e: PUT and DELETE lifecycle unchanged (8ms)"
+    },
+    {
+      "tc_id": "TC-142f",
+      "status": "pass",
+      "notes": "Code inspection lib/commands/web.js:118-124 - guard rejects any req.socket.remoteAddress outside {127.0.0.1, ::1, ::ffff:127.0.0.1} with 403; server binds 127.0.0.1 only. A loopback e2e harness cannot present a non-loopback source address; control verified at source. File untouched by this feature.",
+      "verified_manually": true,
+      "verified_at": "2026-07-06T12:48:56.536Z",
+      "evidence": "../../lib/commands/web.js"
+    },
+    {
+      "tc_id": "TC-143h",
+      "status": "pass",
+      "notes": "✔ TC-143h: remote clone/pull cycle unchanged (894.648875ms)"
+    },
+    {
+      "tc_id": "TC-143e",
+      "status": "pass",
+      "notes": "✔ TC-143e: poller skip — no pull when checked too recently (1.046375ms)"
+    },
+    {
+      "tc_id": "TC-143f",
+      "status": "pass",
+      "notes": "✔ TC-143f: 429 backoff preserved — no retry inside the window (0.298375ms)"
+    },
+    {
+      "tc_id": "TC-144h",
+      "status": "pass",
+      "notes": "✔ TC-144h: projection additivity on an unchanged snapshot (0.403666ms)"
+    },
+    {
+      "tc_id": "TC-144e",
+      "status": "pass",
+      "notes": "✔ TC-144e: no new keys appear without data (0.195375ms)"
+    },
+    {
+      "tc_id": "TC-144f",
+      "status": "pass",
+      "notes": "✔ TC-144f: the type-diff guard detects a real break (0.146458ms)"
+    },
+    {
+      "tc_id": "TC-145h",
+      "status": "pass",
+      "notes": "✔ TC-145h: safe relative layoutRoot accepted (6.266875ms)"
+    },
+    {
+      "tc_id": "TC-145e",
+      "status": "pass",
+      "notes": "✔ TC-145e: dangling layoutRoot does not throw (0.769208ms)"
+    },
+    {
+      "tc_id": "TC-145f",
+      "status": "pass",
+      "notes": "✔ TC-145f: absolute and symlink escapes rejected (NFR-045 trio) (3.116ms)"
+    }
+  ],
+  "fr_coverage": [
+    {
+      "fr_id": "FR-040",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-041",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-042",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-043",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-044",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-045",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-046",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-047",
+      "tests_passing": 0,
+      "tests_failing": 0,
+      "tests_skipped": 3,
+      "tests_manual": 0,
+      "status": "partial"
+    }
+  ],
+  "ac_coverage": [
+    {
+      "ac_id": "AC-0401",
+      "fr_id": "FR-040",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0402",
+      "fr_id": "FR-040",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0411",
+      "fr_id": "FR-041",
+      "tests_passing": 8,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0412",
+      "fr_id": "FR-041",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0421",
+      "fr_id": "FR-042",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0422",
+      "fr_id": "FR-042",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0431",
+      "fr_id": "FR-043",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0432",
+      "fr_id": "FR-043",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0441",
+      "fr_id": "FR-044",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0442",
+      "fr_id": "FR-044",
+      "tests_passing": 4,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0451",
+      "fr_id": "FR-045",
+      "tests_passing": 2,
+      "tests_failing": 0,
+      "tests_skipped": 1,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0452",
+      "fr_id": "FR-045",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 2,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0461",
+      "fr_id": "FR-046",
+      "tests_passing": 5,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "ac_id": "AC-0462",
+      "fr_id": "FR-046",
+      "tests_passing": 1,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    }
+  ],
+  "summary": {
+    "total": 42,
+    "passed": 39,
+    "failed": 0,
+    "skipped": 3,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 3,
+    "manual": 0,
+    "manual_verified": 1
+  },
+  "low_confidence_tcs": [],
+  "quality_gates": [
+    {
+      "name": "lint",
+      "command": "npm --prefix ../.. run lint",
+      "required": true,
+      "status": "pass",
+      "exit_code": 0,
+      "output": "/web/src/__tests__/IntegrationAlertBanner.test.jsx\n  6:10  warning  'describe' is defined but never used. Allowed unused vars must match /^_/u  no-unused-vars\n\n/Users/cesareyeserrano/Documents/PROJECTS/AITRI-HUB/web/src/components/Header.jsx\n  51:3  warning  'projects' is assigned a value but never used. Allowed unused args must match /^_/u  no-unused-vars\n\n/Users/cesareyeserrano/Documents/PROJECTS/AITRI-HUB/web/src/components/ProjectCard.jsx\n  540:5  warning  'audit' is assigned a value but never used. Allowed unused vars must match /^_/u  no-unused-vars\n\n✖ 14 problems (0 errors, 14 warnings)"
+    },
+    {
+      "name": "web-tests",
+      "command": "npm --prefix ../.. run test:web",
+      "required": true,
+      "status": "pass",
+      "exit_code": 0,
+      "output": "0s (transform 308ms, setup 379ms, import 633ms, tests 467ms, environment 3.10s)\n\n\n7:48:26 AM [vite] warning: `esbuild` option was specified by \"vite:react-babel\" plugin. This option is deprecated, please use `oxc` instead.\n7:48:26 AM [vite] warning: `optimizeDeps.esbuildOptions` option was specified by \"vite:react-babel\" plugin. This option is deprecated, please use `optimizeDeps.rolldownOptions` instead.\nBoth esbuild and oxc options were set. oxc options will be used and esbuild options will be ignored. The following esbuild options were set: `{ jsx: 'automatic', jsxImportSource: undefined }`"
+    }
+  ]
+}

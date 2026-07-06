@@ -1,0 +1,6 @@
+{
+  "files_created": [
+    "src/app.js"
+  ],
+  "test_runner": "node --test"
+}

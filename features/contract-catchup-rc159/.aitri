@@ -1,0 +1,210 @@
+{
+  "currentPhase": 5,
+  "approvedPhases": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "completedPhases": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "projectName": "contract-catchup-rc159",
+  "createdAt": "2026-07-05T20:28:40.780Z",
+  "artifactsDir": "spec",
+  "updatedAt": "2026-07-06T12:59:18.509Z",
+  "driftPhases": [],
+  "events": [
+    {
+      "at": "2026-07-06T03:25:06.431Z",
+      "event": "completed",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-06T03:26:03.082Z",
+      "event": "approved",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-06T03:26:29.364Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 31,
+      "failed": 0,
+      "skipped": 11,
+      "manual": 0
+    },
+    {
+      "at": "2026-07-06T03:27:41.424Z",
+      "event": "completed",
+      "phase": 3
+    },
+    {
+      "at": "2026-07-06T03:28:29.109Z",
+      "event": "completed",
+      "phase": 3
+    },
+    {
+      "at": "2026-07-06T12:40:23.784Z",
+      "event": "approved",
+      "phase": 3
+    },
+    {
+      "at": "2026-07-06T12:41:03.045Z",
+      "event": "completed",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-06T12:41:54.637Z",
+      "event": "approved",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-06T12:42:26.146Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 32,
+      "failed": 1,
+      "skipped": 8,
+      "manual": 1
+    },
+    {
+      "at": "2026-07-06T12:45:26.362Z",
+      "event": "completed",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-06T12:47:27.827Z",
+      "event": "approved",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-06T12:48:27.797Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 38,
+      "failed": 0,
+      "skipped": 3,
+      "manual": 1
+    },
+    {
+      "at": "2026-07-06T12:48:44.056Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 38,
+      "failed": 0
+    },
+    {
+      "at": "2026-07-06T12:48:56.616Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-07-06T12:51:19.267Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-07-06T12:51:26.185Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-07-06T12:51:33.793Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-07-06T12:51:42.600Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-07-06T12:53:00.745Z",
+      "event": "completed",
+      "phase": 5
+    },
+    {
+      "at": "2026-07-06T12:59:18.476Z",
+      "event": "approved",
+      "phase": 5
+    }
+  ],
+  "cascadedPhases": [],
+  "artifactHashes": {
+    "1": "52db6f4ad453a37101495e1b59646ecdeee2e48f2087ddc14975ec82951f075d",
+    "2": "9135f500696eea857e0286c6042c599eb8c0cfdc5441c0d2412660c2dc016d15",
+    "3": "53df0968a13ad88d1682c92c0d3d36875ccc511c7ed0015207958c0370e56847",
+    "4": "9b5ee9773a1d949729494775c1f4300bcea36d9fe6db14a7cfd4f2c44f8b8fee",
+    "5": "295f8b9e75d1589563ed26ad25f03532e84881328094e0ff7af12d0c389cd53d"
+  },
+  "coverageAuditLastAt": "2026-07-05T20:34:34.360Z",
+  "coverageAuditReqHash": "aa37072cc04da05ec06c56d9b7f4e4b0f02b75ea2aca2f715759ba40ec271395",
+  "frSnapshots": {
+    "2": [
+      "FR-040",
+      "FR-041",
+      "FR-042",
+      "FR-043",
+      "FR-044",
+      "FR-045",
+      "FR-046",
+      "FR-047"
+    ],
+    "3": [
+      "FR-040",
+      "FR-041",
+      "FR-042",
+      "FR-043",
+      "FR-044",
+      "FR-045",
+      "FR-046",
+      "FR-047"
+    ],
+    "4": [
+      "FR-040",
+      "FR-041",
+      "FR-042",
+      "FR-043",
+      "FR-044",
+      "FR-045",
+      "FR-046",
+      "FR-047"
+    ],
+    "5": [
+      "FR-040",
+      "FR-041",
+      "FR-042",
+      "FR-043",
+      "FR-044",
+      "FR-045",
+      "FR-046",
+      "FR-047"
+    ]
+  },
+  "verifyPassed": true,
+  "verifyResultsHash": "079fb316e03b9a7b809a34fcea9695cd46da77f29ad5a4ad9439d59586f69042",
+  "verifyRanAt": "2026-07-06T12:48:27.797Z",
+  "lastVerifyRun": {
+    "passed": 38,
+    "failed": 0,
+    "skipped": 3,
+    "manual": 1,
+    "at": "2026-07-06T12:48:27.797Z"
+  },
+  "verifySummary": {
+    "total": 42,
+    "passed": 39,
+    "failed": 0,
+    "skipped": 3,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 3,
+    "manual": 0,
+    "manual_verified": 1
+  }
+}

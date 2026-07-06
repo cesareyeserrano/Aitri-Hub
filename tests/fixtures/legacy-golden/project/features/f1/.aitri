@@ -1,0 +1,14 @@
+{
+  "projectName": "f1",
+  "currentPhase": 3,
+  "approvedPhases": [
+    1,
+    2
+  ],
+  "completedPhases": [
+    1,
+    2,
+    3
+  ],
+  "artifactsDir": "spec"
+}
