@@ -71,10 +71,10 @@ async function setup(page, { cards = [card()], detail = detailPayload(), detailS
       body: JSON.stringify({ available: true, fetchedAt: 1, report: { health: { deployable: false, reasons: ['blocked: FR-2 uncovered'] }, advisories: [] } }) }));
 }
 
-test('TC-050h: card click navigates to /project/:id', async ({ page }) => {
+test('TC-050h: view-project button navigates to /project/:id', async ({ page }) => {
   await setup(page);
   await page.goto(BASE);
-  await page.locator('[data-testid="project-card"]').first().click();
+  await page.locator('[data-testid="view-project-btn"]').first().click();
   await expect(page).toHaveURL(/\/project\/demo$/);
   await expect(page.locator('[data-testid="detail-view"]')).toBeVisible();
 });
@@ -110,7 +110,7 @@ test('TC-051f: header stays stable across tab switches (no flicker/refetch)', as
 test('TC-050e: back returns to an intact overview', async ({ page }) => {
   await setup(page);
   await page.goto(BASE);
-  await page.locator('[data-testid="project-card"]').first().click();
+  await page.locator('[data-testid="view-project-btn"]').first().click();
   await expect(page.locator('[data-testid="detail-view"]')).toBeVisible();
   await page.goBack();
   await expect(page).toHaveURL(new RegExp(`${BASE}/?$`));

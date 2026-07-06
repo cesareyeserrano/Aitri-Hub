@@ -3262,3 +3262,15 @@ h1, h2, h3, h4, .section-title, .detail-name, .card__name {
   .card--clickable, .tab-btn, .scope-btn, .back-btn, .refresh-btn, .chain-item, .data-table tbody tr { transition: none; }
   .card--clickable:hover { transform: none; }
 }
+
+/* Card footer — explicit "view project" action (replaces whole-card click) */
+.card__footer { margin-top: auto; padding-top: 12px; display: flex; justify-content: flex-end; }
+.card__view-btn {
+  background: transparent; color: var(--accent);
+  border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+  font-family: var(--font-ui); font-size: 12px; font-weight: 500; padding: 5px 12px;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.card__view-btn:hover { border-color: var(--accent); background: var(--accent-subtle); }
+.card__view-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.card__view-btn:disabled { color: var(--text-muted); cursor: default; border-color: var(--border); background: transparent; }

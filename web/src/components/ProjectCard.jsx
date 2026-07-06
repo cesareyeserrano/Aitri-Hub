@@ -529,15 +529,10 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
 
   return (
     <div
-      className="card card--clickable"
+      className="card"
       data-status={status}
       data-testid="project-card"
       style={{ animationDelay: `${animationDelay}ms` }}
-      onClick={openDetail}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(); } }}
-      role="link"
-      tabIndex={0}
-      title="Open QA Workspace"
     >
       <div className="card__header">
         <div className="card__header-left">
@@ -600,6 +595,17 @@ export default function ProjectCard({ project, animationDelay = 0 }) {
           <VersionSection project={project} />
         </>
       )}
+
+      <div className="card__footer">
+        <button
+          className="card__view-btn"
+          data-testid="view-project-btn"
+          onClick={openDetail}
+          disabled={!project.id}
+        >
+          Ver proyecto →
+        </button>
+      </div>
     </div>
   );
 }
