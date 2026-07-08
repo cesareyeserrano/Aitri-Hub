@@ -20,7 +20,7 @@
   "createdAt": "2026-03-13T19:38:24.840Z",
   "aitriVersion": "2.0.0-rc.161",
   "artifactsDir": "spec",
-  "updatedAt": "2026-07-07T23:58:37.719Z",
+  "updatedAt": "2026-07-08T01:32:04.456Z",
   "artifactHashes": {
     "1": "e37d308347403019a08bebc62f792bff95b75fde6a7a3de3c002d67f01a61e9e",
     "2": "86fde8e7a1ddb52fc88ae18bfcf5d5b589891f183477a017edfdd379bf759cf1",
@@ -32,36 +32,6 @@
   "verifyPassed": true,
   "verifyTimestamp": "2026-04-16T22:38:26.112Z",
   "events": [
-    {
-      "at": "2026-07-05T20:18:38.995Z",
-      "event": "upgrade_migration",
-      "phase": "upgrade",
-      "from_version": "0.1.65",
-      "to_version": "2.0.0-rc.159",
-      "category": "artifactRename",
-      "target": "features/hub-bug-summary-snapshot/spec/04_BUILD_REPORT.json",
-      "transform": "rename artifact file 04_IMPLEMENTATION_MANIFEST.json → 04_BUILD_REPORT.json on disk (content unchanged)"
-    },
-    {
-      "at": "2026-07-05T20:18:38.996Z",
-      "event": "upgrade_migration",
-      "phase": "upgrade",
-      "from_version": "0.1.65",
-      "to_version": "2.0.0-rc.159",
-      "category": "artifactRename",
-      "target": "features/hub-bug-summary-snapshot/spec/05_TRACEABILITY.json",
-      "transform": "rename artifact file 05_PROOF_OF_COMPLIANCE.json → 05_TRACEABILITY.json on disk (content unchanged)"
-    },
-    {
-      "at": "2026-07-05T20:18:38.996Z",
-      "event": "upgrade_migration",
-      "phase": "upgrade",
-      "from_version": "0.1.65",
-      "to_version": "2.0.0-rc.159",
-      "category": "artifactRename",
-      "target": "features/hub-folder-scan/spec/04_BUILD_REPORT.json",
-      "transform": "rename artifact file 04_IMPLEMENTATION_MANIFEST.json → 04_BUILD_REPORT.json on disk (content unchanged)"
-    },
     {
       "at": "2026-07-05T20:18:38.996Z",
       "event": "upgrade_migration",
@@ -231,12 +201,44 @@
       "category": "artifactRename",
       "target": "features/web-graph-integration/spec/05_TRACEABILITY.json",
       "transform": "rename artifact file 05_PROOF_OF_COMPLIANCE.json → 05_TRACEABILITY.json on disk (content unchanged)"
+    },
+    {
+      "at": "2026-07-08T01:31:35.994Z",
+      "event": "reconcile-pending",
+      "phase": null,
+      "files": 5,
+      "method": "git",
+      "verifyPassedCleared": true
+    },
+    {
+      "at": "2026-07-08T01:32:04.335Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 27,
+      "failed": 0,
+      "skipped": 0,
+      "manual": 0
+    },
+    {
+      "at": "2026-07-08T01:32:04.435Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 27,
+      "failed": 0
     }
   ],
   "driftPhases": [],
-  "verifyRanAt": "2026-05-22T22:16:08.563Z",
+  "verifyRanAt": "2026-07-08T01:32:04.335Z",
   "auditLastAt": "2026-05-22T20:18:47.589Z",
   "upgradeFindings": [],
+  "verifyResultsHash": "3f551c2a91305753a9066419839d9eb20b053244575e64b1093e53c0ec3a7986",
+  "lastVerifyRun": {
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "manual": 0,
+    "at": "2026-07-08T01:32:04.335Z"
+  },
   "verifySummary": {
     "total": 27,
     "passed": 27,
