@@ -17,70 +17,9 @@
   "projectName": "qa-workspace",
   "createdAt": "2026-07-06T12:59:55.213Z",
   "artifactsDir": "spec",
-  "updatedAt": "2026-07-06T17:40:01.954Z",
+  "updatedAt": "2026-07-08T01:27:25.530Z",
   "driftPhases": [],
   "events": [
-    {
-      "at": "2026-07-06T13:20:03.848Z",
-      "event": "started",
-      "phase": 1
-    },
-    {
-      "at": "2026-07-06T13:37:27.313Z",
-      "event": "completed",
-      "phase": 1
-    },
-    {
-      "at": "2026-07-06T13:48:50.955Z",
-      "event": "completed",
-      "phase": 1
-    },
-    {
-      "at": "2026-07-06T14:11:54.554Z",
-      "event": "started",
-      "phase": 2
-    },
-    {
-      "at": "2026-07-06T14:13:26.197Z",
-      "event": "completed",
-      "phase": 2
-    },
-    {
-      "at": "2026-07-06T14:48:16.198Z",
-      "event": "approved",
-      "phase": 1,
-      "ideaArchived": true
-    },
-    {
-      "at": "2026-07-06T14:48:24.492Z",
-      "event": "approved",
-      "phase": 2
-    },
-    {
-      "at": "2026-07-06T14:56:54.227Z",
-      "event": "started",
-      "phase": 3
-    },
-    {
-      "at": "2026-07-06T14:56:54.384Z",
-      "event": "completed",
-      "phase": 3
-    },
-    {
-      "at": "2026-07-06T14:58:43.893Z",
-      "event": "approved",
-      "phase": 3
-    },
-    {
-      "at": "2026-07-06T14:59:05.390Z",
-      "event": "started",
-      "phase": 4
-    },
-    {
-      "at": "2026-07-06T17:22:48.065Z",
-      "event": "completed",
-      "phase": 4
-    },
     {
       "at": "2026-07-06T17:29:25.032Z",
       "event": "approved",
@@ -129,11 +68,82 @@
       "at": "2026-07-06T17:40:01.917Z",
       "event": "approved",
       "phase": 5
+    },
+    {
+      "at": "2026-07-08T01:11:15.670Z",
+      "event": "completed",
+      "phase": 1
+    },
+    {
+      "at": "2026-07-08T01:11:24.278Z",
+      "event": "approved",
+      "phase": 1
+    },
+    {
+      "at": "2026-07-08T01:26:24.277Z",
+      "event": "completed",
+      "phase": 2
+    },
+    {
+      "at": "2026-07-08T01:26:24.378Z",
+      "event": "approved",
+      "phase": 2
+    },
+    {
+      "at": "2026-07-08T01:26:24.478Z",
+      "event": "completed",
+      "phase": 3
+    },
+    {
+      "at": "2026-07-08T01:26:24.580Z",
+      "event": "approved",
+      "phase": 3
+    },
+    {
+      "at": "2026-07-08T01:26:24.678Z",
+      "event": "completed",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-08T01:26:24.820Z",
+      "event": "approved",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-08T01:26:24.919Z",
+      "event": "completed",
+      "phase": 5
+    },
+    {
+      "at": "2026-07-08T01:26:25.025Z",
+      "event": "approved",
+      "phase": 5
+    },
+    {
+      "at": "2026-07-08T01:26:57.120Z",
+      "event": "approved",
+      "phase": 5
+    },
+    {
+      "at": "2026-07-08T01:27:25.404Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 31,
+      "failed": 0,
+      "skipped": 14,
+      "manual": 0
+    },
+    {
+      "at": "2026-07-08T01:27:25.508Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 31,
+      "failed": 0
     }
   ],
   "cascadedPhases": [],
   "artifactHashes": {
-    "1": "28f0608ca36a2d4e6a398769798df33eb21af272c50645bfb17117650efb33ec",
+    "1": "f315b020c5e0dcd58cbc51f55ff09ec69a1a324afebdeab5d2cf171956791342",
     "2": "3d255f712c529e6c86d2648663835c5319667f87b38ee250a2dce6e1a0e9c17d",
     "3": "0aad762d2e2a928327d57649fcc5e0a88af97e656b906ba3f3a03d41d804b7ba",
     "4": "57debbcf7375e6173804d730f3a5156ee1a917d76ea58211b1ea2b094e7bc1ca",
@@ -191,16 +201,16 @@
       "FR-059"
     ]
   },
-  "verifyResultsHash": "c982c1e29b36e8c7aba809a3c13dc1bd3786e9e556eb8f922a85191e997a25a8",
-  "verifyRanAt": "2026-07-06T17:34:01.160Z",
+  "verifyPassed": true,
+  "verifyResultsHash": "e1c9e41190f22095809cdbaab0db6b585ad87a6275ead91453580a40b801ac53",
+  "verifyRanAt": "2026-07-08T01:27:25.404Z",
   "lastVerifyRun": {
     "passed": 31,
     "failed": 0,
     "skipped": 14,
     "manual": 0,
-    "at": "2026-07-06T17:34:01.160Z"
+    "at": "2026-07-08T01:27:25.404Z"
   },
-  "verifyPassed": true,
   "verifySummary": {
     "total": 45,
     "passed": 31,

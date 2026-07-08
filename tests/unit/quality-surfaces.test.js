@@ -120,7 +120,10 @@ describe('projectQualitySurfaces — defensive narrowing', () => {
       ]),
     );
     assert.deepEqual(out.perPipeline[0].quality_gates, [
-      { name: null, status: null, required: false },
+      // required: 1 → true (truthy, matching Core's gate semantics — a
+      // blocking gate must never read "advisory" here); strings/objects in
+      // name/status/threshold are dropped to null/omitted.
+      { name: null, status: null, required: true },
     ]);
   });
 

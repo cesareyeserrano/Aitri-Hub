@@ -13,6 +13,8 @@ const TC_COLOR = { passed: 'var(--syn-green)', failed: 'var(--syn-red)' };
 const FRESH = {
   fresh: { label: 'fresh', color: 'var(--syn-green)' },
   stale: { label: 'stale', color: 'var(--syn-yellow)' },
+  // BG-015: audit ran but freshness is unverifiable (pre-rc.154 — no hash stamp).
+  unknown: { label: 'freshness unknown', color: 'var(--text-dim)' },
   'not-run': { label: 'audit not run', color: 'var(--text-dim)' },
 };
 

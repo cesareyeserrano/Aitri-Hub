@@ -283,6 +283,30 @@
       "resolution": null,
       "fix_commit_sha": "0f0cb9ddf8f13de96c3f725650d1e32884b1f48e",
       "fix_at": "2026-05-22T22:11:53.294Z"
+    },
+    {
+      "id": "BG-015",
+      "title": "Traceability auditFreshness overstates 'fresh' for pre-rc.154 projects with no coverageAuditReqHash stamp",
+      "description": "",
+      "steps_to_reproduce": [],
+      "expected_result": "",
+      "actual_result": "",
+      "environment": null,
+      "severity": "low",
+      "status": "closed",
+      "fr": null,
+      "tc_reference": null,
+      "phase_detected": null,
+      "detected_by": "manual",
+      "evidence": null,
+      "reported_by": null,
+      "created_at": "2026-07-08T01:27:48.643Z",
+      "updated_at": "2026-07-08T01:30:59.575Z",
+      "resolution": "detail-reader auditFreshness: audit timestamp without a coverageAuditReqHash stamp (pre-rc.154) now reads 'unknown' instead of falling through to 'fresh'; 4-way derivation pinned by tests/unit/audit-freshness.test.js",
+      "fix_commit_sha": "e19c765257dba9c20065cac96e4d48ca4bf743cc",
+      "fix_at": "2026-07-08T01:29:30.923Z",
+      "close_commit_sha": "e19c765257dba9c20065cac96e4d48ca4bf743cc",
+      "close_at": "2026-07-08T01:30:59.575Z"
     }
   ]
 }
