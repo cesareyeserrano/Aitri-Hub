@@ -1,0 +1,19 @@
+{
+  "files_created": [
+    "tests/unit/quality-surfaces.test.js",
+    "tests/integration/contract-catchup-rc161.test.js"
+  ],
+  "files_modified": [
+    "lib/collector/snapshot-reader.js",
+    "lib/collector/index.js"
+  ],
+  "test_runner": "node --test ../../tests/unit/quality-surfaces.test.js ../../tests/integration/contract-catchup-rc161.test.js",
+  "test_files": [
+    "tests/unit/quality-surfaces.test.js",
+    "tests/integration/contract-catchup-rc161.test.js"
+  ],
+  "technical_debt": [],
+  "setup_commands": [],
+  "environment_variables": [],
+  "notes": "Ship-time data edit outside the repo: ~/.aitri-hub/integration-compat.json reviewedUpTo advances to 2.0.0-rc.161 (FR-063) after the rc.160/rc.161 '— additive' CHANGELOG review. Closes the FR-047 technical_debt of contract-catchup-rc159: quality_gates/ac_coverage now reach the record via projectQualitySurfaces (TC-064f pins that the debt is not re-filed here)."
+}

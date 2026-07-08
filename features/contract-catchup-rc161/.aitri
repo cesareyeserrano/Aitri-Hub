@@ -1,0 +1,183 @@
+{
+  "currentPhase": 5,
+  "approvedPhases": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "completedPhases": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "projectName": "contract-catchup-rc161",
+  "createdAt": "2026-07-08T00:00:04.053Z",
+  "artifactsDir": "spec",
+  "updatedAt": "2026-07-08T00:53:26.922Z",
+  "driftPhases": [],
+  "events": [
+    {
+      "at": "2026-07-08T00:01:18.745Z",
+      "event": "started",
+      "phase": 1
+    },
+    {
+      "at": "2026-07-08T00:03:01.626Z",
+      "event": "completed",
+      "phase": 1
+    },
+    {
+      "at": "2026-07-08T00:03:09.183Z",
+      "event": "approved",
+      "phase": 1,
+      "ideaArchived": true
+    },
+    {
+      "at": "2026-07-08T00:03:09.284Z",
+      "event": "started",
+      "phase": 2
+    },
+    {
+      "at": "2026-07-08T00:06:57.443Z",
+      "event": "completed",
+      "phase": 2
+    },
+    {
+      "at": "2026-07-08T00:06:57.540Z",
+      "event": "approved",
+      "phase": 2
+    },
+    {
+      "at": "2026-07-08T00:41:40.343Z",
+      "event": "completed",
+      "phase": 3
+    },
+    {
+      "at": "2026-07-08T00:41:40.449Z",
+      "event": "approved",
+      "phase": 3
+    },
+    {
+      "at": "2026-07-08T00:42:53.418Z",
+      "event": "started",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-08T00:51:01.140Z",
+      "event": "completed",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-08T00:51:06.812Z",
+      "event": "approved",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-08T00:51:20.549Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 20,
+      "manual": 0
+    },
+    {
+      "at": "2026-07-08T00:52:34.089Z",
+      "event": "completed",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-08T00:52:34.242Z",
+      "event": "approved",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-08T00:52:49.413Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0,
+      "manual": 0
+    },
+    {
+      "at": "2026-07-08T00:52:55.393Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 24,
+      "failed": 0
+    },
+    {
+      "at": "2026-07-08T00:53:26.798Z",
+      "event": "completed",
+      "phase": 5
+    },
+    {
+      "at": "2026-07-08T00:53:26.897Z",
+      "event": "approved",
+      "phase": 5
+    }
+  ],
+  "cascadedPhases": [],
+  "artifactHashes": {
+    "1": "7ba9b3e87597e1c59fccb2856dfe63f0fc744b5b1aff66be8bd60d52bf0bad43",
+    "2": "5c35ea902b82fec7d1641c905fde19b45d2f58ec3db061a02b54f42a2e8fc132",
+    "3": "9e532bcada71bb7d0328563b0271f99d199a1d4cb3da83d50965bceb876c2ca7",
+    "4": "66e190cb3b32996cad8641054c515d250cf92db16a7de1a531a06fd98bc5caa3",
+    "5": "1c50aeaafdf38901e0e3de568950eca50bb59daf99379aea5cd06934cc586f55"
+  },
+  "frSnapshots": {
+    "2": [
+      "FR-060",
+      "FR-061",
+      "FR-062",
+      "FR-063",
+      "FR-064"
+    ],
+    "3": [
+      "FR-060",
+      "FR-061",
+      "FR-062",
+      "FR-063",
+      "FR-064"
+    ],
+    "4": [
+      "FR-060",
+      "FR-061",
+      "FR-062",
+      "FR-063",
+      "FR-064"
+    ],
+    "5": [
+      "FR-060",
+      "FR-061",
+      "FR-062",
+      "FR-063",
+      "FR-064"
+    ]
+  },
+  "verifyPassed": true,
+  "verifyResultsHash": "1d9ff73d4cbbc1aed321d06427dbc44ab9f26f69574d278940b5b8431e7ccb0c",
+  "verifyRanAt": "2026-07-08T00:52:49.413Z",
+  "lastVerifyRun": {
+    "passed": 24,
+    "failed": 0,
+    "skipped": 0,
+    "manual": 0,
+    "at": "2026-07-08T00:52:49.413Z"
+  },
+  "verifySummary": {
+    "total": 24,
+    "passed": 24,
+    "failed": 0,
+    "skipped": 0,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 0,
+    "manual": 0,
+    "manual_verified": 0
+  }
+}

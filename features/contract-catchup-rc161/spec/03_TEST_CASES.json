@@ -1,0 +1,519 @@
+{
+  "test_plan": {
+    "strategy": "Unit tests pin the two changed projection behaviors in snapshot-reader.js directly (projectFromSnapshot / new projectQualitySurfaces helper) with the full absent-tolerant matrix: key present with data, key present null, key absent. Integration tests exercise collectOne with a stubbed aitri binary emitting rc.161-shaped payloads to prove the .aitri.local read is (a) skipped when the payload carries the lastSession key \u2014 asserted by seeding a POISON .aitri.local whose value must NOT surface \u2014 and (b) still taken on key-absent payloads (pre-rc.161 CLI), pinning NFR-056. NFR-057/058 map onto the EXISTING aitri-reader / parseErrors / integration-alert suites run with unmodified assertions rather than duplicating them. FR-063 is asserted via evaluateIntegrationAlert against a manifest fixture with reviewedUpTo 2.0.0-rc.161 (the live ~/.aitri-hub edit happens at ship, outside tests). All fixtures use os.tmpdir()/AITRI_HUB_DIR isolation; no absolute user paths.",
+    "coverage_goal": "every MUST FR and every Regression NFR traced to at least one passing automated test; the new helper at 100% branch coverage of its decision points",
+    "test_types": [
+      "unit",
+      "integration"
+    ]
+  },
+  "test_cases": [
+    {
+      "id": "TC-060h",
+      "requirement_id": "FR-060",
+      "user_story_id": "US-060",
+      "ac_id": "AC-0601",
+      "title": "lastSession from snapshot wins; .aitri.local never read",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [
+        "stub aitri binary emits payload with lastSession {at, agent, event}",
+        "project dir contains a POISON .aitri.local with a DIFFERENT lastSession"
+      ],
+      "given": "a snapshot-eligible local project whose stubbed status --json carries lastSession {event:'approve 1', agent:'claude', at:'2026-07-07T10:00:00.000Z'} and a .aitri.local on disk with lastSession {event:'POISON'}",
+      "when": "collectOne collects the project",
+      "then": "the record's lastSession.event is 'approve 1' (snapshot value) and the POISON value appears nowhere in the record",
+      "steps": [
+        "seed project + poison .aitri.local",
+        "run collectOne with stubbed spawn",
+        "inspect record.lastSession"
+      ],
+      "expected_result": "snapshot lastSession carried verbatim; poison never surfaces, proving no .aitri.local read on this path",
+      "test_data": {}
+    },
+    {
+      "id": "TC-060e",
+      "requirement_id": "FR-060",
+      "user_story_id": "US-060",
+      "ac_id": "AC-0603",
+      "title": "lastSession key present but null: trusted as null, no fallback",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [
+        "stub payload has lastSession: null",
+        "poison .aitri.local present"
+      ],
+      "given": "a stubbed status --json whose payload contains the lastSession KEY with value null, and a poison .aitri.local with a real session object",
+      "when": "collectOne collects the project",
+      "then": "record.lastSession is null and the poison .aitri.local value does not surface",
+      "steps": [
+        "seed payload with lastSession:null + poison file",
+        "collectOne",
+        "assert record.lastSession === null"
+      ],
+      "expected_result": "key-presence proves the rc.161 contract; null means 'no session yet', not 'fall back'",
+      "test_data": {}
+    },
+    {
+      "id": "TC-060f",
+      "requirement_id": "FR-060",
+      "user_story_id": "US-060",
+      "ac_id": "AC-0602",
+      "title": "payload without lastSession key: legacy fallback still populates",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [
+        "stub payload LACKS the lastSession key (pre-rc.161 shape)",
+        ".aitri.local carries a valid lastSession"
+      ],
+      "given": "a stubbed pre-rc.161 status --json payload (no lastSession key) and a .aitri.local with lastSession {event:'checkpoint'}",
+      "when": "collectOne collects the project",
+      "then": "record.lastSession.event is 'checkpoint' \u2014 the inline fallback ran exactly as before",
+      "steps": [
+        "seed key-absent payload + valid .aitri.local",
+        "collectOne",
+        "assert fallback value in record"
+      ],
+      "expected_result": "pre-rc.161 projects keep their lastSession via the fallback (NFR-056 half)",
+      "test_data": {}
+    },
+    {
+      "id": "TC-061h",
+      "requirement_id": "FR-061",
+      "user_story_id": "US-061",
+      "ac_id": "AC-0611",
+      "title": "quality_gates projected verbatim into qualitySurfaces",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "a snapshot object whose tests.perPipeline root entry has quality_gates [{name:'lint',status:'fail',required:true}]",
+      "when": "projectFromSnapshot(snapshot)",
+      "then": "record.qualitySurfaces.perPipeline[0] has scope 'root' and quality_gates [{name:'lint',status:'fail',required:true}]",
+      "steps": [
+        "build snapshot fixture",
+        "projectFromSnapshot",
+        "deep-equal the projected entry"
+      ],
+      "expected_result": "gate name, status and required preserved verbatim",
+      "test_data": {}
+    },
+    {
+      "id": "TC-061e",
+      "requirement_id": "FR-061",
+      "user_story_id": "US-061",
+      "ac_id": "AC-0613",
+      "title": "coverage-style gate keeps threshold and measured",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "a root perPipeline entry with quality_gates [{name:'coverage',status:'pass',required:true,threshold:80,measured:92}]",
+      "when": "projectFromSnapshot(snapshot)",
+      "then": "the projected gate carries threshold 80 and measured 92 as numbers",
+      "steps": [
+        "build fixture with numeric threshold/measured",
+        "project",
+        "assert both numbers survive"
+      ],
+      "expected_result": "optional numeric fields carried when present",
+      "test_data": {}
+    },
+    {
+      "id": "TC-061f",
+      "requirement_id": "FR-061",
+      "user_story_id": "US-061",
+      "ac_id": "AC-0612",
+      "title": "all-null quality surfaces: record carries no qualitySurfaces key",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "a snapshot whose every tests.perPipeline entry has quality_gates: null and ac_coverage: null (and a second snapshot lacking tests.perPipeline entirely)",
+      "when": "projectFromSnapshot(snapshot) for both",
+      "then": "'qualitySurfaces' in record === false for both \u2014 no key, not an empty object",
+      "steps": [
+        "project both fixtures",
+        "assert key absence"
+      ],
+      "expected_result": "absent-tolerant: old CLIs and gate-less projects produce records without the new key (NFR-056 half)",
+      "test_data": {}
+    },
+    {
+      "id": "TC-062h",
+      "requirement_id": "FR-062",
+      "user_story_id": "US-062",
+      "ac_id": "AC-0621",
+      "title": "ac_coverage passes through unchanged",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "a root perPipeline entry with ac_coverage [{ac_id:'AC-001',fr_id:'FR-001',tests_passing:2,tests_failing:0,tests_skipped:0,tests_manual:0,status:'covered'}]",
+      "when": "projectFromSnapshot(snapshot)",
+      "then": "the projected entry's ac_coverage deep-equals the input array (identical, no re-shaping)",
+      "steps": [
+        "build fixture",
+        "project",
+        "deep-equal input vs projected"
+      ],
+      "expected_result": "pass-through unchanged per FR-062",
+      "test_data": {}
+    },
+    {
+      "id": "TC-062f",
+      "requirement_id": "FR-062",
+      "user_story_id": "US-062",
+      "ac_id": "AC-0622",
+      "title": "ac_coverage null on a pipeline that has gates: entry carries gates only",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "a root entry with quality_gates non-null and ac_coverage: null",
+      "when": "projectFromSnapshot(snapshot)",
+      "then": "the projected perPipeline entry has a quality_gates key and NO ac_coverage key",
+      "steps": [
+        "project mixed fixture",
+        "assert per-surface key independence"
+      ],
+      "expected_result": "each surface is independently absent-tolerant",
+      "test_data": {}
+    },
+    {
+      "id": "TC-063h",
+      "requirement_id": "FR-063",
+      "user_story_id": "US-063",
+      "ac_id": "AC-0631",
+      "title": "integration alert silent for rc.161 once reviewedUpTo advances",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "medium",
+      "preconditions": [
+        "manifest fixture with reviewedUpTo '2.0.0-rc.161'"
+      ],
+      "given": "evaluateIntegrationAlert with detected aitriVersion '2.0.0-rc.161' and a manifest whose reviewedUpTo is '2.0.0-rc.161'",
+      "when": "the alert evaluation runs",
+      "then": "no version-gap integration alert is raised",
+      "steps": [
+        "build manifest fixture",
+        "evaluateIntegrationAlert",
+        "assert no alert"
+      ],
+      "expected_result": "reviewed baseline covers rc.161",
+      "test_data": {}
+    },
+    {
+      "id": "TC-064h",
+      "requirement_id": "FR-064",
+      "user_story_id": "US-064",
+      "ac_id": "AC-0641",
+      "title": "new projection cases run with zero skips",
+      "type": "unit",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "the snapshot-reader test file containing the TC-060/061/062 cases",
+      "when": "npm test executes the unit suite",
+      "then": "all new projection cases run and pass; none is marked skip/todo",
+      "steps": [
+        "run suite",
+        "assert zero skipped among the new cases"
+      ],
+      "expected_result": "FR-047's skipped-placeholder pattern is not repeated",
+      "test_data": {}
+    },
+    {
+      "id": "TC-062e",
+      "requirement_id": "FR-062",
+      "user_story_id": "US-062",
+      "ac_id": "AC-0621",
+      "title": "ac_coverage empty array passes through as empty array, not dropped",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "a root perPipeline entry with ac_coverage: [] (present but empty \u2014 distinct from null)",
+      "when": "projectFromSnapshot(snapshot)",
+      "then": "the projected entry carries ac_coverage: [] \u2014 present-but-empty is preserved, never coerced to key-absence",
+      "steps": [
+        "build fixture with ac_coverage []",
+        "project",
+        "assert deep-equal []"
+      ],
+      "expected_result": "pass-through fidelity includes the empty array (null and [] stay distinguishable end-to-end)",
+      "test_data": {}
+    },
+    {
+      "id": "TC-063e",
+      "requirement_id": "FR-063",
+      "user_story_id": "US-063",
+      "ac_id": "AC-0631",
+      "title": "version beyond the reviewed baseline still alerts",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "medium",
+      "preconditions": [],
+      "given": "a manifest fixture with reviewedUpTo '2.0.0-rc.161' and a project detected on aitriVersion '2.0.0-rc.162'",
+      "when": "evaluateIntegrationAlert runs",
+      "then": "the version-gap alert IS raised for rc.162 \u2014 advancing the baseline to rc.161 silences only reviewed versions",
+      "steps": [
+        "build manifest fixture at rc.161",
+        "evaluate with detected rc.162",
+        "assert alert raised"
+      ],
+      "expected_result": "the baseline advance does not blind the Hub to future contract changes",
+      "test_data": {}
+    },
+    {
+      "id": "TC-063f",
+      "requirement_id": "FR-063",
+      "user_story_id": "US-063",
+      "ac_id": "AC-0632",
+      "title": "malformed manifest leaves alert evaluation on its existing degraded path",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": [],
+      "given": "an unreadable/invalid integration-compat.json fixture and a project on '2.0.0-rc.161'",
+      "when": "evaluateIntegrationAlert runs",
+      "then": "behavior matches the pre-existing malformed-manifest contract (no crash; same alert outcome as before this feature) \u2014 pinned by running the existing manifest test suite unmodified",
+      "steps": [
+        "corrupt manifest fixture",
+        "evaluate",
+        "assert no throw and unchanged outcome"
+      ],
+      "expected_result": "FR-063 is a data edit; the reader's failure modes are untouched",
+      "test_data": {}
+    },
+    {
+      "id": "TC-064e",
+      "requirement_id": "FR-064",
+      "user_story_id": "US-064",
+      "ac_id": "AC-0641",
+      "title": "new projection test file is discovered by the npm test glob",
+      "type": "unit",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "the new test file placed under tests/unit/ with the *.test.js suffix",
+      "when": "npm test resolves its file list",
+      "then": "the new file is in the executed set (its tests appear in the runner output)",
+      "steps": [
+        "run npm test",
+        "assert the new cases' titles appear in output"
+      ],
+      "expected_result": "the cases cannot silently drop out of CI by living outside the glob",
+      "test_data": {}
+    },
+    {
+      "id": "TC-064f",
+      "requirement_id": "FR-064",
+      "user_story_id": "US-064",
+      "ac_id": "AC-0642",
+      "title": "this feature's build report carries no blocked-on-Core debt for the consumed fields",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "features/contract-catchup-rc161/spec/04_BUILD_REPORT.json after Phase 4",
+      "when": "its technical_debt array is inspected",
+      "then": "no entry references quality_gates/ac_coverage/lastSession as blocked-on-Core \u2014 the FR-047 debt closes here instead of moving forward",
+      "steps": [
+        "read build report",
+        "assert no matching technical_debt entry"
+      ],
+      "expected_result": "debt is closed with evidence, not re-filed",
+      "test_data": {}
+    },
+    {
+      "id": "TC-056h",
+      "requirement_id": "NFR-056",
+      "user_story_id": "US-060",
+      "ac_id": "AC-0561",
+      "title": "pre-rc.161 payload produces a byte-identical record (regression pin)",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "a stubbed pre-rc.161 status --json payload (no lastSession key, no quality_gates/ac_coverage on perPipeline) and a .aitri.local with a session",
+      "when": "collectOne collects the project before and after this feature's change (golden expectation from the pre-change projection)",
+      "then": "the produced record deep-equals the golden pre-change record: lastSession via fallback, and no qualitySurfaces key",
+      "steps": [
+        "seed pre-rc.161 fixture",
+        "collectOne",
+        "deep-equal against golden record"
+      ],
+      "expected_result": "old-CLI projects are provably untouched \u2014 the additive-only guardrail is executable, not asserted",
+      "test_data": {}
+    },
+    {
+      "id": "TC-057h",
+      "requirement_id": "NFR-057",
+      "user_story_id": "US-060",
+      "ac_id": "AC-0571",
+      "title": "legacy fallback reader path untouched (existing suite runs unmodified)",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "the existing aitri-reader test suite as committed on the parent branch, with zero assertion changes",
+      "when": "npm test runs after this feature's implementation",
+      "then": "every aitri-reader test passes without modification \u2014 the snapshot-ineligible path never entered this feature's diff",
+      "steps": [
+        "run npm test",
+        "assert aitri-reader suite green with no diff to its file"
+      ],
+      "expected_result": "NFR-057 is enforced by the unmodified existing suite, per the test plan's mapping rule",
+      "test_data": {}
+    },
+    {
+      "id": "TC-058h",
+      "requirement_id": "NFR-058",
+      "user_story_id": "US-063",
+      "ac_id": "AC-0581",
+      "title": "parseErrors consumption and version-gap alert untouched (existing suites run unmodified)",
+      "type": "integration",
+      "scenario": "happy_path",
+      "priority": "high",
+      "preconditions": [],
+      "given": "the existing bugs.parseErrors and evaluateIntegrationAlert test suites as committed, with zero assertion changes",
+      "when": "npm test runs after this feature's implementation",
+      "then": "every parseErrors and integration-alert test passes without modification",
+      "steps": [
+        "run npm test",
+        "assert both suites green with no diffs to their files"
+      ],
+      "expected_result": "rc.158 consumption and the alert engine are provably unaffected",
+      "test_data": {}
+    },
+    {
+      "id": "TC-056e",
+      "requirement_id": "NFR-056",
+      "user_story_id": "US-060",
+      "ac_id": "AC-0561",
+      "title": "pre-rc.161 payload with no .aitri.local at all: record shape still identical",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "a stubbed pre-rc.161 payload (no new keys) and NO .aitri.local on disk",
+      "when": "collectOne collects the project",
+      "then": "record.lastSession is null (fallback finds nothing, as today) and no qualitySurfaces key exists",
+      "steps": [
+        "seed fixture without .aitri.local",
+        "collectOne",
+        "assert null lastSession + key absence"
+      ],
+      "expected_result": "the absent-file corner of the legacy path is inside the byte-identical guarantee",
+      "test_data": {}
+    },
+    {
+      "id": "TC-056f",
+      "requirement_id": "NFR-056",
+      "user_story_id": "US-060",
+      "ac_id": "AC-0561",
+      "title": "golden-record comparison is not vacuous (mutation guard)",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "high",
+      "preconditions": [],
+      "given": "the TC-056h golden record with one field deliberately mutated",
+      "when": "the same deep-equal assertion runs against the mutated copy",
+      "then": "the comparison FAILS \u2014 proving TC-056h's pass is a real byte-parity check, not a tautology",
+      "steps": [
+        "mutate one golden field",
+        "run the deep-equal",
+        "assert it throws"
+      ],
+      "expected_result": "regression pin proven non-vacuous (rc159 NFR-041 precedent)",
+      "test_data": {}
+    },
+    {
+      "id": "TC-057e",
+      "requirement_id": "NFR-057",
+      "user_story_id": "US-060",
+      "ac_id": "AC-0571",
+      "title": "snapshot-ineligible project: new projection never runs on the legacy path",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "a project whose aitriVersion is below the snapshot floor (fallback reader path)",
+      "when": "collectOne collects it",
+      "then": "the record carries no qualitySurfaces key and its lastSession comes from the legacy reader exactly as before",
+      "steps": [
+        "seed sub-floor project",
+        "collectOne",
+        "assert legacy record shape"
+      ],
+      "expected_result": "the feature's code is unreachable from aitri-reader.js",
+      "test_data": {}
+    },
+    {
+      "id": "TC-057f",
+      "requirement_id": "NFR-057",
+      "user_story_id": "US-060",
+      "ac_id": "AC-0571",
+      "title": "corrupted .aitri on the legacy path degrades exactly as pre-feature",
+      "type": "integration",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": [],
+      "given": "a snapshot-ineligible project with a malformed .aitri",
+      "when": "collectOne collects it",
+      "then": "the existing degraded-record behavior is produced, unchanged by this feature",
+      "steps": [
+        "corrupt .aitri fixture",
+        "collectOne",
+        "assert pre-existing degraded outcome"
+      ],
+      "expected_result": "legacy failure modes untouched",
+      "test_data": {}
+    },
+    {
+      "id": "TC-058e",
+      "requirement_id": "NFR-058",
+      "user_story_id": "US-063",
+      "ac_id": "AC-0581",
+      "title": "bugs.parseErrors consumption coexists with the new rc.161 keys",
+      "type": "integration",
+      "scenario": "edge_case",
+      "priority": "high",
+      "preconditions": [],
+      "given": "a stubbed rc.161 payload carrying BOTH quality surfaces AND bugs.parseErrors ['root']",
+      "when": "collectOne collects it",
+      "then": "the record carries the parseErrors-driven flags exactly as today AND the new qualitySurfaces key \u2014 neither interferes with the other",
+      "steps": [
+        "seed combined payload",
+        "collectOne",
+        "assert both surfaces coexist"
+      ],
+      "expected_result": "rc.158 consumption is orthogonal to rc.161 consumption",
+      "test_data": {}
+    },
+    {
+      "id": "TC-058f",
+      "requirement_id": "NFR-058",
+      "user_story_id": "US-063",
+      "ac_id": "AC-0581",
+      "title": "version-gap alert still fires for an unreviewed version carrying the new fields",
+      "type": "unit",
+      "scenario": "negative",
+      "priority": "medium",
+      "preconditions": [],
+      "given": "a manifest with reviewedUpTo '2.0.0-rc.161' and a project detected on an unreviewed '2.0.0-rc.199' whose payload includes qualitySurfaces data",
+      "when": "evaluateIntegrationAlert runs",
+      "then": "the alert fires \u2014 presence of the new fields never suppresses the version-gap check",
+      "steps": [
+        "evaluate unreviewed version",
+        "assert alert raised"
+      ],
+      "expected_result": "alert logic reads versions, not payload keys",
+      "test_data": {}
+    }
+  ]
+}

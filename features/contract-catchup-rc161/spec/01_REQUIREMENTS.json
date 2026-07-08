@@ -1,0 +1,198 @@
+{
+  "project_name": "AITRI-HUB — contract-catchup-rc161",
+  "project_summary": "Consume the Aitri v2.0.0-rc.161 status --json additions (top-level lastSession, per-pipeline quality_gates/ac_coverage) and retire the two workarounds that existed only because those fields were missing: the collector's direct .aitri.local read (the acknowledged SCHEMA.md deviation) and the FR-047 technical_debt from contract-catchup-rc159. North Star KPI: zero SCHEMA.md deviations in the collector for rc.161+ projects. JTBD: when the dashboard shows a project, its session marker and code-quality gate results come from the sanctioned contract surface, so QA can trust them without the Hub touching per-machine files. Guardrail metric: records for pre-rc.161 projects remain byte-identical (additive-only).",
+  "functional_requirements": [
+    {
+      "id": "FR-060",
+      "title": "Prefer snapshot lastSession over the .aitri.local inline read",
+      "description": "When the aitri status --json payload contains the lastSession key (rc.161+), projectFromSnapshot carries it into the record and the collector performs NO direct .aitri.local read for that project. The inline read survives only as a fallback for payloads that lack the key (pre-rc.161 CLIs). A snapshot lastSession of null is trusted as null (no session yet) — it does not trigger the fallback, because the key's presence proves the CLI speaks the rc.161 contract.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a snapshot with lastSession: {at, agent, event}, the record's lastSession equals that object's event/agent/at and fs.readFileSync of .aitri.local is never called for that project",
+        "Given a snapshot WITHOUT the lastSession key, the existing inline .aitri.local fallback runs exactly as before and populates the record",
+        "Given a snapshot with lastSession: null, the record's lastSession is null and the fallback does NOT run"
+      ]
+    },
+    {
+      "id": "FR-061",
+      "title": "Project per-pipeline quality_gates into the record",
+      "description": "projectFromSnapshot carries tests.perPipeline[].quality_gates ([{name, status, required, threshold?, measured?}] | null) into the project record, additive and absent-tolerant: entries with a non-null array produce a record field preserving name, status (pass|fail|error|null), required flag and the optional threshold/measured numbers; null or absent adds no key. null is never interpreted as an Aitri version signal (the artifact fields predate rc.161 — only the projection is new).",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a snapshot whose root perPipeline entry has quality_gates [{name:'lint',status:'fail',required:true}], the record preserves name, status and required verbatim",
+        "Given quality_gates: null on every perPipeline entry, the record carries no quality_gates key",
+        "A coverage-style gate {name:'coverage',status:'pass',required:true,threshold:80,measured:92} keeps threshold and measured in the record"
+      ]
+    },
+    {
+      "id": "FR-062",
+      "title": "Project per-pipeline ac_coverage into the record unchanged",
+      "description": "projectFromSnapshot carries tests.perPipeline[].ac_coverage (array of {ac_id, fr_id, tests_passing, tests_failing, tests_skipped, tests_manual, status} | null) into the project record as an unchanged pass-through, additive and absent-tolerant: null or absent adds no key.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given ac_coverage [{ac_id:'AC-001',fr_id:'FR-001',tests_passing:2,tests_failing:0,tests_skipped:0,tests_manual:0,status:'covered'}] on the root entry, the record contains the identical array",
+        "Given ac_coverage: null, the record carries no ac_coverage key"
+      ]
+    },
+    {
+      "id": "FR-063",
+      "title": "Integration manifest reviewed baseline advances to 2.0.0-rc.161",
+      "description": "After the rc.160 + rc.161 integration CHANGELOG entries are reviewed (both marked — additive), ~/.aitri-hub/integration-compat.json reviewedUpTo is set to 2.0.0-rc.161 so the version-gap integration alert stops flagging rc.160/rc.161 projects. Data change performed once at ship time; the manifest reader itself is untouched.",
+      "priority": "SHOULD",
+      "type": "configuration",
+      "acceptance_criteria": [
+        "evaluateIntegrationAlert raises no alert for a project on aitriVersion 2.0.0-rc.161 once the manifest is updated",
+        "The manifest file remains valid JSON and keeps its existing fields"
+      ]
+    },
+    {
+      "id": "FR-064",
+      "title": "Snapshot projection unit coverage for the new fields",
+      "description": "The projectFromSnapshot test suite gains cases for the three new surfaces (lastSession preference + both quality surfaces), including the absent-tolerant negatives, replacing the skipped TC-047h/e/f placeholders from contract-catchup-rc159 with running tests.",
+      "priority": "MUST",
+      "type": "testing",
+      "acceptance_criteria": [
+        "npm test runs the new projection cases with zero skipped among them",
+        "The contract-catchup-rc159 technical_debt note for FR-047 is closed by reference to this feature in its record"
+      ]
+    }
+  ],
+  "user_personas": [
+    {
+      "role": "QA auditor",
+      "tech_level": "mid",
+      "goal": "Read session recency and code-quality gate verdicts from the dashboard record and trust their provenance",
+      "pain_point": "Gate results never reach the record (FR-047 debt), and session data comes from a per-machine file the contract tells consumers not to read"
+    },
+    {
+      "role": "Hub maintainer",
+      "tech_level": "senior",
+      "goal": "Keep the collector on sanctioned contract surfaces only, so Aitri Core upgrades never silently break ingestion",
+      "pain_point": "The .aitri.local inline read is a documented deviation that must be carried and re-justified on every schema review"
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US-060",
+      "requirement_id": "FR-060",
+      "as_a": "Hub maintainer",
+      "i_want": "the collector to take lastSession from the status --json payload when present",
+      "so_that": "the SCHEMA.md deviation disappears for current-CLI projects"
+    },
+    {
+      "id": "US-061",
+      "requirement_id": "FR-061",
+      "as_a": "QA auditor",
+      "i_want": "quality gate names and verdicts stored in the project record",
+      "so_that": "future QA views can render lint/type-check/security results without another collector change"
+    },
+    {
+      "id": "US-062",
+      "requirement_id": "FR-062",
+      "as_a": "QA auditor",
+      "i_want": "AC-level coverage stored in the record",
+      "so_that": "acceptance-criterion traceability is available to the workspace"
+    },
+    {
+      "id": "US-063",
+      "requirement_id": "FR-063",
+      "as_a": "Hub maintainer",
+      "i_want": "the reviewed-contract baseline to advance to rc.161",
+      "so_that": "the integration alert only fires for genuinely unreviewed versions"
+    },
+    {
+      "id": "US-064",
+      "requirement_id": "FR-064",
+      "as_a": "Hub maintainer",
+      "i_want": "running tests for the new projection paths",
+      "so_that": "the FR-047 debt closes with evidence instead of moving"
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-056",
+      "category": "Regression",
+      "requirement": "Snapshot-path records for projects on pre-rc.161 CLIs stay identical: lastSession still populated via the inline fallback, and no quality_gates/ac_coverage keys appear",
+      "acceptance_criteria": "Existing snapshot-reader tests for payloads without the new keys pass unchanged"
+    },
+    {
+      "id": "NFR-057",
+      "category": "Regression",
+      "requirement": "The legacy/fallback reader path (aitri-reader.js, snapshot-ineligible projects) is untouched — same reads, same record shape",
+      "acceptance_criteria": "aitri-reader test suite passes with zero modifications"
+    },
+    {
+      "id": "NFR-058",
+      "category": "Regression",
+      "requirement": "bugs.parseErrors consumption (rc.158) and the version-gap integration alert keep working unchanged",
+      "acceptance_criteria": "Existing parseErrors + evaluateIntegrationAlert tests pass with zero modifications"
+    },
+    {
+      "id": "NFR-059",
+      "category": "Security",
+      "requirement": "No new file reads outside the project directory and the existing manifest path; the change strictly REMOVES a per-machine file read for rc.161+ projects",
+      "acceptance_criteria": "Code review confirms no new fs access paths; the .aitri.local read is reachable only on the fallback branch"
+    }
+  ],
+  "no_go_zone": [
+    "No new UI sections — rendering quality_gates/ac_coverage in QA Workspace tabs is a separate feature",
+    "No coverage-audit freshness consumption (Core deliberately did not ship it; the Traceability-tab re-hash stays)",
+    "No changes to detail-reader.js on-demand artifact reads",
+    "No validate --json consumption changes (Deploy Verdict already reads top-level deployable)"
+  ],
+  "constraints": [
+    "Additive-only on the record schema: existing dashboard.json consumers must keep working without reading the new fields"
+  ],
+  "technology_preferences": [
+    "Node.js (existing Hub stack)"
+  ],
+  "idea_provenance": {
+    "problem": "confirmed",
+    "users": "confirmed",
+    "baseline": "confirmed",
+    "success_metric": "confirmed",
+    "no_go_zone": "confirmed"
+  },
+  "idea_provenance_sources": {
+    "problem": "This repo's own recorded debt: lib/collector/index.js lastSession inline-read comment ('Core feedback filed to expose lastSession…retire this inline read') + FR-047 technical_debt in features/contract-catchup-rc159/spec/04_BUILD_REPORT.json",
+    "users": "Existing Hub personas (QA auditor, maintainer) from contract-catchup-rc159 — no new user types",
+    "baseline": "Aitri Core v2.0.0-rc.161 shipped 2026-07-07 (docs/integrations/CHANGELOG.md, — additive) exposing exactly these fields",
+    "success_metric": "FEATURE_IDEA.md Success Criteria, user-directed 2026-07-07",
+    "no_go_zone": "FEATURE_IDEA.md Out of Scope — mirrors the FR-047 boundary drawn in rc159"
+  },
+  "idea_gaps": [],
+  "coverage_map": [
+    {
+      "need": "stop reading .aitri.local when the contract provides lastSession",
+      "disposition": "FR-060"
+    },
+    {
+      "need": "quality gate results reach the project record (FR-047 debt)",
+      "disposition": "FR-061"
+    },
+    {
+      "need": "AC-level coverage reaches the project record (FR-047 debt)",
+      "disposition": "FR-062"
+    },
+    {
+      "need": "integration alert stops flagging reviewed rc.160/rc.161",
+      "disposition": "FR-063"
+    },
+    {
+      "need": "TC-047h/e/f stop being skipped placeholders",
+      "disposition": "FR-064"
+    },
+    {
+      "need": "render the new surfaces in QA Workspace tabs",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "coverage-audit freshness from Core",
+      "disposition": "out_of_scope"
+    }
+  ],
+  "original_brief": "<!-- Ground truth: user-directed 2026-07-07 (\"dale a todo\" — consume the rc.161\n     contract). Problem/Why sourced from this repo's own recorded debt, not\n     inferred: index.js lastSession inline-read comment + FR-047 technical_debt\n     in features/contract-catchup-rc159/spec/04_BUILD_REPORT.json. -->\n\n## Feature\nConsume the Aitri v2.0.0-rc.161 `status --json` additions (`lastSession`, per-pipeline `quality_gates`/`ac_coverage`) and retire the two workarounds that existed only because those fields were missing.\n\n## Problem / Why\nCore shipped rc.161 today with the surfaces this Hub filed as HUB-CATCHUP-0705. Until the Hub consumes them: (a) the collector keeps reading `.aitri.local` directly on the snapshot path — the acknowledged SCHEMA.md deviation recorded in lib/collector/index.js; (b) FR-047 of contract-catchup-rc159 stays open as technical_debt (\"blocked on Core exposing quality_gates/ac_coverage\"), so QA-facing views cannot ever render gate results from the record.\n\n## Target Users\nExisting Hub users (QA/PM personas reading dashboard.json-backed views). No new user types.\n\n## New Behavior\nThe system must...\n- Prefer the snapshot's top-level `lastSession` when the key is present in `aitri status --json` output, without falling back to `.aitri.local` for that project.\n- Keep the `.aitri.local` inline fallback ONLY when the snapshot payload lacks the `lastSession` key (pre-rc.161 CLI).\n- Carry `tests.perPipeline[].quality_gates` (name/status/required + optional threshold/measured) into the project record when present, additive and absent-tolerant.\n- Carry `tests.perPipeline[].ac_coverage` into the project record unchanged when present, additive and absent-tolerant.\n- Add no field to the record when the snapshot lacks these surfaces (`null` or absent → no key), and never interpret `null` as \"old Aitri version\" (the artifact fields predate rc.161; only the projection is new).\n\n## Success Criteria\n- Given a snapshot payload with `lastSession: {at, agent, event}`, when the collector projects it, then the record's lastSession matches the snapshot and no `.aitri.local` read occurs for that project.\n- Given a snapshot payload without the `lastSession` key (older CLI), when the collector runs, then the existing inline fallback still populates lastSession as before.\n- Given a snapshot whose root perPipeline entry carries `quality_gates` with a failed required gate, when projected, then the record preserves gate name, status and required flag.\n- Given a snapshot whose perPipeline entries have `quality_gates: null` and `ac_coverage: null`, when projected, then the record carries no quality_gates/ac_coverage keys.\n- The three TC-047h/e/f test cases skipped in contract-catchup-rc159 (or their equivalents here) run and pass.\n- After review, `~/.aitri-hub/integration-compat.json` `reviewedUpTo` = `2.0.0-rc.161`.\n\n## Touch Points\n- MODIFIES `lib/collector/snapshot-reader.js` (`projectFromSnapshot`) — new field projection.\n- MODIFIES `lib/collector/index.js` — lastSession preference order (snapshot key wins; inline `.aitri.local` read becomes the pre-rc.161 fallback only).\n- MODIFIES `~/.aitri-hub/integration-compat.json` (data, not code) — reviewedUpTo bump after review.\n- Existing FRs: completes the intent of FR-047 (contract-catchup-rc159, shipped as technical_debt); touches FR-016 (lastSession rendering) data source only.\n\n## Must Not Break (Regression Boundary)\n- Snapshot-path collection for projects on pre-rc.161 CLIs keeps producing the same record (lastSession via inline fallback; no quality_gates/ac_coverage keys).\n- The legacy/fallback reader path (`aitri-reader.js`, snapshot-ineligible projects) remains byte-identical in behavior.\n- QA Workspace detail tabs (detail-reader.js) keep reading artifacts directly — no change to on-demand reads.\n- The `bugs.parseErrors` consumption (rc.158) and the version-gap integration alert keep working unchanged.\n- dashboard.json records for projects WITHOUT the new fields keep their exact current shape (additive-only guarantee).\n\n## Out of Scope\n- No new UI sections — rendering quality_gates/ac_coverage in QA Workspace tabs is a separate feature (same boundary FR-047 drew).\n- No coverage-audit freshness consumption (Core deliberately did not ship it; the Traceability tab re-hash stays, deferred until a real project mis-reports).\n- No `validate --json` changes (rc.160's `allValid` fix is corrective upstream; the Deploy Verdict card already reads top-level `deployable`).\n"
+}

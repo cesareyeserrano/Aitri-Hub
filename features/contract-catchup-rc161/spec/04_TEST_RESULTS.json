@@ -1,0 +1,180 @@
+{
+  "executed_at": "2026-07-08T00:52:49.410Z",
+  "test_runner": "node --test ../../tests/unit/quality-surfaces.test.js ../../tests/integration/contract-catchup-rc161.test.js",
+  "exit_code": 0,
+  "results": [
+    {
+      "tc_id": "TC-060h",
+      "status": "pass",
+      "notes": "✔ TC-060h: snapshot lastSession wins; .aitri.local never read (456.694ms)"
+    },
+    {
+      "tc_id": "TC-060e",
+      "status": "pass",
+      "notes": "✔ TC-060e: lastSession key present but null — trusted, no fallback (85.342625ms)"
+    },
+    {
+      "tc_id": "TC-060f",
+      "status": "pass",
+      "notes": "✔ TC-060f: payload without the lastSession key — legacy fallback still populates (28.901042ms)"
+    },
+    {
+      "tc_id": "TC-061h",
+      "status": "pass",
+      "notes": "✔ TC-061h: quality_gates projected verbatim (3.35675ms)"
+    },
+    {
+      "tc_id": "TC-061e",
+      "status": "pass",
+      "notes": "✔ TC-061e: coverage-style gate keeps threshold and measured (2.939792ms)"
+    },
+    {
+      "tc_id": "TC-061f",
+      "status": "pass",
+      "notes": "✔ TC-061f: all-null surfaces → no qualitySurfaces key (2.016083ms)"
+    },
+    {
+      "tc_id": "TC-062h",
+      "status": "pass",
+      "notes": "✔ TC-062h: ac_coverage passes through unchanged (2.252ms)"
+    },
+    {
+      "tc_id": "TC-062f",
+      "status": "pass",
+      "notes": "✔ TC-062f: per-surface independence — gates without ac_coverage (0.885375ms)"
+    },
+    {
+      "tc_id": "TC-063h",
+      "status": "pass",
+      "notes": "✔ TC-063h: no alert for a project on the reviewed rc.161 (1.24025ms)"
+    },
+    {
+      "tc_id": "TC-064h",
+      "status": "pass",
+      "notes": "✔ TC-064h: this suite carries no skip/todo markers — zero-skip guarantee (1.392333ms)"
+    },
+    {
+      "tc_id": "TC-062e",
+      "status": "pass",
+      "notes": "✔ TC-062e: ac_coverage empty array is preserved, not dropped (2.800875ms)"
+    },
+    {
+      "tc_id": "TC-063e",
+      "status": "pass",
+      "notes": "✔ TC-063e: alert still fires beyond the baseline (rc.162) (0.344708ms)"
+    },
+    {
+      "tc_id": "TC-063f",
+      "status": "pass",
+      "notes": "✔ TC-063f: absent/malformed reviewed baseline degrades without throwing (0.390333ms)"
+    },
+    {
+      "tc_id": "TC-064e",
+      "status": "pass",
+      "notes": "✔ TC-064e: this file sits inside the npm-test unit glob (tests/unit/*.test.js) (0.636416ms)"
+    },
+    {
+      "tc_id": "TC-064f",
+      "status": "pass",
+      "notes": "✔ TC-064f: the feature build report re-files no blocked-on-Core debt (0.725417ms)"
+    },
+    {
+      "tc_id": "TC-056h",
+      "status": "pass",
+      "notes": "✔ TC-056h: pre-rc.161 payload → record deep-equals the golden pre-change shape (31.65575ms)"
+    },
+    {
+      "tc_id": "TC-057h",
+      "status": "pass",
+      "notes": "✔ TC-057h: sub-floor project takes the legacy path — no qualitySurfaces ever (20.026084ms)"
+    },
+    {
+      "tc_id": "TC-058h",
+      "status": "pass",
+      "notes": "✔ TC-058h: bugs.parseErrors consumption unchanged (rc.158 pin) (25.922458ms)"
+    },
+    {
+      "tc_id": "TC-056e",
+      "status": "pass",
+      "notes": "✔ TC-056e: pre-rc.161 payload with NO .aitri.local at all (26.054125ms)"
+    },
+    {
+      "tc_id": "TC-056f",
+      "status": "pass",
+      "notes": "✔ TC-056f: the golden comparison is not vacuous (mutation guard) (30.645541ms)"
+    },
+    {
+      "tc_id": "TC-057e",
+      "status": "pass",
+      "notes": "✔ TC-057e: legacy path sources lastSession from the legacy reader, unchanged (17.969ms)"
+    },
+    {
+      "tc_id": "TC-057f",
+      "status": "pass",
+      "notes": "✔ TC-057f: corrupted .aitri on the legacy path degrades exactly as before (17.121833ms)"
+    },
+    {
+      "tc_id": "TC-058e",
+      "status": "pass",
+      "notes": "✔ TC-058e: parseErrors consumption coexists with the rc.161 surfaces (25.382708ms)"
+    },
+    {
+      "tc_id": "TC-058f",
+      "status": "pass",
+      "notes": "✔ TC-058f: alert logic reads versions (+ manifest metadata), never payload keys (0.25275ms)"
+    }
+  ],
+  "fr_coverage": [
+    {
+      "fr_id": "FR-060",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-061",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-062",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-063",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    },
+    {
+      "fr_id": "FR-064",
+      "tests_passing": 3,
+      "tests_failing": 0,
+      "tests_skipped": 0,
+      "tests_manual": 0,
+      "status": "covered"
+    }
+  ],
+  "summary": {
+    "total": 24,
+    "passed": 24,
+    "failed": 0,
+    "skipped": 0,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 0,
+    "manual": 0,
+    "manual_verified": 0
+  },
+  "low_confidence_tcs": []
+}

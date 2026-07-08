@@ -1,0 +1,20 @@
+{
+  "project": "aitri-hub",
+  "feature_id": "contract-catchup-rc161",
+  "version": "0.2.1",
+  "phases_completed": [1, 2, 3, 4, 5],
+  "completed_at": "2026-07-07",
+  "summary": "Consumed the Aitri v2.0.0-rc.161 status --json additions the Hub filed as HUB-CATCHUP-0705. lastSession now sources from the snapshot payload when the key is present (key-presence = contract proof, TRD ADR-1), confining the .aitri.local inline read — the acknowledged SCHEMA.md deviation — to pre-rc.161 CLIs only. New projectQualitySurfaces carries per-pipeline quality_gates (narrowed projection) and ac_coverage (unchanged pass-through) into the record as the additive qualitySurfaces key, omitted when empty so pre-rc.161 records stay byte-identical (golden-record pin with mutation guard). Closes the FR-047 technical_debt of contract-catchup-rc159 with 24 running tests (zero skips — the placeholder pattern did not recur). Ship-time data edit: integration-compat.json reviewedUpTo advances to 2.0.0-rc.161 after the rc.160/rc.161 '— additive' CHANGELOG review.",
+  "overall_status": "compliant",
+  "requirement_compliance": [
+    { "id": "FR-060", "level": "functionally_present", "evidence": "lib/collector/index.js snapshotSpeaksLastSession gate; TC-060h/e/f (poison .aitri.local technique proves no file read)" },
+    { "id": "FR-061", "level": "functionally_present", "evidence": "lib/collector/snapshot-reader.js projectQualitySurfaces; TC-061h/e/f" },
+    { "id": "FR-062", "level": "functionally_present", "evidence": "ac_coverage pass-through in projectQualitySurfaces; TC-062h/e/f" },
+    { "id": "FR-063", "level": "functionally_present", "evidence": "TC-063h/e/f vs evaluateIntegrationAlert; live manifest edit at ship time" },
+    { "id": "FR-064", "level": "functionally_present", "evidence": "24/24 verify-run credits, zero skips; TC-064h/e/f" },
+    { "id": "NFR-056", "level": "functionally_present", "evidence": "TC-056h/e/f golden-record pin + mutation guard" },
+    { "id": "NFR-057", "level": "functionally_present", "evidence": "TC-057h/e/f legacy-path pins; aitri-reader.js untouched in the diff" },
+    { "id": "NFR-058", "level": "functionally_present", "evidence": "TC-058h/e/f; parseErrors + alert suites pass unmodified" },
+    { "id": "NFR-059", "level": "functionally_present", "evidence": "diff strictly removes a file read for rc.161+ projects; no new fs paths" }
+  ]
+}
