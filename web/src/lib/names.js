@@ -27,6 +27,7 @@ export const NAME_MAP = Object.freeze({
   'AUDIT_REPORT.md': 'Audit Report',
   'BUGS.json': 'Bug Log',
   'BACKLOG.json': 'Backlog — Plan',
+  'BUILD_PLAN.md': 'Build Plan — Epics',
 });
 
 /**

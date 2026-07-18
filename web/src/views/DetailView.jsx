@@ -357,12 +357,12 @@ export default function DetailView({ id, record, loading = false }) {
 
         {(section === 'artifacts' || QA_SECTIONS.includes(section)) && (
           <>
-            {detail.loading && !detail.payload && section !== 'reports' && <div className="d-empty" data-testid="detail-loading">loading…</div>}
-            {detail.error && section !== 'reports' && (
+            {detail.loading && !detail.payload && !['reports', 'artifacts'].includes(section) && <div className="d-empty" data-testid="detail-loading">loading…</div>}
+            {detail.error && !['reports', 'artifacts'].includes(section) && (
               <div className="d-empty" data-testid="detail-error">// could not load: {detail.error.error}</div>
             )}
-            {detail.payload && section === 'artifacts' && (
-              <ArtifactsExplorer id={id} tree={detail.payload.artifacts?.tree ?? []} scope="product" />
+            {section === 'artifacts' && (
+              <ArtifactsExplorer id={id} scopes={detail.payload?.scopes ?? ['product']} />
             )}
             {detail.payload && section === 'testcases' && <QaTestCases id={id} testCases={detail.payload.testCases} />}
             {detail.payload && section === 'bugs' && <QaBugs bugs={detail.payload.bugs} />}

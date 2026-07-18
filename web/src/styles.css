@@ -3502,6 +3502,9 @@ h1, h2, h3, h4, .section-title, .detail-name, .card__name {
 /* ============================================================
    v0.3.0 Artifacts explorer + reader (Epic 3)
    ============================================================ */
+.ax-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-3); }
+.ax-scope { display: flex; align-items: center; gap: var(--space-2); font-size: 12px; }
+.ax-scope select { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); font-family: var(--font-mono); font-size: 12px; padding: 4px 8px; border-radius: 3px; }
 .ax-grid { display: grid; grid-template-columns: 300px 1fr; gap: var(--space-4); align-items: start; }
 /* Tree stays in view (sticky, own scroll) while a long artifact scrolls the page —
    no scrolling back up to pick another file. */

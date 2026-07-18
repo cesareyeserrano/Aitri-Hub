@@ -15,7 +15,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { productName } from '../lib/names.js';
-import { fetchArtifact } from '../lib/detailApi.js';
+import { fetchArtifact, fetchDetail } from '../lib/detailApi.js';
 import { renderMarkdown } from '../lib/markdown.jsx';
 import { JsonView } from '../lib/jsonView.jsx';
 
@@ -59,14 +59,40 @@ function imageRefs(md) {
 }
 
 /**
- * @param {{ id:string, tree:Array, scope?:string, feature?:string }} props
+ * @param {{ id:string, tree?:Array, scopes?:string[], scope?:string, feature?:string }} props
+ *   When `tree` is passed it renders statically (tests). Otherwise it fetches the
+ *   tree for the selected scope and shows a scope selector (product / each feature),
+ *   so feature artifacts — including BUILD_PLAN.md — are reachable (FR-015/019).
  */
-export default function ArtifactsExplorer({ id, tree = [], scope, feature }) {
+export default function ArtifactsExplorer({ id, tree: treeProp, scopes = ['product'], scope: scopeProp, feature }) {
+  const staticMode = Array.isArray(treeProp);
+  const [scope, setScope] = useState(scopeProp ?? 'product');
+  const [tree, setTree] = useState(treeProp ?? []);
+  const [treeState, setTreeState] = useState({ loading: !staticMode, error: null });
   const [selected, setSelected] = useState(null);
   const [content, setContent] = useState({ loading: false, data: null, error: null });
   const [images, setImages] = useState({});
   const [collapsed, setCollapsed] = useState({});
   const toggleFolder = (phase) => setCollapsed((c) => ({ ...c, [phase]: !c[phase] }));
+
+  // Fetch the artifact tree for the selected scope (skipped in static/test mode).
+  useEffect(() => {
+    if (staticMode) return;
+    let cancelled = false;
+    setTreeState({ loading: true, error: null });
+    setSelected(null);
+    setContent({ loading: false, data: null, error: null });
+    (async () => {
+      const res = await fetchDetail(id, scope);
+      if (cancelled) return;
+      if (res.ok) { setTree(res.payload.artifacts?.tree ?? []); setTreeState({ loading: false, error: null }); }
+      else { setTree([]); setTreeState({ loading: false, error: res.error }); }
+    })();
+    return () => { cancelled = true; };
+  }, [id, scope, staticMode]);
+
+  // Feature scope prefixes product names with the feature (FR-019).
+  const activeFeature = feature ?? (scope !== 'product' ? scope : undefined);
 
   const load = useCallback(async (name) => {
     setContent({ loading: true, data: null, error: null });
@@ -108,10 +134,22 @@ export default function ArtifactsExplorer({ id, tree = [], scope, feature }) {
 
   return (
     <section className="d-section artifacts-explorer" data-testid="section-artifacts">
-      <h2 className="d-section__title">// artifacts</h2>
+      <div className="ax-header">
+        <h2 className="d-section__title">// artifacts</h2>
+        {!staticMode && scopes.length > 1 && (
+          <label className="ax-scope">
+            <span className="dim mono">scope</span>
+            <select value={scope} onChange={(e) => setScope(e.target.value)} data-testid="artifact-scope">
+              {scopes.map((s) => <option key={s} value={s}>{s === 'product' ? 'product' : `feature: ${s}`}</option>)}
+            </select>
+          </label>
+        )}
+      </div>
       <div className="ax-grid">
         <aside className="ax-tree" data-testid="artifacts-tree">
-          {tree.length === 0 && <div className="d-empty">// no artifacts</div>}
+          {treeState.loading && <div className="d-empty" data-testid="tree-loading">loading artifacts…</div>}
+          {treeState.error && <div className="d-empty" data-testid="tree-error">// could not load artifacts: {treeState.error}</div>}
+          {!treeState.loading && !treeState.error && tree.length === 0 && <div className="d-empty">// no artifacts</div>}
           {tree.map((group) => {
             const meta = STATUS_META[group.status] ?? STATUS_META.empty;
             return (
@@ -140,7 +178,7 @@ export default function ArtifactsExplorer({ id, tree = [], scope, feature }) {
                         data-testid="artifact-file"
                         data-name={f.technicalName}
                       >
-                        <span className="ax-file__name">{productName(f.technicalName, feature ? { feature } : undefined)}</span>
+                        <span className="ax-file__name">{productName(f.technicalName, activeFeature ? { feature: activeFeature } : undefined)}</span>
                         <span className="ax-file__tech mono" title={f.technicalName}>{f.technicalName}</span>
                         <span className="ax-file__meta mono">{sizeOf(f.size)} · {ageOf(f.mtime)}</span>
                         <span className={`status-badge status-badge--${fmeta.cls} ax-file__chip`}>{fmeta.glyph} {fmeta.label}</span>
@@ -165,7 +203,7 @@ export default function ArtifactsExplorer({ id, tree = [], scope, feature }) {
           )}
           {selected && content.data && (
             <div className="ax-reader__body">
-              <div className="ax-reader__title mono">{productName(selected, feature ? { feature } : undefined)}
+              <div className="ax-reader__title mono">{productName(selected, activeFeature ? { feature: activeFeature } : undefined)}
                 <span className="ax-reader__tech"> · {selected}</span>
               </div>
               {content.data.kind === 'markdown' && renderMarkdown(content.data.content, { resolveImage })}
