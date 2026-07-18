@@ -27,8 +27,9 @@ import {
   buildAlerts,
 } from '../lib/detail.js';
 import ArtifactsExplorer from '../components/ArtifactsExplorer.jsx';
-import TestCasesTab from './tabs/TestCasesTab.jsx';
-import BugsTab from './tabs/BugsTab.jsx';
+import QaTestCases from '../components/QaTestCases.jsx';
+import QaBugs from '../components/QaBugs.jsx';
+import QaReports from '../components/QaReports.jsx';
 
 const URGENCY_META = Object.freeze({
   error: { label: 'CRITICAL', glyph: '✕', cls: 'error' },
@@ -45,7 +46,7 @@ const BADGE_META = Object.freeze({
 
 // Core sections derive from the polled record; QA/artifact sections use the payload.
 const CORE_SECTIONS = ['overview', 'health', 'artifacts', 'sessions', 'alerts'];
-const QA_SECTIONS = ['testcases', 'bugs'];
+const QA_SECTIONS = ['testcases', 'bugs', 'reports'];
 const SECTION_LABEL = Object.freeze({
   overview: 'Overview',
   health: 'Health',
@@ -54,6 +55,7 @@ const SECTION_LABEL = Object.freeze({
   alerts: 'Alerts',
   testcases: 'Test Cases',
   bugs: 'Bugs',
+  reports: 'Reports',
 });
 
 /** Relative-age string for an epoch/ISO timestamp; '—' when absent. */
@@ -355,15 +357,16 @@ export default function DetailView({ id, record, loading = false }) {
 
         {(section === 'artifacts' || QA_SECTIONS.includes(section)) && (
           <>
-            {detail.loading && !detail.payload && <div className="d-empty" data-testid="detail-loading">loading…</div>}
-            {detail.error && (
+            {detail.loading && !detail.payload && section !== 'reports' && <div className="d-empty" data-testid="detail-loading">loading…</div>}
+            {detail.error && section !== 'reports' && (
               <div className="d-empty" data-testid="detail-error">// could not load: {detail.error.error}</div>
             )}
             {detail.payload && section === 'artifacts' && (
               <ArtifactsExplorer id={id} tree={detail.payload.artifacts?.tree ?? []} scope="product" />
             )}
-            {detail.payload && section === 'testcases' && <TestCasesTab testCases={detail.payload.testCases} />}
-            {detail.payload && section === 'bugs' && <BugsTab bugs={detail.payload.bugs} />}
+            {detail.payload && section === 'testcases' && <QaTestCases id={id} testCases={detail.payload.testCases} />}
+            {detail.payload && section === 'bugs' && <QaBugs bugs={detail.payload.bugs} />}
+            {section === 'reports' && <QaReports id={id} scopes={detail.payload?.scopes ?? ['product']} />}
           </>
         )}
       </div>

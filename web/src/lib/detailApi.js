@@ -54,6 +54,78 @@ export async function fetchArtifact(id, relPath, scope) {
 }
 
 /**
+ * Read QA executions for a project (optionally one test case).
+ * @param {string} id
+ * @param {string} [testCaseId]
+ * @returns {Promise<{ok:true, executions:object[]} | {ok:false, error:string}>}
+ */
+export async function fetchExecutions(id, testCaseId) {
+  const q = testCaseId ? `?tc=${encodeURIComponent(testCaseId)}` : '';
+  try {
+    const res = await fetch(`/api/project/${encodeURIComponent(id)}/executions${q}`, { cache: 'no-store' });
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
+    const body = await res.json();
+    return { ok: true, executions: body.executions ?? [] };
+  } catch (e) {
+    return { ok: false, error: String(e?.message ?? e) };
+  }
+}
+
+/**
+ * Record a manual execution (result required; optional notes/environment/evidence).
+ * @param {string} id
+ * @param {string} testCaseId
+ * @param {{result:string, notes?:string, environment?:string, evidence?:{mime:string, base64:string}}} body
+ * @returns {Promise<{ok:true, execution:object} | {ok:false, status:number, error:string, code?:string}>}
+ */
+export async function postExecution(id, testCaseId, body) {
+  try {
+    const res = await fetch(`/api/project/${encodeURIComponent(id)}/testcases/${encodeURIComponent(testCaseId)}/executions`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, status: res.status, error: payload.error ?? `HTTP ${res.status}`, code: payload.code };
+    return { ok: true, execution: payload.execution };
+  } catch (e) {
+    return { ok: false, status: 0, error: String(e?.message ?? e) };
+  }
+}
+
+/**
+ * Set a manual test case status.
+ * @returns {Promise<{ok:true, case:object} | {ok:false, status:number, error:string, code?:string}>}
+ */
+export async function patchStatus(id, testCaseId, status) {
+  try {
+    const res = await fetch(`/api/project/${encodeURIComponent(id)}/testcases/${encodeURIComponent(testCaseId)}/status`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }),
+    });
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, status: res.status, error: payload.error ?? `HTTP ${res.status}`, code: payload.code };
+    return { ok: true, case: payload.case };
+  } catch (e) {
+    return { ok: false, status: 0, error: String(e?.message ?? e) };
+  }
+}
+
+/**
+ * Fetch an on-demand quality report.
+ * @param {string} id
+ * @param {string} scope - 'project' | 'feature:<name>' | 'run:<stamp>'
+ * @returns {Promise<{ok:true, report:object} | {ok:false, error:string}>}
+ */
+export async function fetchReport(id, scope = 'project') {
+  try {
+    const res = await fetch(`/api/project/${encodeURIComponent(id)}/report?scope=${encodeURIComponent(scope)}`, { cache: 'no-store' });
+    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
+    const body = await res.json();
+    return { ok: true, report: body.report };
+  } catch (e) {
+    return { ok: false, error: String(e?.message ?? e) };
+  }
+}
+
+/**
  * Run the on-demand deploy-readiness check.
  * @param {string} id
  * @param {boolean} [refresh]
