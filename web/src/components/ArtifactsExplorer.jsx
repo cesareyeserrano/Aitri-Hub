@@ -65,6 +65,8 @@ export default function ArtifactsExplorer({ id, tree = [], scope, feature }) {
   const [selected, setSelected] = useState(null);
   const [content, setContent] = useState({ loading: false, data: null, error: null });
   const [images, setImages] = useState({});
+  const [collapsed, setCollapsed] = useState({});
+  const toggleFolder = (phase) => setCollapsed((c) => ({ ...c, [phase]: !c[phase] }));
 
   const load = useCallback(async (name) => {
     setContent({ loading: true, data: null, error: null });
@@ -114,11 +116,18 @@ export default function ArtifactsExplorer({ id, tree = [], scope, feature }) {
             const meta = STATUS_META[group.status] ?? STATUS_META.empty;
             return (
               <div key={group.phase} className="ax-folder" data-testid="artifact-folder" data-phase={group.phase}>
-                <div className="ax-folder__head">
+                <button
+                  className="ax-folder__head"
+                  onClick={() => toggleFolder(group.phase)}
+                  aria-expanded={!collapsed[group.phase]}
+                  data-testid="artifact-folder-toggle"
+                >
+                  <span className="ax-caret mono">{collapsed[group.phase] ? '▸' : '▾'}</span>
                   <span className={`ax-glyph color--${meta.cls}`}>{group.glyph}</span>
                   <span className="ax-folder__label mono">{group.label}</span>
-                </div>
-                {group.files.length === 0 ? (
+                  <span className="ax-folder__count mono">{group.files.length || ''}</span>
+                </button>
+                {collapsed[group.phase] ? null : group.files.length === 0 ? (
                   <div className="ax-empty-row" data-testid="artifact-empty-phase">// no artifacts in this phase yet</div>
                 ) : (
                   group.files.map((f) => {

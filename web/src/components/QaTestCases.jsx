@@ -117,6 +117,8 @@ export default function QaTestCases({ id, testCases }) {
   const [history, setHistory] = useState({ loading: false, executions: [] });
   const [overrides, setOverrides] = useState({});
   const [rowError, setRowError] = useState(null);
+  const [collapsed, setCollapsed] = useState({});
+  const toggleGroup = (key) => setCollapsed((c) => ({ ...c, [key]: !c[key] }));
 
   const filtered = applyCaseFilters(cases.map((c) => (overrides[c.id] ? { ...c, status: overrides[c.id] } : c)), { type, status, fr });
   const groups = groupCasesByFr(filtered);
@@ -179,8 +181,10 @@ export default function QaTestCases({ id, testCases }) {
         <div className="d-empty">// no cases match the filters</div>
       ) : groups.map((g) => (
         <div key={g.key} className="qa-group" data-testid="qa-group">
-          <div className="qa-group__head mono">{g.key}</div>
-          {g.cases.map((c) => {
+          <button className="qa-group__head mono" onClick={() => toggleGroup(g.key)} aria-expanded={!collapsed[g.key]} data-testid="qa-group-toggle">
+            <span className="qa-caret">{collapsed[g.key] ? '▸' : '▾'}</span> {g.key} <span className="qa-group__count">({g.cases.length})</span>
+          </button>
+          {collapsed[g.key] ? null : g.cases.map((c) => {
             const t = caseType(c);
             const st = c.status ?? 'pending';
             return (

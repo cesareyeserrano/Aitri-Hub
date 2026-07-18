@@ -8,7 +8,7 @@
  * @aitri-trace FR-ID: FR-016, US-ID: US-016, AC-ID: AC-016-2, TC-ID: TC-JSON-016h
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 
 /** A primitive leaf, coloured by type. */
 function Leaf({ value }) {
@@ -20,10 +20,28 @@ function Leaf({ value }) {
 }
 
 /**
- * Recursively render a JSON value.
- * @param {{ value:any, k?:string }} props
+ * A collapsible object/array group. Large collections (>20 items) default collapsed
+ * so a big artifact opens compact; everything else defaults expanded.
+ * @param {{ label:React.ReactNode, count:number, depth:number, children:React.ReactNode }} props
  */
-function Node({ value, k }) {
+function Group({ label, count, depth, children }) {
+  const [open, setOpen] = useState(!(count > 20 && depth > 0));
+  return (
+    <div className="jv-block">
+      <button className="jv-toggle mono" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+        <span className="jv-caret">{open ? '▾' : '▸'}</span>
+        {label}
+      </button>
+      {open && <div className="jv-children">{children}</div>}
+    </div>
+  );
+}
+
+/**
+ * Recursively render a JSON value.
+ * @param {{ value:any, k?:string, depth?:number }} props
+ */
+function Node({ value, k, depth = 0 }) {
   if (value === null || typeof value !== 'object') {
     return (
       <div className="jv-row">
@@ -42,28 +60,24 @@ function Node({ value, k }) {
         </div>
       );
     }
+    const label = <span className="jv-key jv-key--group">{k ?? 'array'} <span className="jv-count">[{value.length}]</span></span>;
     return (
-      <div className="jv-block">
-        {k != null && <div className="jv-key mono jv-key--group">{k} <span className="jv-count">[{value.length}]</span></div>}
-        <div className="jv-children">
-          {value.map((v, i) => (
-            typeof v === 'object' && v !== null
-              ? <div key={i} className="jv-item"><div className="jv-idx mono">#{i + 1}</div><Node value={v} /></div>
-              : <div key={i} className="jv-row"><span className="jv-idx mono">#{i + 1}</span><Leaf value={v} /></div>
-          ))}
-        </div>
-      </div>
+      <Group label={label} count={value.length} depth={depth}>
+        {value.map((v, i) => (
+          typeof v === 'object' && v !== null
+            ? <div key={i} className="jv-item"><div className="jv-idx mono">#{i + 1}</div><Node value={v} depth={depth + 1} /></div>
+            : <div key={i} className="jv-row"><span className="jv-idx mono">#{i + 1}</span><Leaf value={v} /></div>
+        ))}
+      </Group>
     );
   }
 
   const entries = Object.entries(value);
+  const label = <span className="jv-key jv-key--group">{k ?? 'object'} <span className="jv-count">{`{${entries.length}}`}</span></span>;
   return (
-    <div className="jv-block">
-      {k != null && <div className="jv-key mono jv-key--group">{k}</div>}
-      <div className="jv-children">
-        {entries.map(([key, v]) => <Node key={key} k={key} value={v} />)}
-      </div>
-    </div>
+    <Group label={label} count={entries.length} depth={depth}>
+      {entries.map(([key, v]) => <Node key={key} k={key} value={v} depth={depth + 1} />)}
+    </Group>
   );
 }
 
@@ -73,9 +87,19 @@ function Node({ value, k }) {
  * @returns {JSX.Element}
  */
 export function JsonView({ data }) {
-  return (
-    <div className="json-view" data-testid="json-view">
-      <Node value={data} />
-    </div>
-  );
+  // Render the root's members directly (expanded) so there is no redundant
+  // top-level toggle; nested objects/arrays are individually collapsible.
+  let body;
+  if (data !== null && typeof data === 'object' && !Array.isArray(data)) {
+    body = Object.entries(data).map(([key, v]) => <Node key={key} k={key} value={v} depth={1} />);
+  } else if (Array.isArray(data)) {
+    body = data.map((v, i) => (
+      typeof v === 'object' && v !== null
+        ? <div key={i} className="jv-item"><div className="jv-idx mono">#{i + 1}</div><Node value={v} depth={1} /></div>
+        : <div key={i} className="jv-row"><span className="jv-idx mono">#{i + 1}</span><Leaf value={v} /></div>
+    ));
+  } else {
+    body = <Node value={data} />;
+  }
+  return <div className="json-view" data-testid="json-view">{body}</div>;
 }
