@@ -26,6 +26,7 @@ export const NAME_MAP = Object.freeze({
   '05_TRACEABILITY.json': 'Traceability Matrix',
   'AUDIT_REPORT.md': 'Audit Report',
   'BUGS.json': 'Bug Log',
+  'BACKLOG.json': 'Backlog — Plan',
 });
 
 /**
