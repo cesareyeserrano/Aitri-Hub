@@ -8,12 +8,24 @@
  */
 
 export const NAME_MAP = Object.freeze({
+  // Canonical FR-019 mapping (the six spec-named artifacts).
   '01_REQUIREMENTS.json': 'PRD — Product Requirements',
   '02_SYSTEM_DESIGN.md': 'TRD — Technical Design',
   '03_TEST_CASES.json': 'QA Plan — Test Cases',
   '04_IMPLEMENTATION_MANIFEST.json': 'Implementation Manifest',
   '05_PROOF_OF_COMPLIANCE.json': 'Release Compliance',
   '06_EXTERNAL_SIGNALS.json': 'External Signals',
+  // Extension: the other artifacts Aitri actually emits, so the explorer never
+  // shows a raw technical filename for a known artifact. Still a fixed built-in
+  // map (not user-configurable); truly-unknown names fall back to the raw name.
+  '00_DISCOVERY.md': 'Discovery Brief',
+  '01_UX_SPEC.md': 'UX / Design Spec',
+  '04_BUILD_REPORT.json': 'Build Report — Implementation',
+  '04_CODE_REVIEW.md': 'Code Review',
+  '04_TEST_RESULTS.json': 'Test Results',
+  '05_TRACEABILITY.json': 'Traceability Matrix',
+  'AUDIT_REPORT.md': 'Audit Report',
+  'BUGS.json': 'Bug Log',
 });
 
 /**

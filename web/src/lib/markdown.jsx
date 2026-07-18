@@ -13,15 +13,48 @@
 
 import React from 'react';
 
-// Inline spans: code, bold, italic (asterisk or underscore), links. React
+/**
+ * Per-render image resolver (FR-016). Set by renderMarkdown for the duration of a
+ * single synchronous render pass; read by renderInline's image token. `null` when
+ * a caller passes no resolver — then relative images degrade to an alt-text
+ * placeholder (never a broken/exec'd embed). Not reentrant by design: rendering is
+ * a single synchronous pass, so a module-scoped handle avoids threading it through
+ * every renderInline call site.
+ */
+let _resolveImage = null;
+
+/** Only inline image data-URIs of the supported raster/vector types (FR-016). */
+const IMG_DATA_URI = /^data:image\/(png|jpe?g|gif|webp|svg\+xml);base64,/i;
+
+/**
+ * Render a Markdown image token to an inline <img> when its source resolves, or an
+ * alt-text placeholder otherwise — the document keeps rendering either way (FR-016).
+ * @param {string} alt
+ * @param {string} src - data-URI or a relative artifact path.
+ * @param {string} key
+ */
+function renderImage(alt, src, key) {
+  if (IMG_DATA_URI.test(src)) return <img key={key} className="md-img" src={src} alt={alt} />;
+  const resolved = _resolveImage ? _resolveImage(src) : null;
+  if (resolved && resolved.dataUri) return <img key={key} className="md-img" src={resolved.dataUri} alt={alt} />;
+  return (
+    <span key={key} className="md-img-missing" title={src} role="img" aria-label={alt || 'image'}>
+      🖼 {alt || src}
+    </span>
+  );
+}
+
+// Inline spans: code, bold, italic (asterisk or underscore), images, links. React
 // escapes every text node, so raw HTML in the source renders inert.
 function renderInline(text, keyPrefix) {
   const nodes = [];
   let rest = text;
   let k = 0;
-  // Ordered by precedence; code first so its content is not further parsed.
+  // Ordered by precedence; code first so its content is not further parsed. The
+  // image token precedes the link token so `![alt](src)` matches as an image.
   const patterns = [
     { re: /`([^`]+)`/, make: m => <code key={`${keyPrefix}-${k}`} className="md-code">{m[1]}</code> },
+    { re: /!\[([^\]]*)\]\(([^)\s]+)\)/, make: m => renderImage(m[1], m[2], `${keyPrefix}-${k}`) },
     { re: /\*\*([^*]+)\*\*/, make: m => <strong key={`${keyPrefix}-${k}`}>{renderInline(m[1], `${keyPrefix}-${k}b`)}</strong> },
     { re: /(?:\*([^*]+)\*|_([^_]+)_)/, make: m => <em key={`${keyPrefix}-${k}`}>{m[1] ?? m[2]}</em> },
     { re: /\[([^\]]+)\]\(([^)\s]+)\)/, make: m => renderLink(m[1], m[2], `${keyPrefix}-${k}`) },
@@ -61,9 +94,13 @@ function renderLink(label, href, key) {
 /**
  * Render a Markdown string to a React fragment.
  * @param {string} src
+ * @param {{ resolveImage?: (path:string) => ({dataUri:string}|null) }} [opts]
+ *        resolveImage maps a relative image path to a data-URI (or null when it
+ *        cannot be resolved → alt-text placeholder). FR-016.
  * @returns {JSX.Element}
  */
-export function renderMarkdown(src) {
+export function renderMarkdown(src, opts = {}) {
+  _resolveImage = typeof opts.resolveImage === 'function' ? opts.resolveImage : null;
   if (typeof src !== 'string') return <div className="md" />;
   const lines = src.split('\n');
   const blocks = [];

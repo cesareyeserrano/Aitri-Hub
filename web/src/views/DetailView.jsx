@@ -26,7 +26,7 @@ import {
   buildSessions,
   buildAlerts,
 } from '../lib/detail.js';
-import ArtifactsTab from './tabs/ArtifactsTab.jsx';
+import ArtifactsExplorer from '../components/ArtifactsExplorer.jsx';
 import TestCasesTab from './tabs/TestCasesTab.jsx';
 import BugsTab from './tabs/BugsTab.jsx';
 
@@ -359,7 +359,9 @@ export default function DetailView({ id, record, loading = false }) {
             {detail.error && (
               <div className="d-empty" data-testid="detail-error">// could not load: {detail.error.error}</div>
             )}
-            {detail.payload && section === 'artifacts' && <ArtifactsTab artifacts={detail.payload.artifacts} />}
+            {detail.payload && section === 'artifacts' && (
+              <ArtifactsExplorer id={id} tree={detail.payload.artifacts?.tree ?? []} scope="product" />
+            )}
             {detail.payload && section === 'testcases' && <TestCasesTab testCases={detail.payload.testCases} />}
             {detail.payload && section === 'bugs' && <BugsTab bugs={detail.payload.bugs} />}
           </>

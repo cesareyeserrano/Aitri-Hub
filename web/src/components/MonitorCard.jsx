@@ -71,7 +71,9 @@ export default function MonitorCard({ project, span = 1, animationDelay = 0 }) {
 
       <div className="mcard__issue">
         {m.topIssue ? (
-          <span className="color--error">{meta.glyph} {m.topIssue}</span>
+          <span className={m.urgency === 'critical' ? 'color--error' : m.urgency === 'at_risk' ? 'color--warning' : 'color--info'}>
+            {meta.glyph} {m.topIssue}
+          </span>
         ) : (
           <span className="color--dim">// all systems nominal</span>
         )}

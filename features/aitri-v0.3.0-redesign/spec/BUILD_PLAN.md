@@ -20,7 +20,7 @@ Guardrails carried into every epic: collector (`lib/collector/index.js`) stays f
   Build steps: skeleton → persistence/integrations → hardening
   Why here:    Builds on Epic 1's nav; consumes the existing `/api/project/:id/detail`. No new backend — pure frontend over data that already exists. E2E Dev-triage flow closes Monitor→Detail.
 
-## Epic 3 — Artifacts explorer + reader   [status: pending]
+## Epic 3 — Artifacts explorer + reader   [status: done — 2026-07-18: all 9 Makes-pass TCs green. Backend: detail-reader.js extended with a per-phase artifact tree (glyph=worst child status) + new confined GET /api/project/:id/artifact?path= content endpoint (md→raw, json→parsed projection, image→base64 dataUri), reusing confineToRoot (../ + absolute + %2e%2e-decoded + symlink → 403). Frontend: ArtifactsExplorer (tree w/ product names via names.js + technical secondary + size/age + status chip + toggle-close + empty states) + JsonView (human-readable JSON projection) + markdown.jsx extended for inline images (resolver → dataUri, unresolved → alt placeholder). names.js NAME_MAP extended beyond the canonical 6 to cover all emitted artifacts (addresses review feedback #3). Replaced interim ArtifactsTab in DetailView. Also fixed sticky header/sidebar (review feedback #1). TCs: TC-015h/016h/016e/016f/JSON-016h/PATH-016f/PATH-017f (integration, artifact-content.test.js), TC-015e/015f (vitest, artifacts.test.jsx).]
   Delivers:    US-015, US-016
   FRs:         FR-015, FR-016
   Makes pass:  TC-015h, TC-015e, TC-015f, TC-016h, TC-016e, TC-016f, TC-JSON-016h, TC-PATH-016f, TC-PATH-017f
