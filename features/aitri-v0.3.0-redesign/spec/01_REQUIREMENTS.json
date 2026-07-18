@@ -1,0 +1,896 @@
+{
+  "project_name": "Aitri Hub — v0.3.0 UI/UX Redesign",
+  "project_summary": "Presentation-layer redesign of Aitri Hub: transforms the existing local monitoring dashboard (FR-001..009 already shipped) into a signals-first mission-control interface plus an in-Hub QA workspace, grounded in the UI Discovery Brief (feature_context/aitri-hub-ui-discovery.md), the two interaction prototypes (aitri-hub-jarvis-health.jsx = monitor/health/sessions authority, aitri-hub-final.jsx = artifact-tree authority), and the parent UI_UX_SPEC_V2.md (design system + data contracts). This feature is UI/UX only — the Hub's professionalization (installable app, isolated runtime, architecture upgrade) is deferred to a separate future feature (aitri-hub-platform-upgrade).\n\nProduct Analysis:\n  North Star KPI: Time-to-urgency — from opening the Monitor, a user identifies the single most urgent project in <10 seconds (via bento size, ordering, and color, without reading body text).\n  JTBD: 'When I oversee several Aitri projects across Dev/Product/QA, help me see which one needs attention and act on it — read its full state and, for QA, run a test — without opening another tool.'\n  Guardrail metric: Data ingestion parity — the redesign must not change the data the Hub reads from Aitri projects (same dashboard.json contract, same monitor collection), and each detail section must render in ≤2s for a project with up to 20 artifacts.\n\nScope note: this is a change to an existing system. New FRs (FR-010+) cover the redesigned surfaces; the existing collection/admin/alerts engine (FR-001..009) and the shipped qa-workspace feature are the substrate the redesign re-presents and must not break (see Regression NFRs).",
+  "no_go_zone": [
+    "No role/user separation or differentiated access — the three roles (Dev, Product, QA) share one unsegmented view in v1",
+    "No push or background notifications, and no toasts — alerting is in-page only (parent Annex A cut)",
+    "No artifact editing from Hub — the reader can approve/reject/complete via existing actions, but never edits artifact content",
+    "No file export (PDF/Markdown) — browser print of the report view is the only output; no server-side export",
+    "No support for non-Aitri projects — a directory without Aitri state is not rendered",
+    "No authentication, sessions, or multi-tenant access control in v1",
+    "No aitri command execution beyond the already-shipped approve/reject/complete artifact actions — the Hub does not run run-phase/verify from the UI",
+    "Deferred to a separate feature (aitri-hub-platform-upgrade): making the Hub installable, giving it an isolated runtime/environment, and the general architecture upgrade — explicitly NOT in this v0.3.0",
+    "Cut from v1 (parent UI_UX_SPEC_V2 Annex A): team/commit velocity metric, vulnerable-dependency alerts, code-coverage-% surfacing (FR coverage only, unless a coverage quality-gate is declared), light theme, uptime",
+    "No mobile/tablet-optimized layout and no native mobile build — desktop web only; small viewports may degrade without breaking",
+    "No manual refresh control in v1 — data syncs on a periodic timer only",
+    "No separate 'release' entity or release CRUD — a manual test execution binds to the current Aitri verify-run/snapshot, not a user-managed release object"
+  ],
+  "user_personas": [
+    {
+      "role": "Dev (Three Amigos)",
+      "tech_level": "high",
+      "goal": "Spot which Aitri project is blocked, inspect drift/verify/artifacts, and resume work — without cd-ing into repos or reading raw JSON",
+      "pain_point": "Today must open each repo, read raw artifacts, and run terminal commands; cannot see at a glance which project is critical vs merely idle"
+    },
+    {
+      "role": "Product (Three Amigos)",
+      "tech_level": "mid",
+      "goal": "Follow the phase pipeline and read artifacts in product language (PRD/TRD/QA Plan) to validate overall project state",
+      "pain_point": "Aitri's technical file names and raw Markdown/JSON are unreadable for a non-CLI role; visual artifact content is buried"
+    },
+    {
+      "role": "QA (Three Amigos)",
+      "tech_level": "mid",
+      "goal": "Use Hub as an active work tool — consult test cases, record manual test executions with evidence, review bugs, and produce a quality report",
+      "pain_point": "No place to register manual test results tied to the project's verify run, or to see test cases and bugs alongside the project state"
+    }
+  ],
+  "functional_requirements": [
+    {
+      "id": "FR-010",
+      "title": "Monitor — urgency-weighted bento grid with worst-first ordering and health filters",
+      "description": "Redesign the Monitor (home) as a bento grid where each project's card size encodes its computed health urgency: CRITICAL = large (spans 2 columns) with alert glow + pulse animation, AT RISK = medium, NOMINAL = compact/neutral. Cards are ordered worst-first (CRITICAL → AT RISK → NOMINAL) and re-sorted on each data refresh. A filter bar (ALL / CRITICAL / AT RISK / NOMINAL) narrows the grid, and a topbar shows a radial NOMINAL-n/total summary, per-state counts, a sync-countdown ticker, and a clock. Grid columns follow the parent spec breakpoints (≥1200px = 4-col, 768–1200px = 2-col).",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given a project computed CRITICAL, when the Monitor renders, then its card spans 2 grid columns and shows an alert glow with a pulse animation completing a cycle in ≤1500ms",
+        "Given projects of mixed health, when the grid renders, then order is strictly CRITICAL first then AT RISK then NOMINAL, and re-sorts within ≤1 refresh cycle when a project's health changes",
+        "Given the filter set to CRITICAL, when applied, then only CRITICAL cards are shown and the count in the bar equals the number of CRITICAL projects",
+        "Given a viewport ≥1200px the grid renders 4 columns and at 768–1200px it renders 2 columns with no horizontal scroll",
+        "Given zero registered projects, when the Monitor loads, then the existing onboarding empty state (FR-005) renders — the redesigned grid never shows a broken/blank layout",
+        "Every health state is distinguishable without color alone — each card carries a text label (NOMINAL/AT RISK/CRITICAL) and an icon, contrast ≥4.5:1"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-011",
+      "title": "Monitor project card — health badge, segmented pipeline, 6 signal tiles, top issue, detail CTA",
+      "description": "Each Monitor card presents, without requiring the user to read prose: the project's readable name (not the technical folder name), a colored health badge, the phase pipeline as a segmented bar (no phase text), 6 compact signal tiles with semantic color — Tests, Drift, Verify, Pending commits, External signals, Rejections — the single most-critical active issue on one line, and a button into the project detail.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given a project, when its card renders, then it shows the readable project name and a health badge whose color matches its computed state",
+        "Given a project with N approved phases, when the card renders, then the segmented pipeline bar fills exactly N of 5 segments in the phase status colors",
+        "Given a project, when the card renders, then exactly 6 signal tiles appear (Tests, Drift, Verify, Pending, Signals, Rejections), each colored green/amber/red by its own threshold",
+        "Given a project with ≥1 active issue, when the card renders, then the single highest-severity issue is shown on one line; given no active issue, then that line shows a nominal/all-clear state instead of empty space",
+        "Given a card, when the detail CTA is activated, then the Project Detail view for that project opens",
+        "Given a tile whose underlying datum is unavailable (e.g. no verify run), when the card renders, then the tile shows an explicit 'N/A' rather than a misleading zero"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-012",
+      "title": "Project Detail shell — single-page, fixed sidebar + scrollable content, browser-back to Monitor",
+      "description": "Opening any card routes to a single-page Project Detail with a two-column layout: a fixed left sidebar (project name + health, active branch and type local/remote, mini phase pipeline, section nav with per-section issue-count badges, quick stats: active issues / rejections / drift / tests) and a scrollable right content area hosting the sections (Overview, Health, Artifacts, Sessions, Alerts, plus the QA sections). Navigation is single-page; the browser Back button returns from detail to the Monitor with no full reload.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given a Project Detail is open, when the user presses browser Back, then the app returns to the Monitor without a full page reload and preserves the prior filter",
+        "Given a section with active issues, when the sidebar renders, then that section's nav item shows a count badge equal to its issue count",
+        "Given the detail view, when it renders, then the sidebar stays fixed while the content column scrolls independently",
+        "Given a project id that no longer exists in the snapshot, when its detail is requested, then an explicit 'project not found / removed' state renders instead of a crash or blank page",
+        "Given the sidebar quick-stats, when rendered, then active-issues / rejections / drift / tests values match the same values shown on the project's Monitor card",
+        "Given a viewport ≥1200px, when a nav section is switched, then the content swaps in ≤200ms while the sidebar stays fixed, and all sidebar text meets contrast ≥4.5:1"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-013",
+      "title": "Detail — Overview section",
+      "description": "Executive summary of the project: description; phase-by-phase pipeline where each phase shows its visual state (approved, completed-pending-approval, active, future) with a readable label (not the technical file name); key metric tiles (last session, agent, branch, verify, pending commits, version); and test telemetry (passed, failing, skipped, total, age of last run) with a circular gauge.",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "Given a project, when Overview renders, then all 5 phases appear each labelled with its state (approved / completed-pending / active / future) using readable labels, not technical file names",
+        "Given a project with a verify summary, when Overview renders, then passed/failing/skipped/total and last-run age are shown with a circular gauge reflecting the pass ratio",
+        "Given a project with no verify run yet, when Overview renders, then the test-telemetry block shows an explicit 'no run yet' state rather than a zeroed gauge",
+        "Given the metric tiles, when rendered, then last session, agent, branch, verify, pending commits, and version each display the project's actual value"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-014",
+      "title": "Detail — Health section with five diagnostic dimensions",
+      "description": "A diagnostic split into five dimensions in fixed order — Pipeline (phases completed-not-approved, phase drift), Tests (failing, stale, verify not run), Code (unpushed commits, off-pipeline changes), Artifacts (unapproved, rejections with feedback), Version (project vs installed CLI mismatch). Each dimension is a panel with an OK / WARN / CRITICAL badge and, per issue, the issue text and its available remediation action.",
+      "priority": "MUST",
+      "type": "logic",
+      "acceptance_criteria": [
+        "Given a project, when Health renders, then exactly five dimension panels appear in order Pipeline, Tests, Code, Artifacts, Version, each with an OK/WARN/CRITICAL badge",
+        "Given a dimension with ≥1 issue, when rendered, then each issue lists its message and the remediation action available for it",
+        "Given a dimension with no issues, when rendered, then it shows an explicit 'all checks passing' state, not an empty panel",
+        "Given a project with a version mismatch (project vs installed CLI), when Health renders, then the Version dimension is WARN or CRITICAL and names the two versions",
+        "Given a dimension badge, when rendered, then its level is conveyed by label+icon (not color alone) with contrast ≥4.5:1"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-015",
+      "title": "Detail — Artifacts explorer tree",
+      "description": "An artifact explorer with a file tree on the left grouped by phase. Each phase folder shows a rolled-up status glyph (✓ all approved, ○ any pending, ✕ any rejected). Each file shows its readable product name (per FR-019), size, and age, with the technical file name present as secondary reference and a per-file status chip. Selecting a file opens it in the reader panel (FR-016); re-selecting toggles it closed.",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given a project's artifacts, when the tree renders, then files are grouped under their phase folder and each folder shows a rolled-up glyph (✓/○/✕) matching its children's worst status",
+        "Given a file row, when rendered, then it shows the readable product name as the title and the technical file name as secondary text, plus size and age",
+        "Given a file is selected, when clicked again, then the reader panel closes (toggle) and no file is marked active",
+        "Given a phase with no artifacts yet, when the tree renders, then that phase shows an explicit empty/pending state rather than being silently omitted",
+        "Given the reader is not yet opened, when the explorer first renders, then the reader panel shows a 'select a file to read' empty state",
+        "Given a project with ≤20 artifacts, when the explorer opens, then the full tree renders in ≤2s and status glyphs/labels meet contrast ≥4.5:1"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-016",
+      "title": "Detail — Artifact reader renders Markdown, JSON, and embedded images",
+      "description": "The reader panel renders the selected artifact's real content: Markdown is rendered formatted (not raw); JSON is rendered as a readable structured projection (not raw text); embedded images referenced in Markdown — by a relative path within the artifact's spec folder or as a base64 data-URI — are rendered inline, supporting PNG, JPG, SVG, GIF, and WebP. The reader also shows the artifact status, any rejection feedback, and the status-appropriate action (approve / reject-with-feedback / complete).",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "Given a Markdown artifact, when opened, then it renders formatted (headings, lists, tables, code) with no raw Markdown syntax visible",
+        "Given a JSON artifact, when opened, then it renders as a structured human-readable projection, not a raw text dump",
+        "Given a Markdown artifact embedding an image by relative path or data-URI in PNG/JPG/SVG/GIF/WebP, when opened, then the image renders inline",
+        "Given a Markdown artifact referencing an image that cannot be resolved (missing file / unsupported type), when opened, then a placeholder with the alt text renders and the rest of the document still renders — no crash",
+        "Given a rejected artifact, when opened, then the reader shows the rejection feedback and offers the reject/approve actions appropriate to its status",
+        "Given an artifact ≤1MB of text, when opened, then the reader renders it in ≤2s"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-017",
+      "title": "Detail — Sessions timeline",
+      "description": "A chronological log of the project's lifecycle events (approvals, rejections, completions, phase starts), newest first. Each event shows relative time, an event type with color+icon, the phase, and inline rejection feedback when present. Below the timeline, a last-session context panel shows the description of work done, the files touched, and the agent.",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "Given a project with lifecycle events, when Sessions renders, then events appear newest-first with relative time, typed icon+label, and phase",
+        "Given a rejection event with feedback, when rendered, then the feedback text is shown inline on that event",
+        "Given a project with no events yet, when Sessions renders, then an explicit empty state is shown rather than a blank panel",
+        "Given last-session context exists, when rendered, then the work description, files-touched chips, and agent are shown"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-018",
+      "title": "Detail — Alerts aggregation",
+      "description": "All active issues in one place: the issues from the five Health dimensions (each with dimension label and WARN/CRITICAL level) plus external tool signals (e.g. npm-audit, eslint) with tool, type, severity, message, and remediation command. When there are no alerts, an explicit all-clear confirmation state is shown (not merely absence of content).",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given a project with Health issues and external signals, when Alerts renders, then each is a card showing its dimension/tool label, level/severity, message, and (for signals) the remediation command",
+        "Given a project with zero alerts, when Alerts renders, then an explicit all-clear confirmation state is shown, not a blank panel",
+        "Given an alert card, when rendered, then its severity is conveyed by label+icon (not color alone) with contrast ≥4.5:1",
+        "Given the Alerts count, when rendered, then it equals the sum of Health issues plus external signals shown in the sidebar badge"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-019",
+      "title": "Artifact name translation — fixed technical→product mapping, features inherit with prefix",
+      "description": "Everywhere an artifact is named, Hub shows a readable product name via a fixed built-in mapping (01_REQUIREMENTS.json → 'PRD — Product Requirements', 02_SYSTEM_DESIGN.md → 'TRD — Technical Design', 03_TEST_CASES.json → 'QA Plan — Test Cases', 04_IMPLEMENTATION_MANIFEST.json → 'Implementation Manifest', 05_PROOF_OF_COMPLIANCE.json → 'Release Compliance', 06_EXTERNAL_SIGNALS.json → 'External Signals'). Feature artifacts inherit the same mapping prefixed by the feature name. The technical file name remains visible as secondary reference (tooltip / reader metadata). The mapping is fixed in v1 (not user-configurable).",
+      "priority": "MUST",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given any of the six known technical artifact names, when displayed anywhere in Hub, then its fixed product name is shown as the primary label",
+        "Given a feature artifact (under features/<name>/), when displayed, then its product name is prefixed with the feature name and the same base mapping applies",
+        "Given a translated artifact, when the user hovers or opens the reader, then the original technical file name is visible as secondary reference",
+        "Given an artifact whose technical name is not in the mapping, when displayed, then it falls back to showing the raw file name (no crash, no blank label)",
+        "Given a translated artifact row, when rendered, then the product name is the primary label at contrast ≥4.5:1 and the secondary technical name renders at a smaller size (≥11px) without truncating the product name"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-020",
+      "title": "QA Workspace — Test Cases view",
+      "description": "Within Project Detail, a QA section listing all test cases of the project organized by phase and feature, sourced from Aitri's testing-phase artifacts (03_TEST_CASES.json and feature equivalents). Each case shows ID, description, type (manual/automated), and status (pending/passed/failed/blocked). Filters by phase, feature, status, and type. Manual test cases can have their status edited directly from Hub.",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "Given a project with testing artifacts, when Test Cases renders, then every case appears grouped by phase and feature with ID, description, type, and status",
+        "Given the type filter set to manual, when applied, then only manual cases are listed and the count reflects the filtered set",
+        "Given a manual test case, when its status is edited in Hub, then the new status persists and is reflected on next render",
+        "Given an attempt to edit the status of an automated test case, when made, then Hub rejects/blocks the edit (automated statuses come from runs, not manual edits)",
+        "Given a project with no testing artifacts, when Test Cases renders, then an explicit empty state explains none exist yet"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-021",
+      "title": "QA Workspace — record manual test execution bound to the current verify run",
+      "description": "QA records manual test results: select a test case, then capture per-execution fields — result (passed/failed/blocked), notes, attached evidence (image/screenshot), and test environment. Each execution is associated with the project's current Aitri verify-run/snapshot (resultsBinding) and appended to the case's history, so a case can have multiple executions over time. No separate release entity is created in v1.",
+      "priority": "MUST",
+      "type": "persistence",
+      "acceptance_criteria": [
+        "Given a selected test case, when QA submits an execution with result/notes/evidence/environment, then it is stored bound to the current verify-run id and appears in that case's history",
+        "Given a case with prior executions, when a new execution is recorded, then the history retains all executions in chronological order (execution is additive, never overwrites)",
+        "Given a recorded execution, when the Hub process restarts, then the execution and its evidence reference survive (persisted under ~/.aitri-hub/)",
+        "Given an execution submitted with no result selected, when submitted, then it is rejected with a validation message and nothing is persisted",
+        "Given evidence of a disallowed type or over the size cap, when attached, then it is rejected before persistence (see NFR-010)"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-022",
+      "title": "QA Workspace — Bugs view",
+      "description": "A list of bugs reported in the project, consumed from Aitri project files (BUGS.json and feature equivalents) — bugs live in Aitri, not an external tracker. Each bug shows ID, description, severity, phase where detected, and status. Filters by severity, status, and feature. A per-bug detail shows full description, reproduction steps, attached evidence, and status-change history. Bug parse errors are surfaced explicitly (never a silent '0 bugs').",
+      "priority": "MUST",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "Given a project with a BUGS.json, when Bugs renders, then each bug shows ID, description, severity, detected-phase, and status",
+        "Given the severity filter, when set, then only bugs of that severity are listed and the count reflects the filtered set",
+        "Given a bug, when its detail opens, then full description, reproduction steps, evidence, and status-change history are shown",
+        "Given a BUGS.json that is missing, when Bugs renders, then an explicit empty state is shown; given a BUGS.json that fails to parse, then a parse-error warning is surfaced rather than a silent zero",
+        "Given bugs across product and features, when rendered, then the feature filter scopes the list to the selected feature"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-023",
+      "title": "QA Workspace — quality reports (project / feature / release), on-demand and printable",
+      "description": "Generate and view quality reports in three scopes: Project summary (overall state, test coverage, bugs by severity, cases passed/failed/pending), Per-feature (a feature's cases, results, associated bugs), and Release report (all of the above scoped to a specific verify-run/iteration). Reports render live on-demand from the current snapshot inside Hub with a clean, legible layout, and offer a browser-print-optimized view (PDF via browser print). No file export is produced.",
+      "priority": "SHOULD",
+      "type": "reporting",
+      "acceptance_criteria": [
+        "Given a project, when the Project-summary report is opened, then it renders on-demand from the current snapshot with overall state, test coverage, bugs-by-severity, and case pass/fail/pending counts",
+        "Given a feature is selected, when the Per-feature report is opened, then it is scoped to that feature's cases, results, and bugs",
+        "Given a verify-run/iteration is selected, when the Release report is opened, then its figures are scoped to that run",
+        "Given a report is open, when the user invokes browser print, then a print-optimized layout renders (no navigation chrome, legible on A4/Letter)",
+        "Given a scope with no data (e.g. a feature with no test cases), when its report is opened, then an explicit empty report state is shown rather than a broken layout"
+      ],
+      "implementation_level": "functional"
+    },
+    {
+      "id": "FR-024",
+      "title": "Global — periodic data sync with countdown ticker, no manual refresh",
+      "description": "Hub data syncs on a periodic timer (reading the current snapshot); the topbar shows a countdown ticker to the next refresh. There is no manual refresh control in v1. On each refresh, the Monitor re-sorts and re-sizes cards and all open sections reflect the new snapshot.",
+      "priority": "SHOULD",
+      "type": "UX",
+      "acceptance_criteria": [
+        "Given the Monitor is open, when the refresh timer elapses, then the ticker resets and the grid re-sorts/re-sizes from the new snapshot without a full page reload",
+        "Given no manual refresh control exists, when the user inspects the UI, then there is no refresh button anywhere in v1",
+        "Given a snapshot read fails or is stale on a refresh, when it occurs, then the last-known data remains visible with an explicit 'snapshot stale' indicator rather than a blank screen"
+      ],
+      "implementation_level": "functional"
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US-010",
+      "requirement_id": "FR-010",
+      "as_a": "Dev",
+      "i_want": "the Monitor to size and order projects by urgency",
+      "so_that": "I spot the most critical project in seconds without reading each card",
+      "acceptance_criteria": [
+        {
+          "id": "AC-010-1",
+          "given": "5 projects where exactly one is CRITICAL and two are AT RISK",
+          "when": "the Monitor renders",
+          "then": "the CRITICAL card is largest (spans 2 columns) and appears first, before the AT RISK and NOMINAL cards"
+        },
+        {
+          "id": "AC-010-2",
+          "given": "the Monitor is showing all projects",
+          "when": "the user selects the CRITICAL filter",
+          "then": "only CRITICAL cards remain and the bar count equals the number of CRITICAL projects"
+        },
+        {
+          "id": "AC-010-3",
+          "given": "a project's health changes from CRITICAL to NOMINAL between refreshes",
+          "when": "the next refresh completes",
+          "then": "its card shrinks to compact and moves to the end of the order within one refresh cycle"
+        }
+      ]
+    },
+    {
+      "id": "US-011",
+      "requirement_id": "FR-011",
+      "as_a": "Product",
+      "i_want": "each card to show the health badge, pipeline, six signals and the top issue",
+      "so_that": "I understand a project's state without opening it or reading raw data",
+      "acceptance_criteria": [
+        {
+          "id": "AC-011-1",
+          "given": "a project with 3 of 5 phases approved",
+          "when": "its card renders",
+          "then": "the segmented pipeline fills exactly 3 of 5 segments and 6 signal tiles are shown"
+        },
+        {
+          "id": "AC-011-2",
+          "given": "a project with no verify run",
+          "when": "its card renders",
+          "then": "the Verify/Tests tiles show 'N/A' rather than a green or zero value"
+        },
+        {
+          "id": "AC-011-3",
+          "given": "a project with an active critical issue",
+          "when": "its card renders",
+          "then": "the single highest-severity issue is shown on one line"
+        }
+      ]
+    },
+    {
+      "id": "US-012",
+      "requirement_id": "FR-012",
+      "as_a": "Dev",
+      "i_want": "a single-page detail with a fixed sidebar and browser-back to the monitor",
+      "so_that": "I can navigate a project and return without losing my place",
+      "acceptance_criteria": [
+        {
+          "id": "AC-012-1",
+          "given": "a Project Detail is open having arrived from the CRITICAL filter",
+          "when": "the user presses browser Back",
+          "then": "the Monitor reappears with the CRITICAL filter still applied and no full reload"
+        },
+        {
+          "id": "AC-012-2",
+          "given": "a project whose Health has 2 issues",
+          "when": "the detail sidebar renders",
+          "then": "the Health nav item shows a badge of 2"
+        },
+        {
+          "id": "AC-012-3",
+          "given": "a project id that was removed from the snapshot",
+          "when": "its detail URL/state is opened",
+          "then": "a 'project not found' state renders instead of a crash"
+        }
+      ]
+    },
+    {
+      "id": "US-013",
+      "requirement_id": "FR-013",
+      "as_a": "Product",
+      "i_want": "an overview with the phase pipeline in readable labels and test telemetry",
+      "so_that": "I can validate where the project stands without technical file names",
+      "acceptance_criteria": [
+        {
+          "id": "AC-013-1",
+          "given": "a project mid-pipeline",
+          "when": "Overview renders",
+          "then": "each of the 5 phases shows a readable label and its state (approved/completed-pending/active/future)"
+        },
+        {
+          "id": "AC-013-2",
+          "given": "a project with a verify summary of 27 passed / 0 failed",
+          "when": "Overview renders",
+          "then": "the gauge reflects a full pass ratio and shows passed/failing/skipped/total plus last-run age"
+        },
+        {
+          "id": "AC-013-3",
+          "given": "a project that has never run verify",
+          "when": "Overview renders",
+          "then": "the telemetry block shows an explicit 'no run yet' state, not a zeroed gauge"
+        }
+      ]
+    },
+    {
+      "id": "US-014",
+      "requirement_id": "FR-014",
+      "as_a": "Dev",
+      "i_want": "a Health section split into five dimensions with remediation",
+      "so_that": "I know exactly what is wrong and what to run to fix it",
+      "acceptance_criteria": [
+        {
+          "id": "AC-014-1",
+          "given": "a project with a failing test and a version mismatch",
+          "when": "Health renders",
+          "then": "the Tests dimension is CRITICAL/WARN and the Version dimension names both versions"
+        },
+        {
+          "id": "AC-014-2",
+          "given": "a dimension with an issue that has a known remediation",
+          "when": "rendered",
+          "then": "the remediation action/command is shown with the issue"
+        },
+        {
+          "id": "AC-014-3",
+          "given": "a dimension with no issues",
+          "when": "rendered",
+          "then": "it shows 'all checks passing' rather than an empty panel"
+        }
+      ]
+    },
+    {
+      "id": "US-015",
+      "requirement_id": "FR-015",
+      "as_a": "Product",
+      "i_want": "an artifact tree grouped by phase with rolled-up status",
+      "so_that": "I can find and open the artifact I need at a glance",
+      "acceptance_criteria": [
+        {
+          "id": "AC-015-1",
+          "given": "a phase whose artifacts are all approved",
+          "when": "the tree renders",
+          "then": "the phase folder shows a ✓ glyph; if any child is rejected it shows ✕"
+        },
+        {
+          "id": "AC-015-2",
+          "given": "a selected file",
+          "when": "the same file row is clicked again",
+          "then": "the reader closes and no file is active"
+        },
+        {
+          "id": "AC-015-3",
+          "given": "the explorer just opened with nothing selected",
+          "when": "it renders",
+          "then": "the reader shows a 'select a file to read' empty state"
+        }
+      ]
+    },
+    {
+      "id": "US-016",
+      "requirement_id": "FR-016",
+      "as_a": "Product",
+      "i_want": "artifacts rendered as formatted docs, structured JSON and inline images",
+      "so_that": "I never have to read raw JSON or Markdown to understand an artifact",
+      "acceptance_criteria": [
+        {
+          "id": "AC-016-1",
+          "given": "a Markdown artifact with headings, a table and an embedded PNG by relative path",
+          "when": "opened",
+          "then": "it renders formatted with the image inline and no raw Markdown syntax visible"
+        },
+        {
+          "id": "AC-016-2",
+          "given": "a JSON artifact",
+          "when": "opened",
+          "then": "it renders as a structured readable projection, not a raw text dump"
+        },
+        {
+          "id": "AC-016-3",
+          "given": "a Markdown artifact referencing a missing or unsupported image",
+          "when": "opened",
+          "then": "a placeholder with alt text renders and the rest of the document still renders without crashing"
+        }
+      ]
+    },
+    {
+      "id": "US-017",
+      "requirement_id": "FR-017",
+      "as_a": "Dev",
+      "i_want": "a chronological sessions timeline with last-session context",
+      "so_that": "I can see what happened last and resume the project",
+      "acceptance_criteria": [
+        {
+          "id": "AC-017-1",
+          "given": "a project with approval and rejection events",
+          "when": "Sessions renders",
+          "then": "events appear newest-first with typed icon+label and phase, and rejection feedback is shown inline"
+        },
+        {
+          "id": "AC-017-2",
+          "given": "a project with no events",
+          "when": "Sessions renders",
+          "then": "an explicit empty state is shown"
+        },
+        {
+          "id": "AC-017-3",
+          "given": "last-session context exists",
+          "when": "rendered",
+          "then": "the work description, files-touched chips and agent are shown"
+        }
+      ]
+    },
+    {
+      "id": "US-018",
+      "requirement_id": "FR-018",
+      "as_a": "Dev",
+      "i_want": "one Alerts view combining health issues and external signals",
+      "so_that": "I have a single actionable list of everything wrong",
+      "acceptance_criteria": [
+        {
+          "id": "AC-018-1",
+          "given": "a project with 2 health issues and 1 npm-audit signal",
+          "when": "Alerts renders",
+          "then": "3 cards appear, the signal card showing its remediation command"
+        },
+        {
+          "id": "AC-018-2",
+          "given": "a project with zero alerts",
+          "when": "Alerts renders",
+          "then": "an explicit all-clear confirmation state is shown, not a blank panel"
+        }
+      ]
+    },
+    {
+      "id": "US-019",
+      "requirement_id": "FR-019",
+      "as_a": "Product",
+      "i_want": "technical artifact names shown as product names",
+      "so_that": "I read PRD/TRD/QA Plan instead of file names",
+      "acceptance_criteria": [
+        {
+          "id": "AC-019-1",
+          "given": "an artifact named 01_REQUIREMENTS.json",
+          "when": "displayed",
+          "then": "its primary label reads 'PRD — Product Requirements' and the technical name is secondary"
+        },
+        {
+          "id": "AC-019-2",
+          "given": "a feature artifact under features/redesign/",
+          "when": "displayed",
+          "then": "its product name is prefixed with the feature name"
+        },
+        {
+          "id": "AC-019-3",
+          "given": "an artifact whose name is not in the mapping",
+          "when": "displayed",
+          "then": "it falls back to the raw file name without crashing or showing a blank label"
+        }
+      ]
+    },
+    {
+      "id": "US-020",
+      "requirement_id": "FR-020",
+      "as_a": "QA",
+      "i_want": "to see all test cases by phase and feature and edit manual statuses",
+      "so_that": "I can track testing without leaving Hub",
+      "acceptance_criteria": [
+        {
+          "id": "AC-020-1",
+          "given": "a project with manual and automated cases",
+          "when": "the manual type filter is applied",
+          "then": "only manual cases are listed with the correct count"
+        },
+        {
+          "id": "AC-020-2",
+          "given": "a manual case",
+          "when": "its status is changed in Hub",
+          "then": "the new status persists and shows on next render"
+        },
+        {
+          "id": "AC-020-3",
+          "given": "an automated case",
+          "when": "a manual status edit is attempted",
+          "then": "Hub blocks the edit"
+        }
+      ]
+    },
+    {
+      "id": "US-021",
+      "requirement_id": "FR-021",
+      "as_a": "QA",
+      "i_want": "to record a manual test execution with evidence bound to the verify run",
+      "so_that": "results are traceable to the run they were tested against",
+      "acceptance_criteria": [
+        {
+          "id": "AC-021-1",
+          "given": "a selected case and a current verify-run",
+          "when": "QA submits result=passed with notes, environment and a PNG screenshot",
+          "then": "the execution persists bound to that verify-run id and appears in the case history"
+        },
+        {
+          "id": "AC-021-2",
+          "given": "a case with one prior execution",
+          "when": "a second execution is recorded",
+          "then": "both executions remain in chronological history (additive, no overwrite) and survive a Hub restart"
+        },
+        {
+          "id": "AC-021-3",
+          "given": "an execution form with no result selected",
+          "when": "submitted",
+          "then": "it is rejected with a validation message and nothing is persisted"
+        }
+      ]
+    },
+    {
+      "id": "US-022",
+      "requirement_id": "FR-022",
+      "as_a": "QA",
+      "i_want": "to review bugs read from Aitri with filters and detail",
+      "so_that": "I can triage without an external tracker",
+      "acceptance_criteria": [
+        {
+          "id": "AC-022-1",
+          "given": "a project BUGS.json with bugs of mixed severity",
+          "when": "the high-severity filter is applied",
+          "then": "only high-severity bugs are listed with the correct count"
+        },
+        {
+          "id": "AC-022-2",
+          "given": "a bug",
+          "when": "its detail opens",
+          "then": "full description, reproduction steps, evidence and status history are shown"
+        },
+        {
+          "id": "AC-022-3",
+          "given": "a BUGS.json that fails to parse",
+          "when": "Bugs renders",
+          "then": "a parse-error warning is surfaced instead of a silent '0 bugs'"
+        }
+      ]
+    },
+    {
+      "id": "US-023",
+      "requirement_id": "FR-023",
+      "as_a": "QA",
+      "i_want": "on-demand quality reports I can print",
+      "so_that": "I can share a project/feature/release quality summary",
+      "acceptance_criteria": [
+        {
+          "id": "AC-023-1",
+          "given": "a project",
+          "when": "the Project-summary report is opened",
+          "then": "it renders on-demand from the current snapshot with coverage, bugs-by-severity and case pass/fail/pending counts"
+        },
+        {
+          "id": "AC-023-2",
+          "given": "an open report",
+          "when": "the user invokes browser print",
+          "then": "a print-optimized layout renders without navigation chrome"
+        },
+        {
+          "id": "AC-023-3",
+          "given": "a feature with no test cases",
+          "when": "its Per-feature report is opened",
+          "then": "an explicit empty report state is shown"
+        }
+      ]
+    },
+    {
+      "id": "US-024",
+      "requirement_id": "FR-024",
+      "as_a": "Product",
+      "i_want": "the dashboard to refresh on a timer with a countdown",
+      "so_that": "I always see current state without a manual refresh",
+      "acceptance_criteria": [
+        {
+          "id": "AC-024-1",
+          "given": "the Monitor is open",
+          "when": "the refresh timer elapses",
+          "then": "the ticker resets and the grid re-sorts from the new snapshot without a full reload"
+        },
+        {
+          "id": "AC-024-2",
+          "given": "a refresh where the snapshot read fails",
+          "when": "it occurs",
+          "then": "the last-known data stays visible with an explicit 'snapshot stale' indicator"
+        }
+      ]
+    }
+  ],
+  "non_functional_requirements": [
+    {
+      "id": "NFR-006",
+      "category": "Regression",
+      "priority": "MUST",
+      "requirement": "The existing Hub monitor collection (aitri-hub monitor / FR-002..004, FR-007..009) keeps producing the same collected data after the redesign",
+      "acceptance_criteria": "Given a set of registered projects, when the collector runs post-redesign, then dashboard.json contains the same project fields (phases, verifyStatus, gitMeta, testSummary, alerts) it produced pre-redesign for the same inputs; a golden-snapshot diff shows no field regressions"
+    },
+    {
+      "id": "NFR-007",
+      "category": "Regression",
+      "priority": "MUST",
+      "requirement": "The dashboard.json snapshot contract (FR-009) remains valid and backward-compatible — the redesigned frontend reads it without requiring project-file access",
+      "acceptance_criteria": "Given a collection cycle, when dashboard.json is written, then it is valid JSON via atomic temp+rename, and the redesigned React app renders solely from it with zero direct project-file reads (verified by network/fs trace)"
+    },
+    {
+      "id": "NFR-008",
+      "category": "Regression",
+      "priority": "MUST",
+      "requirement": "Existing data ingestion from Aitri projects (.aitri state, 04_TEST_RESULTS.json, git metadata) still yields the same fields the redesign consumes",
+      "acceptance_criteria": "Given a project with a valid .aitri and test results, when collected, then currentPhase/approvedPhases/verifySummary/rejections/drift/testSummary are extracted identically to the pre-redesign baseline; a malformed .aitri still yields status 'unreadable' with no crash"
+    },
+    {
+      "id": "NFR-009",
+      "category": "Usability",
+      "requirement": "The redesigned UI meets its interaction and accessibility targets: time-to-urgency, render latency, contrast, non-color status encoding, and reduced-motion",
+      "acceptance_criteria": "Time-to-urgency: the most urgent project is identifiable in <10s (largest+first+red). Each detail section renders in ≤2s for a project with ≤20 artifacts. All text/badges meet WCAG AA contrast ≥4.5:1. Every status is conveyed by icon+label, never color alone. Animations complete in ≤200ms and are suppressed under prefers-reduced-motion. Desktop breakpoints: ≥1200px 4-col, 768–1200px 2-col, no horizontal scroll ≥768px"
+    },
+    {
+      "id": "NFR-010",
+      "category": "Security",
+      "requirement": "Manual-test evidence upload is validated and confined; QA write endpoints stay loopback-only",
+      "acceptance_criteria": "Given an evidence attachment, when uploaded, then only PNG/JPG/GIF/WebP/SVG under a fixed size cap (e.g. ≤5MB) are accepted — other types/sizes are rejected before persistence; evidence is written only under ~/.aitri-hub/ (path is whitelisted, never derived from client input; '..' and absolute paths rejected); any /api QA write from a non-loopback peer (not 127.0.0.1/::1) returns HTTP 403"
+    },
+    {
+      "id": "NFR-011",
+      "category": "Observability",
+      "requirement": "The Hub HTTP server logs every request",
+      "acceptance_criteria": "Given any HTTP request to the Hub server, when handled, then a line '[timestamp] METHOD /path STATUS' is written to stdout/stderr"
+    },
+    {
+      "id": "NFR-012",
+      "category": "CI/CD",
+      "requirement": "CI runs the full declared test suite (including any e2e runner) on every push to main",
+      "acceptance_criteria": "The CI workflow file triggers on push to main and invokes the project's full test command (unit + e2e) — asserted structurally on the workflow file (presence, trigger, exact test command)"
+    },
+    {
+      "id": "NFR-013",
+      "category": "Reliability",
+      "requirement": "The Hub server exposes a healthcheck",
+      "acceptance_criteria": "GET /health returns HTTP 200 with a small JSON body while the process is alive"
+    }
+  ],
+  "constraints": [
+    "Inherits parent constraints: Node.js 18+ server, zero npm runtime dependencies for the server (Node built-ins only), all persistent data under ~/.aitri-hub/ (no writes to project dirs), admin/QA HTTP API loopback-only with no auth",
+    "Web stack: React + Vite bundled and served by the Node process (parent technology_preferences)",
+    "Design system per parent UI_UX_SPEC_V2.md: slate dark palette, Inter + JetBrains Mono typography — replacing the prototypes' synthwave look (prototypes are layout/interaction reference only)",
+    "Frontend reads only ~/.aitri-hub/dashboard.json (+ QA execution store under ~/.aitri-hub/) — no direct project-file access from React",
+    "Prototypes (aitri-hub-jarvis-health.jsx, aitri-hub-final.jsx) are visual/interaction references with mock data — not data-contract authorities"
+  ],
+  "technology_preferences": [
+    "Monitor/health/sessions interaction model: follow aitri-hub-jarvis-health.jsx",
+    "Nested artifact-tree explorer: follow aitri-hub-final.jsx",
+    "Data contract, palette/type, and QA Workspace: follow parent UI_UX_SPEC_V2.md",
+    "Markdown/JSON/image rendering in the reader: client-side render from snapshot-provided artifact content"
+  ],
+  "idea_provenance": {
+    "problem": "confirmed",
+    "users": "confirmed",
+    "baseline": "confirmed",
+    "success_metric": "confirmed",
+    "no_go_zone": "confirmed"
+  },
+  "idea_provenance_sources": {
+    "problem": "feature_context/aitri-hub-ui-discovery.md §Problema (user-designated context, authored by César Eyes)",
+    "users": "feature_context/aitri-hub-ui-discovery.md §Usuarios (Three Amigos: Dev/Product/QA)",
+    "baseline": "feature_context/aitri-hub-ui-discovery.md §Problema (current pain: per-repo, raw artifacts, terminal commands)",
+    "success_metric": "feature_context/aitri-hub-ui-discovery.md §Objetivos de la interfaz (<10s time-to-urgency, one-screen context, QA in-Hub, name translation, visual render)",
+    "no_go_zone": "feature_context/aitri-hub-ui-discovery.md §Fuera de alcance v1 + user chat decision to defer professionalization to a separate feature"
+  },
+  "idea_gaps": [],
+  "coverage_map": [
+    {
+      "need": "Monitor bento grid, urgency-weighted card size",
+      "disposition": "FR-010"
+    },
+    {
+      "need": "Worst-first ordering, re-sort on refresh",
+      "disposition": "FR-010"
+    },
+    {
+      "need": "Filters ALL/CRITICAL/AT RISK/NOMINAL + topbar (radial, counts, ticker, clock)",
+      "disposition": "FR-010"
+    },
+    {
+      "need": "Card content: name, health badge, segmented pipeline, 6 signal tiles, top issue, detail CTA",
+      "disposition": "FR-011"
+    },
+    {
+      "need": "Project Detail two-column shell, fixed sidebar, single-page, browser-back",
+      "disposition": "FR-012"
+    },
+    {
+      "need": "Sidebar: identity, branch/type, mini pipeline, nav badges, quick stats",
+      "disposition": "FR-012"
+    },
+    {
+      "need": "Overview: description, phase pipeline (readable labels), metric tiles, test telemetry gauge",
+      "disposition": "FR-013"
+    },
+    {
+      "need": "Health: five dimensions with OK/WARN/CRITICAL and remediation",
+      "disposition": "FR-014"
+    },
+    {
+      "need": "Artifacts explorer tree grouped by phase, status glyphs, readable names",
+      "disposition": "FR-015"
+    },
+    {
+      "need": "Artifact reader renders Markdown/JSON/embedded images inline",
+      "disposition": "FR-016"
+    },
+    {
+      "need": "Embedded-image support: MD relative-path + data-URI, PNG/JPG/SVG/GIF/WebP",
+      "disposition": "FR-016"
+    },
+    {
+      "need": "Sessions chronological timeline + last-session context",
+      "disposition": "FR-017"
+    },
+    {
+      "need": "Alerts aggregation: health issues + external signals, explicit empty state",
+      "disposition": "FR-018"
+    },
+    {
+      "need": "Artifact name translation, fixed mapping, features inherit prefix, technical name secondary",
+      "disposition": "FR-019"
+    },
+    {
+      "need": "QA Test Cases view by phase/feature, filters, manual status editable",
+      "disposition": "FR-020"
+    },
+    {
+      "need": "QA manual execution: result/notes/evidence/env, bound to verify-run, multiple runs",
+      "disposition": "FR-021"
+    },
+    {
+      "need": "QA Bugs view from Aitri BUGS.json, filters, detail, parse-error surfaced",
+      "disposition": "FR-022"
+    },
+    {
+      "need": "QA reports (project/feature/release), on-demand from snapshot, printable",
+      "disposition": "FR-023"
+    },
+    {
+      "need": "Global periodic refresh + countdown ticker, no manual refresh",
+      "disposition": "FR-024"
+    },
+    {
+      "need": "Explicit empty states across sections",
+      "disposition": "FR-010"
+    },
+    {
+      "need": "Desktop-optimized responsive, accessibility (contrast, non-color status, reduced-motion)",
+      "disposition": "NFR-009"
+    },
+    {
+      "need": "Must-not-break: aitri-hub monitor collection",
+      "disposition": "NFR-006"
+    },
+    {
+      "need": "Must-not-break: dashboard.json snapshot contract",
+      "disposition": "NFR-007"
+    },
+    {
+      "need": "Must-not-break: Aitri project data ingestion parity",
+      "disposition": "NFR-008"
+    },
+    {
+      "need": "Evidence upload security + loopback-only QA writes",
+      "disposition": "NFR-010"
+    },
+    {
+      "need": "Request logging",
+      "disposition": "NFR-011"
+    },
+    {
+      "need": "CI runs full suite on push",
+      "disposition": "NFR-012"
+    },
+    {
+      "need": "Healthcheck endpoint",
+      "disposition": "NFR-013"
+    },
+    {
+      "need": "Role separation / differentiated access",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "Push/background notifications and toasts",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "Artifact editing from Hub",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "File export (PDF/Markdown)",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "Non-Aitri project support",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "Authentication / multi-tenant",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "Team/commit velocity, vulnerable-deps alerts, code-coverage-%, light theme, uptime",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "Professionalization: installable app, isolated runtime, architecture upgrade",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "Separate release entity / release CRUD",
+      "disposition": "out_of_scope"
+    },
+    {
+      "need": "Manual refresh control",
+      "disposition": "out_of_scope"
+    }
+  ],
+  "original_brief": "<!-- AGENT: if you fill this for the user, confirm the ground-truth fields\n     (Problem / Why, Target Users, Success Criteria, Out of Scope) with them —\n     do not silently infer. Mark anything you inferred as \"[ASSUMPTION] …\".\n     Phase 1 records these as a provenance contract and blocks unconfirmed,\n     untracked guesses on the highest-value inputs. -->\n\n## Feature\nRedesign de Aitri Hub v0.3.0 — rediseño completo de la interfaz web (Monitor + Detalle de Proyecto + módulo QA) siguiendo el discovery de UI/UX.\n\n> **Requerimiento principal:** `feature_context/aitri-hub-ui-discovery (1).md`\n> (PRD / Discovery Brief v1.0 — César Eyes, Julio 2026). Es la fuente de verdad de UI/UX.\n> **Referencia visual:** `feature_context/aitri-hub-jarvis-health.jsx` y `feature_context/aitri-hub-final.jsx` (prototipos — fuente de verdad del \"cómo se ve\").\n>\n> **Alcance decidido:** este feature es UI/UX solamente. La profesionalización del Hub\n> (instalable, entorno/runtime propio, upgrade de arquitectura) se aborda en un feature\n> aparte y futuro (`aitri-hub-platform-upgrade`), con su propio discovery.\n\n## Problem / Why\n(Del discovery.) Un equipo que trabaja con múltiples proyectos Aitri no tiene un punto de observación unificado. Entender el estado real de un proyecto exige entrar a cada repo, revisar artefactos en raw y correr comandos en terminal. No escala, no es accesible a roles no técnicos, y no distingue visualmente un proyecto bloqueado de uno inactivo.\n\n## Target Users\n(Del discovery.) **Three Amigos** — Dev, Producto y QA — usando Hub simultáneamente, sin separación de roles ni vistas diferenciadas en esta versión. La distinción es de énfasis:\n- **Dev:** monitorea avance técnico, detecta drift, retoma proyectos.\n- **Producto:** sigue el pipeline de fases, revisa artefactos traducidos a lenguaje de producto, valida estado general.\n- **QA:** herramienta de trabajo activa — registra pruebas, consulta casos, genera informes.\n\n## New Behavior\nEl sistema debe...\n\n**Monitor (Home)**\n- Mostrar todos los proyectos en un bento grid donde el tamaño de la card refleja urgencia (CRITICAL = 2 columnas + glow/pulso, AT RISK = mediana, NOMINAL = compacta).\n- Ordenar por defecto CRITICAL primero → NOMINAL al final; reordenar en cada refresh.\n- En cada card: nombre legible, badge de salud, pipeline como barra segmentada, 6 tiles de señales (Tests, Drift, Verify, Commits pendientes, Señales externas, Rechazos), el issue más crítico en una línea, y acceso al detalle.\n- Filtros ALL / CRITICAL / AT RISK / NOMINAL y topbar con resumen radial, conteos, ticker de sync y reloj.\n\n**Detalle de Proyecto** (single-page, dos columnas: sidebar fijo + contenido scrolleable)\n- **Overview:** descripción, pipeline fase a fase con estado visual y labels legibles, tiles de métricas, telemetría de tests con gauge.\n- **Health:** 5 dimensiones (Pipeline, Tests, Code, Artifacts, Version), cada una con badge OK/WARN/CRITICAL y la acción de remediación del issue.\n- **Artifacts:** árbol por fase + panel de lectura; render de Markdown formateado, JSON como vista estructurada (no raw), imágenes embebidas inline; acciones según estado (aprobar / rechazar con feedback / completar).\n- **Sessions:** log cronológico de eventos del ciclo de vida + contexto de última sesión.\n- **Alerts:** todos los issues activos + señales externas de tools, con estado vacío explícito.\n\n**Módulo QA** (dentro del detalle de proyecto)\n- Casos de prueba por fase/feature (desde artefactos de testing de Aitri), con filtros; los manuales editables desde Hub.\n- Ejecución de pruebas manuales: resultado (pass/fail/blocked), notas, evidencia adjunta, ambiente; múltiples ejecuciones por caso en el tiempo.\n- Bugs consumidos desde Aitri, con filtros y vista de detalle.\n- Informes de QA (resumen de proyecto / por feature / release report), visualizados en Hub con vista imprimible desde navegador.\n\n**Traducción de nombres de artefactos:** mostrar nombres de producto legibles (PRD, TRD, QA Plan, etc.) con el nombre técnico como referencia secundaria; misma lógica para artefactos de feature con prefijo.\n\n**Comportamiento global:** refresh periódico con ticker (sin refresh manual en v1), estados vacíos explícitos, navegación single-page (back del browser: detalle → monitor), optimizado para desktop.\n\n## Success Criteria\n(Objetivos de la interfaz, del discovery.)\n- Given el monitor, When el usuario lo abre, Then identifica el proyecto más urgente en < 10 segundos.\n- Given un proyecto, When el usuario abre su detalle, Then responde \"¿en qué estado quedó?\" sin abrir otra herramienta.\n- Given QA, When trabaja en Hub, Then puede registrar y consultar resultados de pruebas directamente.\n- Given cualquier rol, When lee la UI, Then la terminología técnica de Aitri está traducida a lenguaje de producto legible.\n- Given un artefacto con contenido visual, When se abre, Then se renderiza como imagen (no como texto raw).\n- Given el Hub v0.3.0, When corre, Then el comportamiento existente v0.2.1 (monitoreo, snapshots) sigue funcionando.\n\n## Touch Points\nModifica: toda la capa de UI del Hub (Monitor, Detalle, y el flujo de lectura de artefactos actual). Añade: módulo QA (casos de prueba, ejecución manual, bugs, informes), traducción de nombres, render visual de artefactos.\n\n## Must Not Break (Regression Boundary)\n- El monitoreo de proyectos por el Hub (`aitri-hub monitor`) sigue funcionando.\n- La lectura/generación de snapshots y el resto del comportamiento v0.2.1 se preserva.\n- La ingesta de datos desde proyectos Aitri (estado de fases, tests, artefactos) sigue produciendo los mismos datos que hoy alimentan la vista.\n\n## Out of Scope\n(Fuera de alcance v1, del discovery.)\n- Separación de usuarios/roles con acceso diferenciado.\n- Notificaciones push o alertas en background.\n- Edición de artefactos desde Hub.\n- Exportación a archivo (PDF/Markdown) — la impresión desde navegador cubre el caso.\n- Soporte para proyectos que no usan Aitri.\n- Autenticación o multi-tenant.\n- **Profesionalización del Hub** (instalable, entorno/runtime propio, upgrade de arquitectura) → se difiere a un feature aparte (`aitri-hub-platform-upgrade`).\n\n## Preguntas abiertas de Discovery (a resolver en Fase 1)\nLas 6 preguntas de \"Criterios de aceptación de Discovery\" del PRD:\n1. ¿Qué formato de artefacto soporta render de imágenes embebidas y qué tipos de imagen?\n2. ¿El mapeo de nombre técnico → nombre de producto para artefactos de features es configurable o fijo?\n3. ¿Cómo se asocia una ejecución de prueba manual a un release / iteración?\n4. ¿Modelo de datos de bugs — viven en Aitri o en un sistema externo?\n5. ¿El informe de QA se genera on-demand o hay un snapshot guardado?\n6. ¿Qué define una \"feature\" — división del pipeline o concepto separado?\n"
+}

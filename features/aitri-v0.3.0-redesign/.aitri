@@ -1,0 +1,173 @@
+{
+  "currentPhase": 4,
+  "approvedPhases": [
+    1,
+    "ux",
+    2,
+    3
+  ],
+  "completedPhases": [
+    1,
+    "ux",
+    2,
+    3
+  ],
+  "projectName": "aitri-v0.3.0-redesign",
+  "createdAt": "2026-07-17T16:36:40.062Z",
+  "artifactsDir": "spec",
+  "updatedAt": "2026-07-18T21:01:10.356Z",
+  "driftPhases": [],
+  "events": [
+    {
+      "at": "2026-07-17T16:49:13.531Z",
+      "event": "started",
+      "phase": 1
+    },
+    {
+      "at": "2026-07-17T17:03:16.996Z",
+      "event": "completed",
+      "phase": 1
+    },
+    {
+      "at": "2026-07-17T17:21:41.799Z",
+      "event": "approved",
+      "phase": 1,
+      "ideaArchived": true
+    },
+    {
+      "at": "2026-07-17T17:22:11.583Z",
+      "event": "started",
+      "phase": "ux"
+    },
+    {
+      "at": "2026-07-17T17:22:23.178Z",
+      "event": "started",
+      "phase": "ux"
+    },
+    {
+      "at": "2026-07-17T17:26:44.115Z",
+      "event": "completed",
+      "phase": "ux"
+    },
+    {
+      "at": "2026-07-17T17:57:41.829Z",
+      "event": "completed",
+      "phase": "ux"
+    },
+    {
+      "at": "2026-07-17T18:19:14.731Z",
+      "event": "approved",
+      "phase": "ux"
+    },
+    {
+      "at": "2026-07-17T19:16:29.761Z",
+      "event": "started",
+      "phase": 2
+    },
+    {
+      "at": "2026-07-17T19:20:34.679Z",
+      "event": "completed",
+      "phase": 2
+    },
+    {
+      "at": "2026-07-17T21:25:36.622Z",
+      "event": "completed",
+      "phase": 2
+    },
+    {
+      "at": "2026-07-17T21:25:54.671Z",
+      "event": "approved",
+      "phase": 2
+    },
+    {
+      "at": "2026-07-17T21:33:11.734Z",
+      "event": "started",
+      "phase": 3
+    },
+    {
+      "at": "2026-07-17T22:08:38.562Z",
+      "event": "completed",
+      "phase": 3
+    },
+    {
+      "at": "2026-07-17T22:33:46.214Z",
+      "event": "completed",
+      "phase": 3
+    },
+    {
+      "at": "2026-07-17T22:39:43.389Z",
+      "event": "approved",
+      "phase": 3
+    },
+    {
+      "at": "2026-07-17T22:43:57.958Z",
+      "event": "started",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-18T21:01:10.355Z",
+      "event": "started",
+      "phase": 4
+    }
+  ],
+  "cascadedPhases": [],
+  "artifactHashes": {
+    "1": "d1e48bfa7b904bd63268a30abb57c363a8a483b17244aafe7b23782742b05f0d",
+    "2": "2a889b3d5b001be4370dfbd43b9a6c486314834e1734cd9add8311695718cbd7",
+    "3": "329cfd42f287d668ceb8384c782f5a9948fccf16942e2903a06bbe3f952a3181",
+    "ux": "7706b5efab6b01a56252860b7d4341adb7af29db09eefe533ecd6223eeb4a3b6"
+  },
+  "frSnapshots": {
+    "2": [
+      "FR-010",
+      "FR-011",
+      "FR-012",
+      "FR-013",
+      "FR-014",
+      "FR-015",
+      "FR-016",
+      "FR-017",
+      "FR-018",
+      "FR-019",
+      "FR-020",
+      "FR-021",
+      "FR-022",
+      "FR-023",
+      "FR-024"
+    ],
+    "3": [
+      "FR-010",
+      "FR-011",
+      "FR-012",
+      "FR-013",
+      "FR-014",
+      "FR-015",
+      "FR-016",
+      "FR-017",
+      "FR-018",
+      "FR-019",
+      "FR-020",
+      "FR-021",
+      "FR-022",
+      "FR-023",
+      "FR-024"
+    ],
+    "ux": [
+      "FR-010",
+      "FR-011",
+      "FR-012",
+      "FR-013",
+      "FR-014",
+      "FR-015",
+      "FR-016",
+      "FR-017",
+      "FR-018",
+      "FR-019",
+      "FR-020",
+      "FR-021",
+      "FR-022",
+      "FR-023",
+      "FR-024"
+    ]
+  }
+}

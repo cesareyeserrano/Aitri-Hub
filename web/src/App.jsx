@@ -9,7 +9,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Header from './components/Header.jsx';
 import ConnectionBanner from './components/ConnectionBanner.jsx';
-import HomeView from './components/HomeView.jsx';
+import MonitorView from './views/MonitorView.jsx';
 import AdminPanel from './components/AdminPanel.jsx';
 import IntegrationAlertBanner from './components/IntegrationAlertBanner.jsx';
 import DetailView from './views/DetailView.jsx';
@@ -97,9 +97,9 @@ export default function App() {
         {isAdmin ? (
           <AdminPanel />
         ) : isDetail ? (
-          <DetailView id={route.id} record={detailRecord} />
+          <DetailView id={route.id} record={detailRecord} loading={loading} />
         ) : (
-          <HomeView projects={projects} loading={loading} />
+          <MonitorView projects={projects} loading={loading} />
         )}
       </main>
     </div>

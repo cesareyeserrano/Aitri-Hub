@@ -24,32 +24,36 @@
       "title": "Limit dashboard to max 3 project cards per row",
       "priority": "P3",
       "problem": "Current grid layout in HomeView/ProjectCard adapts to viewport width and can show 4+ cards per row on wide screens, making each card narrow and harder to scan. Cap the layout at 3 columns max so cards keep enough width for all sections (BLOCKERS, PIPELINE, QUALITY, GIT, VERSION) to render without crowding. Files: web/src/components/HomeView.jsx and/or web/src/styles.css (grid-template-columns or max-width on the grid container).",
-      "status": "open",
-      "createdAt": "2026-04-18T02:28:58.647Z"
+      "status": "closed",
+      "createdAt": "2026-04-18T02:28:58.647Z",
+      "closedAt": "2026-07-08T02:31:19.104Z"
     },
     {
       "id": "BL-004",
       "title": "Quitar el reloj del header (no aporta valor)",
       "priority": "P3",
       "problem": "El reloj actual en el header del dashboard no aporta valor funcional. El usuario ya tiene el reloj del sistema operativo. Ocupa espacio visual sin justificación.",
-      "status": "open",
-      "createdAt": "2026-04-18T02:30:23.686Z"
+      "status": "closed",
+      "createdAt": "2026-04-18T02:30:23.686Z",
+      "closedAt": "2026-07-08T02:31:19.627Z"
     },
     {
       "id": "BL-005",
       "title": "Menu lateral colapsable para acciones",
       "priority": "P3",
       "problem": "Las acciones del dashboard (admin, settings, etc.) están dispersas o no tienen un lugar dedicado. Necesitamos un menú lateral colapsable que agrupe todas las acciones de gestión, manteniendo el área principal limpia para visualización de proyectos.",
-      "status": "open",
-      "createdAt": "2026-04-18T02:30:27.056Z"
+      "status": "closed",
+      "createdAt": "2026-04-18T02:30:27.056Z",
+      "closedAt": "2026-07-08T02:31:19.698Z"
     },
     {
       "id": "BL-006",
       "title": "Página de ayuda/guía de uso de Aitri HUB",
       "priority": "P3",
       "problem": "No existe documentación in-app que explique cómo usar Aitri HUB, qué significa cada métrica/alerta del dashboard, cómo interpretar los estados de los proyectos, y cómo actuar sobre la información mostrada. Los usuarios nuevos no tienen referencia.",
-      "status": "open",
-      "createdAt": "2026-04-18T02:30:32.105Z"
+      "status": "closed",
+      "createdAt": "2026-04-18T02:30:32.105Z",
+      "closedAt": "2026-07-08T02:31:19.773Z"
     },
     {
       "id": "BL-007",
