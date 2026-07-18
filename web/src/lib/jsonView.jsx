@@ -38,6 +38,22 @@ function Group({ label, count, depth, children }) {
 }
 
 /**
+ * A telling label for an object with no key of its own (e.g. an array item):
+ * its id/name/title/… value, so a list reads "FR-001, FR-002" instead of
+ * "object, object". Returns null when the object carries no such field.
+ * @param {object} obj
+ * @returns {string|null}
+ */
+function objectLabel(obj) {
+  const KEYS = ['id', 'tc_id', 'fr_id', 'name', 'title', 'key', 'label', 'ac_id', 'requirement_id', 'role', 'tool'];
+  for (const key of KEYS) {
+    const v = obj[key];
+    if (v != null && typeof v !== 'object') return `${key}: ${v}`;
+  }
+  return null;
+}
+
+/**
  * Recursively render a JSON value.
  * @param {{ value:any, k?:string, depth?:number }} props
  */
@@ -73,7 +89,10 @@ function Node({ value, k, depth = 0 }) {
   }
 
   const entries = Object.entries(value);
-  const label = <span className="jv-key jv-key--group">{k ?? 'object'} <span className="jv-count">{`{${entries.length}}`}</span></span>;
+  // Prefer the object's own key; for a keyless item (array element) use a telling
+  // identifier from its content rather than the generic word "object".
+  const title = k ?? objectLabel(value) ?? 'object';
+  const label = <span className="jv-key jv-key--group">{title} <span className="jv-count">{`{${entries.length}}`}</span></span>;
   return (
     <Group label={label} count={entries.length} depth={depth}>
       {entries.map(([key, v]) => <Node key={key} k={key} value={v} depth={depth + 1} />)}
