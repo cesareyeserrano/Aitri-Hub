@@ -15,6 +15,17 @@
 
 import { test, expect } from '@playwright/test';
 
+// SUPERSEDED by the v0.3.0 Monitor redesign (FR-010): the Home no longer renders the
+// old ProjectCard (data-testid="project-card") — it renders the bento MonitorView
+// (data-testid="monitor-card"). These assertions target the retired card's DOM, so
+// they are skipped rather than deleted (kept for history). The redesigned card's
+// rendering is covered by web/src/__tests__/monitor.test.js (unit) and the
+// tests/e2e/dev-triage.test.js flow (e2e). Retire this file when the old ProjectCard
+// component itself is removed.
+test.beforeEach(() => {
+  test.skip(true, 'Superseded by the v0.3.0 bento Monitor redesign (FR-010) — see monitor.test.js + dev-triage.test.js');
+});
+
 const BASE_URL = `http://localhost:${process.env.AITRI_HUB_PORT ?? 3099}`;
 
 // ── Fixture builder ──────────────────────────────────────────────────────────

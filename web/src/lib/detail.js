@@ -97,7 +97,6 @@ export function buildAlerts(project) {
  */
 export function buildSidebar(project) {
   const st = (project && project.aitriState) || {};
-  const git = (project && project.gitMeta) || {};
   const ts = project && project.testSummary;
   const issues = healthIssueCount(project);
   const alerts = buildAlerts(project).count;

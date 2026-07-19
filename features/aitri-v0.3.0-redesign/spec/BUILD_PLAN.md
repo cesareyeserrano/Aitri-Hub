@@ -34,7 +34,13 @@ Guardrails carried into every epic: collector (`lib/collector/index.js`) stays f
   Build steps: skeleton → persistence/integrations → hardening
   Why here:    Heaviest slice — new QA store under `~/.aitri-hub/qa/`, execution/status write endpoints, evidence validation (type/size/magic-byte/filename/SVG), report projection. Depends on Epic 3's endpoint + confinement patterns. Carries the NFR-010 security surface.
 
-## Epic 5 — Regression + hardening   [status: pending]
+## Epic 5 — Regression + hardening   [status: done — 2026-07-18: all 8 Makes-pass TCs green + hardening. NFR-013: /health → JSON {status:'ok'}. NFR-011: single res.on('finish') access logger covers every branch (inline loggers neutralised, no double lines). NFR-006/007/008: tests/integration/redesign-regression.test.js — TC-NFR-006h/e/f (field census, cross-project parity, collectOne degrades without throwing), TC-NFR-007h (reader parity vs golden baseline), TC-NFR-007e (artifact tree never leaks into the frozen snapshot), TC-NFR-008h/e/f (baseline extract / unknown key ignored / malformed .aitri → null no crash). smoke.sh quality-gate: boots the server, probes /health, /, /data/dashboard.json, /api/projects for no 5xx + asserts /health JSON. Reconciled superseded old-monitor e2e: web-dashboard.test.js updated to the redesigned monitor-card selector; snapshot-card.test.js skipped with a supersession pointer (ProjectCard home retired by FR-010). Full suite: node 499/499 · web 12 files green · lint 0 errors.]
+
+## Epic 6 — (appended) UI review polish   [status: done]
+  Not a planned epic — the review-driven UI refinements the operator requested, kept as one appended slice per the stable-id rule (no renumbering EP-01..05).
+  Delivers:    review feedback on the shipped surfaces (no new US)
+  Done:        sticky detail sidebar + artifact tree; JSON crudo → human projection; product-name mapping extended to all emitted artifacts; Monitor top-issue tinted by urgency; expand/collapse for content-section groups (artifacts folders, JSON nodes, TC groups) with counts; JSON keyless objects labelled by their identifier (not "object"); BACKLOG.json + PROOF surfaced; Artifacts scope selector → feature artifacts incl. BUILD_PLAN.md ("Build Plan — Epics").
+  Why here:    operator reviewed each epic live at localhost:3000; these are in-spec refinements (Component Inventory affordances), applied and committed incrementally.
   Delivers:    (no US — regression/observability NFRs)
   FRs:         NFR-006, NFR-007, NFR-008, NFR-011, NFR-013
   Makes pass:  TC-NFR-006h, TC-NFR-006e, TC-NFR-006f, TC-NFR-007h, TC-NFR-007e, TC-NFR-008h, TC-NFR-008e, TC-NFR-008f

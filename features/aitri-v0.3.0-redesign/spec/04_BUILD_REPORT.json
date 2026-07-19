@@ -1,0 +1,89 @@
+{
+  "files_created": [
+    "lib/store/qa.js",
+    "lib/store/evidence.js",
+    "lib/collector/report-builder.js",
+    "lib/commands/loopback.js",
+    "web/src/lib/monitor.js",
+    "web/src/lib/detail.js",
+    "web/src/lib/names.js",
+    "web/src/lib/qa.js",
+    "web/src/lib/jsonView.jsx",
+    "web/src/views/MonitorView.jsx",
+    "web/src/components/MonitorCard.jsx",
+    "web/src/components/ArtifactsExplorer.jsx",
+    "web/src/components/QaTestCases.jsx",
+    "web/src/components/QaBugs.jsx",
+    "web/src/components/QaReports.jsx",
+    "smoke.sh",
+    "tests/unit/qa-security.test.js",
+    "tests/integration/redesign-regression.test.js",
+    "tests/integration/artifact-content.test.js",
+    "tests/integration/qa-endpoints.test.js",
+    "tests/e2e/dev-triage.test.js",
+    "tests/e2e/qa-execution.test.js",
+    "web/src/__tests__/monitor.test.js",
+    "web/src/__tests__/detail.test.js",
+    "web/src/__tests__/detailNav.test.jsx",
+    "web/src/__tests__/artifacts.test.jsx",
+    "web/src/__tests__/qa.test.jsx",
+    "web/src/__tests__/collapse.test.jsx"
+  ],
+  "files_modified": [
+    "lib/commands/web.js",
+    "lib/collector/detail-reader.js",
+    "web/src/App.jsx",
+    "web/src/views/DetailView.jsx",
+    "web/src/lib/navigate.js",
+    "web/src/lib/detailApi.js",
+    "web/src/lib/markdown.jsx",
+    "web/src/styles.css",
+    "tests/e2e/web-dashboard.test.js",
+    "tests/e2e/snapshot-card.test.js"
+  ],
+  "environment_variables": [
+    { "name": "AITRI_HUB_PORT", "default": "3000" },
+    { "name": "AITRI_HUB_DIR", "default": "~/.aitri-hub" },
+    { "name": "AITRI_HUB_REFRESH_MS", "default": "5000" }
+  ],
+  "technical_debt": [
+    {
+      "fr_id": "FR-023",
+      "substitution": "The report scope selector exposes Project and Per-feature scopes; the Release (run:<stamp>) scope is implemented in the /api/project/:id/report endpoint but not surfaced in the UI selector.",
+      "reason": "The run-stamp binding (ADR-08) is a derived verify-run fingerprint, not a user-managed release entity; surfacing a run picker was deferred to keep v1 within the no-release-entity no_go_zone.",
+      "effort_to_fix": "low"
+    },
+    {
+      "fr_id": "FR-010",
+      "substitution": "The pre-redesign Home components (web/src/components/ProjectCard.jsx, HomeView.jsx, views/tabs/{Summary,Traceability,Artifacts,TestCases,Bugs}Tab.jsx) remain in the tree but are no longer rendered; tests/e2e/snapshot-card.test.js is skipped with a supersession pointer.",
+      "reason": "Retiring another feature's shipped components/tests mid-redesign risks collateral breakage; the redesigned surfaces are fully covered by monitor.test.js + the Qa* components. Scheduled for a dedicated cleanup pass.",
+      "effort_to_fix": "medium"
+    },
+    {
+      "fr_id": "FR-016",
+      "substitution": "The artifact reader shows status but does not yet render approve/reject/complete action buttons inline; those actions remain via the existing admin flow.",
+      "reason": "AC-016-5's status-appropriate actions reuse the existing approve/reject/complete surface (no_go_zone: no new artifact editing); wiring them into the reader is additive polish, not covered by a Makes-pass TC.",
+      "effort_to_fix": "low"
+    }
+  ],
+  "test_runner": "node --test ../../tests/unit/qa-security.test.js ../../tests/integration/redesign-regression.test.js ../../tests/integration/artifact-content.test.js ../../tests/integration/qa-endpoints.test.js && npm --prefix ../../web test",
+  "test_files": [
+    "tests/unit/qa-security.test.js",
+    "tests/integration/redesign-regression.test.js",
+    "tests/integration/artifact-content.test.js",
+    "tests/integration/qa-endpoints.test.js",
+    "web/src/__tests__/monitor.test.js",
+    "web/src/__tests__/detail.test.js",
+    "web/src/__tests__/detailNav.test.jsx",
+    "web/src/__tests__/artifacts.test.jsx",
+    "web/src/__tests__/qa.test.jsx",
+    "tests/e2e/dev-triage.test.js",
+    "tests/e2e/qa-execution.test.js"
+  ],
+  "quality_gates": [
+    { "name": "lint", "command": "npm --prefix ../.. run lint", "required": true, "timeout_ms": 300000 },
+    { "name": "smoke", "command": "../../smoke.sh", "required": true, "timeout_ms": 120000 },
+    { "name": "e2e", "command": "npm --prefix ../.. run test:e2e", "required": true, "timeout_ms": 900000 }
+  ],
+  "test_runner_timeout_ms": 900000
+}

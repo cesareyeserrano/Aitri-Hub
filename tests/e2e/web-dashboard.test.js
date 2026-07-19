@@ -31,7 +31,7 @@ test('TC-006e: 768px viewport — no horizontal scroll, project cards visible', 
   const page = await context.newPage();
 
   await page.goto(BASE_URL);
-  await page.waitForSelector('[data-testid="project-card"], .empty-state', { timeout: 10_000 });
+  await page.waitForSelector('[data-testid="monitor-card"], [data-testid="project-card"], .empty-state', { timeout: 10_000 });
 
   // Check no horizontal overflow
   const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -51,7 +51,7 @@ test('TC-006f: when dashboard.json missing, empty state is shown', async ({ page
   // Check for either empty state message OR project cards — app must not show a blank error screen
   const hasContent = await page.evaluate(() => {
     const empty = document.querySelector('.empty-state');
-    const cards = document.querySelectorAll('[data-testid="project-card"]');
+    const cards = document.querySelectorAll('[data-testid="monitor-card"], [data-testid="project-card"]');
     const banner = document.querySelector('[data-testid="connection-banner"]');
     return !!(empty || cards.length > 0 || banner);
   });
