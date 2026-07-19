@@ -6,9 +6,12 @@
  */
 export default class AitriReporter {
   onTestEnd(test, result) {
-    const title = test.title;
+    // A skipped test is NOT a failure \u2014 emit no TC marker for it. Otherwise a TC id
+    // that a skipped (e.g. superseded) e2e shares with a passing test elsewhere
+    // (vitest/node) would be falsely reported as failed and override the real pass.
+    if (result.status === 'skipped') return;
     const icon = result.status === 'passed' ? '\u2714' : '\u2716';
-    console.log(`${icon} ${title}`);
+    console.log(`${icon} ${test.title}`);
   }
 
   onEnd(result) {

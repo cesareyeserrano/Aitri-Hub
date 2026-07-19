@@ -14,6 +14,7 @@
     "test:web": "npm --prefix web test",
     "test:feature": "npm test && npm run test:web",
     "test:e2e": "npx playwright test tests/e2e/",
+    "test:e2e:v030": "npx playwright test tests/e2e/dev-triage.test.js tests/e2e/qa-execution.test.js",
     "test:all": "npm test && npm run test:web && npm run test:e2e",
     "test:with-vitest": "node --test tests/unit/*.test.js tests/integration/*.test.js && npx playwright test tests/e2e/admin-api.test.js && npm --prefix web run test",
     "lint": "eslint .",

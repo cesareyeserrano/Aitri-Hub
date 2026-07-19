@@ -27,7 +27,9 @@
     "web/src/__tests__/detailNav.test.jsx",
     "web/src/__tests__/artifacts.test.jsx",
     "web/src/__tests__/qa.test.jsx",
-    "web/src/__tests__/collapse.test.jsx"
+    "web/src/__tests__/collapse.test.jsx",
+    "tests/run-redesign-tests.sh",
+    "web/vitest-aitri-reporter.js"
   ],
   "files_modified": [
     "lib/commands/web.js",
@@ -39,12 +41,25 @@
     "web/src/lib/markdown.jsx",
     "web/src/styles.css",
     "tests/e2e/web-dashboard.test.js",
-    "tests/e2e/snapshot-card.test.js"
+    "tests/e2e/snapshot-card.test.js",
+    "tests/e2e/qa-workspace.test.js",
+    "package.json",
+    "tests/e2e/aitri-reporter.js",
+    "web/package.json"
   ],
   "environment_variables": [
-    { "name": "AITRI_HUB_PORT", "default": "3000" },
-    { "name": "AITRI_HUB_DIR", "default": "~/.aitri-hub" },
-    { "name": "AITRI_HUB_REFRESH_MS", "default": "5000" }
+    {
+      "name": "AITRI_HUB_PORT",
+      "default": "3000"
+    },
+    {
+      "name": "AITRI_HUB_DIR",
+      "default": "~/.aitri-hub"
+    },
+    {
+      "name": "AITRI_HUB_REFRESH_MS",
+      "default": "5000"
+    }
   ],
   "technical_debt": [
     {
@@ -66,7 +81,7 @@
       "effort_to_fix": "low"
     }
   ],
-  "test_runner": "node --test ../../tests/unit/qa-security.test.js ../../tests/integration/redesign-regression.test.js ../../tests/integration/artifact-content.test.js ../../tests/integration/qa-endpoints.test.js && npm --prefix ../../web test",
+  "test_runner": "../../tests/run-redesign-tests.sh",
   "test_files": [
     "../../tests/unit/qa-security.test.js",
     "../../tests/integration/redesign-regression.test.js",
@@ -81,9 +96,24 @@
     "../../tests/e2e/qa-execution.test.js"
   ],
   "quality_gates": [
-    { "name": "lint", "command": "npm --prefix ../.. run lint", "required": true, "timeout_ms": 300000 },
-    { "name": "smoke", "command": "../../smoke.sh", "required": true, "timeout_ms": 120000 },
-    { "name": "e2e", "command": "npm --prefix ../.. run test:e2e", "required": true, "timeout_ms": 900000 }
+    {
+      "name": "lint",
+      "command": "npm --prefix ../.. run lint",
+      "required": true,
+      "timeout_ms": 300000
+    },
+    {
+      "name": "smoke",
+      "command": "../../smoke.sh",
+      "required": true,
+      "timeout_ms": 120000
+    },
+    {
+      "name": "e2e",
+      "command": "npm --prefix ../.. run test:e2e:v030",
+      "required": true,
+      "timeout_ms": 300000
+    }
   ],
   "test_runner_timeout_ms": 900000
 }

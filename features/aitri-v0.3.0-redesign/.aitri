@@ -17,35 +17,9 @@
   "projectName": "aitri-v0.3.0-redesign",
   "createdAt": "2026-07-17T16:36:40.062Z",
   "artifactsDir": "spec",
-  "updatedAt": "2026-07-19T00:28:40.915Z",
+  "updatedAt": "2026-07-19T00:56:54.503Z",
   "driftPhases": [],
   "events": [
-    {
-      "at": "2026-07-17T17:21:41.799Z",
-      "event": "approved",
-      "phase": 1,
-      "ideaArchived": true
-    },
-    {
-      "at": "2026-07-17T17:22:11.583Z",
-      "event": "started",
-      "phase": "ux"
-    },
-    {
-      "at": "2026-07-17T17:22:23.178Z",
-      "event": "started",
-      "phase": "ux"
-    },
-    {
-      "at": "2026-07-17T17:26:44.115Z",
-      "event": "completed",
-      "phase": "ux"
-    },
-    {
-      "at": "2026-07-17T17:57:41.829Z",
-      "event": "completed",
-      "phase": "ux"
-    },
     {
       "at": "2026-07-17T18:19:14.731Z",
       "event": "approved",
@@ -123,6 +97,51 @@
       "passed": 36,
       "failed": 9,
       "skipped": 24,
+      "manual": 0
+    },
+    {
+      "at": "2026-07-19T00:33:09.931Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 36,
+      "failed": 9,
+      "skipped": 24,
+      "manual": 0
+    },
+    {
+      "at": "2026-07-19T00:41:15.287Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 36,
+      "failed": 9,
+      "skipped": 24,
+      "manual": 0
+    },
+    {
+      "at": "2026-07-19T00:45:18.051Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 36,
+      "failed": 0,
+      "skipped": 33,
+      "manual": 0
+    },
+    {
+      "at": "2026-07-19T00:50:38.437Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 36,
+      "failed": 0,
+      "skipped": 33,
+      "manual": 0
+    },
+    {
+      "at": "2026-07-19T00:56:54.481Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 69,
+      "failed": 0,
+      "skipped": 0,
       "manual": 0
     }
   ],
@@ -204,13 +223,13 @@
       "FR-024"
     ]
   },
-  "verifyResultsHash": "eeadd40a5cecab1c00ee45d6bd5446575f2ee5e88654c46eb706539418560031",
-  "verifyRanAt": "2026-07-19T00:28:40.883Z",
+  "verifyResultsHash": "6483dc5044c409431c237d77e7cfd65c697d396627f5062f7c7396626bdee315",
+  "verifyRanAt": "2026-07-19T00:56:54.481Z",
   "lastVerifyRun": {
-    "passed": 36,
-    "failed": 9,
-    "skipped": 24,
+    "passed": 69,
+    "failed": 0,
+    "skipped": 0,
     "manual": 0,
-    "at": "2026-07-19T00:28:40.883Z"
+    "at": "2026-07-19T00:56:54.481Z"
   }
 }
