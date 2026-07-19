@@ -1,0 +1,166 @@
+{
+  "project": "Aitri Hub — v0.3.0 UI/UX Redesign",
+  "version": "0.3.0",
+  "phases_completed": [1, 2, 3, 4, 5],
+  "overall_status": "partial",
+  "requirement_compliance": [
+    {
+      "id": "FR-010",
+      "title": "Monitor — urgency-weighted bento grid with worst-first ordering and health filters",
+      "level": "complete",
+      "evidence": "4/4 TCs passing (TC-010h/e/f, monitor.test.js) — bento layout, worst-first order, CRITICAL spans 2 cols, filters. The declared debt against FR-010 is retired-component cleanup (old ProjectCard/HomeView remain unused), not a functional gap in the delivered monitor."
+    },
+    {
+      "id": "FR-011",
+      "title": "Monitor project card — health badge, segmented pipeline, 6 signal tiles, top issue, detail CTA",
+      "level": "complete",
+      "evidence": "3/3 TCs passing (TC-011h/e/f) — 6 signal tiles with N/A guards, pipeline fill, top-issue by severity, detail CTA. Verified live via screenshots."
+    },
+    {
+      "id": "FR-012",
+      "title": "Project Detail shell — single-page, fixed sidebar + scrollable content, browser-back to Monitor",
+      "level": "complete",
+      "evidence": "5/5 TCs passing (TC-012h/e/f, STAT-012h, TC-E2E-001h) — fixed sidebar, section nav with issue badges, browser-back preserves filter, not-found panel."
+    },
+    {
+      "id": "FR-013",
+      "title": "Detail — Overview section",
+      "level": "complete",
+      "evidence": "4/4 TCs passing (TC-013h/e/f, TILE-013h) — phase pipeline with readable labels, pass-ratio gauge, no-run state, 6 metric tiles."
+    },
+    {
+      "id": "FR-014",
+      "title": "Detail — Health section with five diagnostic dimensions",
+      "level": "complete",
+      "evidence": "4/4 TCs passing (TC-014h/e/f) — 5 fixed dimensions (Pipeline/Tests/Code/Artifacts/Version), OK/WARN/CRITICAL badges, remediation commands, all-clear state."
+    },
+    {
+      "id": "FR-015",
+      "title": "Detail — Artifacts explorer tree",
+      "level": "complete",
+      "evidence": "3/3 TCs passing (TC-015h/e/f) — per-phase tree, rolled-up folder glyph, product names + technical secondary, toggle-close, empty states; sticky tree with own scroll."
+    },
+    {
+      "id": "FR-016",
+      "title": "Detail — Artifact reader renders Markdown, JSON, and embedded images",
+      "level": "partial",
+      "evidence": "7/7 TCs passing (TC-016h/e/f, JSON-016h, PATH-016f/017f) — Markdown formatted, JSON human-readable projection, inline images, path-traversal 403. GAP (declared debt): AC-016-5's inline approve/reject/complete buttons are not wired into the reader; those actions remain via the existing admin flow. Core rendering complete; action affordance deferred."
+    },
+    {
+      "id": "FR-017",
+      "title": "Detail — Sessions timeline",
+      "level": "complete",
+      "evidence": "3/3 TCs passing (TC-017h/e/f) — events newest-first with typed icon/label/phase, inline rejection feedback, last-session context chips, empty state."
+    },
+    {
+      "id": "FR-018",
+      "title": "Detail — Alerts aggregation",
+      "level": "complete",
+      "evidence": "3/3 TCs passing (TC-018h/e/f) — health issues + external signals aggregated, count matches sidebar badge, all-clear state."
+    },
+    {
+      "id": "FR-019",
+      "title": "Artifact name translation — fixed technical→product mapping, features inherit with prefix",
+      "level": "complete",
+      "evidence": "3/3 TCs passing (TC-019h/e/f) — fixed NAME_MAP (extended to all emitted artifacts), feature-name prefix, raw-name fallback. Live in the Artifacts explorer."
+    },
+    {
+      "id": "FR-020",
+      "title": "QA Workspace — Test Cases view",
+      "level": "complete",
+      "evidence": "4/4 TCs passing (TC-020h/e/f) — cases grouped by requirement with type/status/FR filters, manual status edit persists (409 for automated cases)."
+    },
+    {
+      "id": "FR-021",
+      "title": "QA Workspace — record manual test execution bound to the current verify run",
+      "level": "complete",
+      "evidence": "9/9 TCs passing (TC-021h/e/f, SEC-021f, EVID-021f/022f, SVG-021f, NFR-010h/e) — append-only executions under ~/.aitri-hub/qa/, evidence validated (type/size/magic-byte/SVG-sanitise/server-generated name), bound to {resultsBinding, runStamp}. Persistence + security fully covered."
+    },
+    {
+      "id": "FR-022",
+      "title": "QA Workspace — Bugs view",
+      "level": "complete",
+      "evidence": "3/3 TCs passing (TC-022h/e/f) — bugs from BUGS.json with severity/status filters, per-bug detail (repro/evidence/history), parse-error surfaced (never silent zero)."
+    },
+    {
+      "id": "FR-023",
+      "title": "QA Workspace — quality reports (project / feature / release), on-demand and printable",
+      "level": "partial",
+      "evidence": "3/3 TCs passing (TC-023h/e/f) — Project + Per-feature reports render on-demand from the snapshot (coverage, bugs-by-severity, case counts) with a browser-print layout (@media print). GAP (declared debt): the Release (run:<stamp>) scope is implemented in the /api/project/:id/report endpoint but not surfaced in the UI selector. SHOULD priority."
+    },
+    {
+      "id": "FR-024",
+      "title": "Global — periodic data sync with countdown ticker, no manual refresh",
+      "level": "complete",
+      "evidence": "3/3 TCs passing (TC-024h/e/f) — periodic poll with stale-read fallback (keeps last data + indicator), no manual refresh control. SHOULD priority, fully covered."
+    },
+    {
+      "id": "NFR-006",
+      "title": "Regression — Hub monitor collection keeps producing the same collected data",
+      "level": "complete",
+      "evidence": "TC-NFR-006h/e/f passing — field census + cross-project parity; collectOne degrades without throwing. Collector (lib/collector/index.js) unchanged."
+    },
+    {
+      "id": "NFR-007",
+      "title": "Regression — dashboard.json snapshot contract remains valid and backward-compatible",
+      "level": "complete",
+      "evidence": "TC-NFR-007h/e passing — reader output matches the golden baseline; the redesign's artifact tree never leaks into the frozen snapshot (detail-reader-only)."
+    },
+    {
+      "id": "NFR-008",
+      "title": "Regression — existing data ingestion still yields the same fields the redesign consumes",
+      "level": "complete",
+      "evidence": "TC-NFR-008h/e/f passing — baseline extract parity, unknown-.aitri-key tolerance, malformed .aitri → null (no crash)."
+    },
+    {
+      "id": "NFR-009",
+      "title": "Usability — interaction & accessibility targets (time-to-urgency, latency, contrast, non-color status, reduced-motion)",
+      "level": "partial",
+      "evidence": "Structurally met: GitHub-Dark tokens (AA-verified in styles.css), every status carries icon+label (non-color), reduced-motion suppresses pulses/enter animations, desktop breakpoints (≥1200 4-col / 768–1200 2-col, no h-scroll ≥768). Verified visually via Playwright screenshots and the 768px e2e (TC-006e). GAP: no automated a11y/contrast test suite — coverage is structural + manual, not asserted mechanically."
+    },
+    {
+      "id": "NFR-010",
+      "title": "Security — evidence upload validated and confined; QA writes loopback-only",
+      "level": "complete",
+      "evidence": "TC-NFR-010f/e/h, LOOP-010h, SEC-021f, EVID-021f/022f, SVG-021f passing — loopback guard (403 non-loopback), MIME+magic-byte + 5MB cap, SVG sanitise, server-generated filenames, evidence-ref confinement. Written only under ~/.aitri-hub/qa/."
+    },
+    {
+      "id": "NFR-011",
+      "title": "Observability — the Hub HTTP server logs every request",
+      "level": "complete",
+      "evidence": "Single res.on('finish') access logger emits '[ts] METHOD /path STATUS' on EVERY branch (health/static/data/api/404/errors). admin-api TC-NFR011h/f confirm logging does not break the response or crash on error paths."
+    },
+    {
+      "id": "NFR-012",
+      "title": "CI/CD — CI runs the full declared test suite (incl. e2e) on every push to main",
+      "level": "complete",
+      "evidence": ".github/workflows/ci.yml triggers on push + pull_request to main; jobs: lint, test (node 20/22 → npm test), test-web (Vitest), build-web, e2e (boots server → npm run test:e2e). Full unit + web + e2e suite wired."
+    },
+    {
+      "id": "NFR-013",
+      "title": "Reliability — the Hub server exposes a healthcheck",
+      "level": "complete",
+      "evidence": "GET /health → 200 JSON { status: 'ok' }; smoke.sh boots the server and asserts /health + key routes respond without 5xx."
+    }
+  ],
+  "technical_debt_inherited": [
+    {
+      "fr_id": "FR-023",
+      "substitution": "The report scope selector exposes Project and Per-feature scopes; the Release (run:<stamp>) scope is implemented in the /api/project/:id/report endpoint but not surfaced in the UI selector.",
+      "reason": "The run-stamp binding (ADR-08) is a derived verify-run fingerprint, not a user-managed release entity; surfacing a run picker was deferred to keep v1 within the no-release-entity no_go_zone.",
+      "effort_to_fix": "low"
+    },
+    {
+      "fr_id": "FR-010",
+      "substitution": "The pre-redesign Home + tab-based Detail components (ProjectCard.jsx, HomeView.jsx, views/tabs/*) remain in the tree but are no longer rendered; the old-UI e2e (snapshot-card.test.js, qa-workspace.test.js) are skipped with supersession pointers.",
+      "reason": "Retiring another feature's shipped components/tests mid-redesign risks collateral breakage; the redesigned surfaces are fully covered by the redesign's own suites. Scheduled for a dedicated cleanup pass.",
+      "effort_to_fix": "medium"
+    },
+    {
+      "fr_id": "FR-016",
+      "substitution": "The artifact reader shows status but does not render approve/reject/complete action buttons inline; those actions remain via the existing admin flow.",
+      "reason": "AC-016-5's actions reuse the existing approve/reject/complete surface (no_go_zone: no new artifact editing); wiring them into the reader is additive polish, not covered by a Makes-pass TC.",
+      "effort_to_fix": "low"
+    }
+  ]
+}

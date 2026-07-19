@@ -1,5 +1,5 @@
 {
-  "currentPhase": 4,
+  "currentPhase": 5,
   "approvedPhases": [
     1,
     "ux",
@@ -12,39 +12,15 @@
     "ux",
     2,
     3,
-    4
+    4,
+    5
   ],
   "projectName": "aitri-v0.3.0-redesign",
   "createdAt": "2026-07-17T16:36:40.062Z",
   "artifactsDir": "spec",
-  "updatedAt": "2026-07-19T00:56:54.503Z",
+  "updatedAt": "2026-07-19T01:04:37.857Z",
   "driftPhases": [],
   "events": [
-    {
-      "at": "2026-07-17T18:19:14.731Z",
-      "event": "approved",
-      "phase": "ux"
-    },
-    {
-      "at": "2026-07-17T19:16:29.761Z",
-      "event": "started",
-      "phase": 2
-    },
-    {
-      "at": "2026-07-17T19:20:34.679Z",
-      "event": "completed",
-      "phase": 2
-    },
-    {
-      "at": "2026-07-17T21:25:36.622Z",
-      "event": "completed",
-      "phase": 2
-    },
-    {
-      "at": "2026-07-17T21:25:54.671Z",
-      "event": "approved",
-      "phase": 2
-    },
     {
       "at": "2026-07-17T21:33:11.734Z",
       "event": "started",
@@ -143,6 +119,33 @@
       "failed": 0,
       "skipped": 0,
       "manual": 0
+    },
+    {
+      "at": "2026-07-19T00:57:30.552Z",
+      "event": "verify-complete",
+      "phase": "verify",
+      "passed": 69,
+      "failed": 0
+    },
+    {
+      "at": "2026-07-19T00:58:38.799Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-07-19T00:58:56.320Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-07-19T00:59:03.385Z",
+      "event": "started",
+      "phase": 5
+    },
+    {
+      "at": "2026-07-19T01:04:37.832Z",
+      "event": "completed",
+      "phase": 5
     }
   ],
   "cascadedPhases": [],
@@ -151,6 +154,7 @@
     "2": "2a889b3d5b001be4370dfbd43b9a6c486314834e1734cd9add8311695718cbd7",
     "3": "329cfd42f287d668ceb8384c782f5a9948fccf16942e2903a06bbe3f952a3181",
     "4": "323da5481bf70ffefe6aac3966e6fbf34390fc9ecb629c1377cec43aff53a746",
+    "5": "846a706833e8ccdaad1ad582fe6665ae93d63add2aaeda46ba97b49fc257dc6e",
     "ux": "7706b5efab6b01a56252860b7d4341adb7af29db09eefe533ecd6223eeb4a3b6"
   },
   "frSnapshots": {
@@ -231,5 +235,16 @@
     "skipped": 0,
     "manual": 0,
     "at": "2026-07-19T00:56:54.481Z"
+  },
+  "verifyPassed": true,
+  "verifySummary": {
+    "total": 69,
+    "passed": 69,
+    "failed": 0,
+    "skipped": 0,
+    "skipped_e2e": 0,
+    "skipped_no_marker": 0,
+    "manual": 0,
+    "manual_verified": 0
   }
 }

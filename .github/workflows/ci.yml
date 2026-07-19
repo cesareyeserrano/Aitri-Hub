@@ -54,6 +54,27 @@ jobs:
       - name: Run unit and integration tests
         run: npm test
 
+  # ── Web Unit Tests (Vitest) ───────────────────────────────────────────────────
+  test-web:
+    name: Web Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install web dependencies
+        run: npm ci
+        working-directory: web
+
+      - name: Run web unit tests (Vitest)
+        run: npm test
+        working-directory: web
+
   # ── Web App Build ─────────────────────────────────────────────────────────────
   build-web:
     name: Build Web App
