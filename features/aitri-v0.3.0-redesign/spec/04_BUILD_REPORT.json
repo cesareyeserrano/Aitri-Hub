@@ -55,7 +55,7 @@
     },
     {
       "fr_id": "FR-010",
-      "substitution": "The pre-redesign Home components (web/src/components/ProjectCard.jsx, HomeView.jsx, views/tabs/{Summary,Traceability,Artifacts,TestCases,Bugs}Tab.jsx) remain in the tree but are no longer rendered; tests/e2e/snapshot-card.test.js is skipped with a supersession pointer.",
+      "substitution": "The pre-redesign Home + tab-based Detail components (web/src/components/ProjectCard.jsx, HomeView.jsx, views/tabs/{Summary,Traceability,Artifacts,TestCases,Bugs}Tab.jsx) remain in the tree but are no longer rendered; the old-UI e2e (tests/e2e/snapshot-card.test.js, tests/e2e/qa-workspace.test.js) are skipped with supersession pointers to the redesign's own coverage.",
       "reason": "Retiring another feature's shipped components/tests mid-redesign risks collateral breakage; the redesigned surfaces are fully covered by monitor.test.js + the Qa* components. Scheduled for a dedicated cleanup pass.",
       "effort_to_fix": "medium"
     },

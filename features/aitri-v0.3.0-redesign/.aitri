@@ -4,7 +4,8 @@
     1,
     "ux",
     2,
-    3
+    3,
+    4
   ],
   "completedPhases": [
     1,
@@ -16,19 +17,9 @@
   "projectName": "aitri-v0.3.0-redesign",
   "createdAt": "2026-07-17T16:36:40.062Z",
   "artifactsDir": "spec",
-  "updatedAt": "2026-07-19T00:15:15.520Z",
+  "updatedAt": "2026-07-19T00:28:40.915Z",
   "driftPhases": [],
   "events": [
-    {
-      "at": "2026-07-17T16:49:13.531Z",
-      "event": "started",
-      "phase": 1
-    },
-    {
-      "at": "2026-07-17T17:03:16.996Z",
-      "event": "completed",
-      "phase": 1
-    },
     {
       "at": "2026-07-17T17:21:41.799Z",
       "event": "approved",
@@ -119,6 +110,20 @@
       "at": "2026-07-19T00:15:15.496Z",
       "event": "completed",
       "phase": 4
+    },
+    {
+      "at": "2026-07-19T00:16:47.183Z",
+      "event": "approved",
+      "phase": 4
+    },
+    {
+      "at": "2026-07-19T00:28:40.883Z",
+      "event": "verify-run",
+      "phase": "verify",
+      "passed": 36,
+      "failed": 9,
+      "skipped": 24,
+      "manual": 0
     }
   ],
   "cascadedPhases": [],
@@ -164,6 +169,23 @@
       "FR-023",
       "FR-024"
     ],
+    "4": [
+      "FR-010",
+      "FR-011",
+      "FR-012",
+      "FR-013",
+      "FR-014",
+      "FR-015",
+      "FR-016",
+      "FR-017",
+      "FR-018",
+      "FR-019",
+      "FR-020",
+      "FR-021",
+      "FR-022",
+      "FR-023",
+      "FR-024"
+    ],
     "ux": [
       "FR-010",
       "FR-011",
@@ -181,5 +203,14 @@
       "FR-023",
       "FR-024"
     ]
+  },
+  "verifyResultsHash": "eeadd40a5cecab1c00ee45d6bd5446575f2ee5e88654c46eb706539418560031",
+  "verifyRanAt": "2026-07-19T00:28:40.883Z",
+  "lastVerifyRun": {
+    "passed": 36,
+    "failed": 9,
+    "skipped": 24,
+    "manual": 0,
+    "at": "2026-07-19T00:28:40.883Z"
   }
 }

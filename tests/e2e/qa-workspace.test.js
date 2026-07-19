@@ -10,6 +10,18 @@
 
 import { test, expect } from '@playwright/test';
 
+// SUPERSEDED by the v0.3.0 Project Detail redesign (FR-012): the tab-based DetailView
+// (verdict chip, scope-selector, detail-degradation banner, Summary/Traceability tabs)
+// was replaced by the single-page fixed-sidebar shell (Overview/Health/Artifacts/
+// Sessions/Alerts + QA sections). These assertions target the retired tab UI, so they
+// are skipped rather than deleted (kept for history). The redesigned detail + QA
+// workspace are covered by tests/e2e/{dev-triage,qa-execution}.test.js and the
+// web/src/__tests__/{detailNav,qa,artifacts}.test.jsx suites. Retire when the old
+// tab components are removed.
+test.beforeEach(() => {
+  test.skip(true, 'Superseded by the v0.3.0 Project Detail redesign (FR-012) — see dev-triage.test.js + qa-execution.test.js');
+});
+
 const BASE = `http://localhost:${process.env.AITRI_HUB_PORT ?? 3099}`;
 
 function card(overrides = {}) {
