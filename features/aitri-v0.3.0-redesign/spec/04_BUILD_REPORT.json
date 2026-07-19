@@ -68,17 +68,17 @@
   ],
   "test_runner": "node --test ../../tests/unit/qa-security.test.js ../../tests/integration/redesign-regression.test.js ../../tests/integration/artifact-content.test.js ../../tests/integration/qa-endpoints.test.js && npm --prefix ../../web test",
   "test_files": [
-    "tests/unit/qa-security.test.js",
-    "tests/integration/redesign-regression.test.js",
-    "tests/integration/artifact-content.test.js",
-    "tests/integration/qa-endpoints.test.js",
-    "web/src/__tests__/monitor.test.js",
-    "web/src/__tests__/detail.test.js",
-    "web/src/__tests__/detailNav.test.jsx",
-    "web/src/__tests__/artifacts.test.jsx",
-    "web/src/__tests__/qa.test.jsx",
-    "tests/e2e/dev-triage.test.js",
-    "tests/e2e/qa-execution.test.js"
+    "../../tests/unit/qa-security.test.js",
+    "../../tests/integration/redesign-regression.test.js",
+    "../../tests/integration/artifact-content.test.js",
+    "../../tests/integration/qa-endpoints.test.js",
+    "../../web/src/__tests__/monitor.test.js",
+    "../../web/src/__tests__/detail.test.js",
+    "../../web/src/__tests__/detailNav.test.jsx",
+    "../../web/src/__tests__/artifacts.test.jsx",
+    "../../web/src/__tests__/qa.test.jsx",
+    "../../tests/e2e/dev-triage.test.js",
+    "../../tests/e2e/qa-execution.test.js"
   ],
   "quality_gates": [
     { "name": "lint", "command": "npm --prefix ../.. run lint", "required": true, "timeout_ms": 300000 },
